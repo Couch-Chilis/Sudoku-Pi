@@ -1,0 +1,4 @@
+{
+    "files.insertFinalNewline": true,
+    "rust-analyzer.showUnlinkedFileNotification": false
+}
