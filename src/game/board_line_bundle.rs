@@ -28,8 +28,8 @@ impl BoardLineBundle {
 
         use Orientation::*;
         let translation = match orientation {
-            Horizontal => Vec3::new(0., (n as f32 - 4.5) * scale, 1.),
-            Vertical => Vec3::new((n as f32 - 4.5) * scale, 0., 1.),
+            Horizontal => Vec3::new(0., (n as f32 - 4.5) * scale, 2.),
+            Vertical => Vec3::new((n as f32 - 4.5) * scale, 0., 2.),
         };
 
         use Thickness::*;
@@ -40,8 +40,8 @@ impl BoardLineBundle {
         };
 
         let scale = match orientation {
-            Horizontal => Vec3::new(9. * scale, thickness, 1.),
-            Vertical => Vec3::new(thickness, 9. * scale, 1.),
+            Horizontal => Vec3::new(9.075 * scale, thickness, 1.),
+            Vertical => Vec3::new(thickness, 9.075 * scale, 1.),
         };
 
         let sprite = SpriteBundle {

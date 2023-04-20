@@ -31,7 +31,7 @@ pub struct WindowSize {
 fn main() {
     App::new()
         .insert_resource(WindowSize::default())
-        .add_system(quit_on_escape)
+        .add_system(on_escape)
         .add_system(on_resize)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -62,18 +62,18 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     });
 }
 
-fn quit_on_escape(input: Res<Input<KeyCode>>, mut app_exit_events: EventWriter<AppExit>) {
-    if input.just_pressed(KeyCode::Escape) {
-        app_exit_events.send(AppExit);
-    }
-}
-
-fn return_to_menu_on_escape(
+fn on_escape(
     input: Res<Input<KeyCode>>,
-    mut screen_state: ResMut<NextState<ScreenState>>,
+    current_state: Res<State<ScreenState>>,
+    mut next_state: ResMut<NextState<ScreenState>>,
+    mut app_exit_events: EventWriter<AppExit>,
 ) {
     if input.just_pressed(KeyCode::Escape) {
-        screen_state.set(ScreenState::MainMenu);
+        if current_state.0 == ScreenState::MainMenu {
+            app_exit_events.send(AppExit);
+        } else {
+            next_state.set(ScreenState::MainMenu);
+        }
     }
 }
 
