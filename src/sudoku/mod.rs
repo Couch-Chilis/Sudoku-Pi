@@ -3,26 +3,21 @@ mod math;
 mod notes;
 mod solver;
 
+use bevy::prelude::Resource;
 use math::{get_block_offset, get_pos, get_x_and_y_from_pos};
 use notes::Notes;
 use solver::solve;
 use std::fmt::{self, Write};
 use std::num::NonZeroU8;
 
-pub use generator::Game;
-
-/// A single cell within the Sudoku board, which may or may not have a number.
-pub type Cell = Option<NonZeroU8>;
-
-pub struct Hint {
-    pub x: u8,
-    pub y: u8,
-}
-
-impl From<(u8, u8)> for Hint {
-    fn from((x, y): (u8, u8)) -> Self {
-        Self { x, y }
-    }
+/// A Sudoku game with a starting board and a solution, a current state, and
+/// notes.
+#[derive(Default, Resource)]
+pub struct Game {
+    pub start: Sudoku,
+    pub solution: Sudoku,
+    pub current: Sudoku,
+    pub notes: Notes,
 }
 
 /// Keeps track of all the cells within the Sudoku board.
@@ -224,5 +219,19 @@ impl fmt::Display for Sudoku {
         }
 
         Ok(())
+    }
+}
+
+/// A single cell within the Sudoku board, which may or may not have a number.
+pub type Cell = Option<NonZeroU8>;
+
+pub struct Hint {
+    pub x: u8,
+    pub y: u8,
+}
+
+impl From<(u8, u8)> for Hint {
+    fn from((x, y): (u8, u8)) -> Self {
+        Self { x, y }
     }
 }

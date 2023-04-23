@@ -33,7 +33,7 @@ pub struct Notes {
 impl Notes {
     /// Returns a new, empty set of notes.
     pub fn new() -> Self {
-        Self { cells: [0; 81] }
+        Self::default()
     }
 
     /// Returns a new set of notes based on the state of the given Sudoku.
@@ -434,12 +434,28 @@ impl Notes {
         self.cells[get_pos(x, y)] |= 1 << n.get();
     }
 
+    /// Toggles the given number in the notes for the cell at the given
+    /// coordinates.
+    pub fn toggle(&mut self, x: u8, y: u8, n: NonZeroU8) {
+        if self.has(x, y, n) {
+            self.unset(x, y, n)
+        } else {
+            self.set(x, y, n)
+        }
+    }
+
     /// Removes the given number from the notes for the cell at the given
     /// coordinates.
     ///
     /// Does nothing if the number wasn't in the notes.
     pub fn unset(&mut self, x: u8, y: u8, n: NonZeroU8) {
         self.cells[get_pos(x, y)] &= !(1 << n.get());
+    }
+}
+
+impl Default for Notes {
+    fn default() -> Self {
+        Self { cells: [0; 81] }
     }
 }
 

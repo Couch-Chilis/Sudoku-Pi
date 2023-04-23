@@ -4,20 +4,11 @@ use super::math::get_x_and_y_from_pos;
 use super::solver::{rate_difficulty, solve};
 use super::Sudoku;
 use anyhow::{bail, Context};
-use bevy::prelude::Resource;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::num::NonZeroU8;
 
-/// A Sudoku game with a starting board and a solution.
-
-#[derive(Default, Resource)]
-pub struct Game {
-    pub start: Sudoku,
-    pub solution: Sudoku,
-}
-
-impl Game {
+impl super::Game {
     /// Generates a new game at the given difficulty level.
     pub fn generate(difficulty: u8) -> anyhow::Result<Self> {
         let Some(solution) = create_solution(Sudoku::new(), 0, 0) else {
@@ -87,7 +78,12 @@ impl Game {
             }
         }
 
-        Ok(Self { solution, start })
+        Ok(Self {
+            solution,
+            start: start.clone(),
+            current: start,
+            ..Default::default()
+        })
     }
 }
 
