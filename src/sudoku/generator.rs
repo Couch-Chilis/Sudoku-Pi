@@ -32,7 +32,7 @@ impl Game {
 
         let mut start = solution.clone();
         let mut num_cells_dug = 0;
-        for i in 0..81 {
+        'dig: for i in 0..81 {
             let (x, y) = get_x_and_y_from_pos(digging_order[i]);
 
             if min_numbers_per_line > 0 {
@@ -52,41 +52,38 @@ impl Game {
                 {
                     // We would be left with too few numbers in a single row or
                     // column, so continue before we let that happen.
-                    continue;
+                    continue 'dig;
                 }
             }
 
             let n = start.get(x, y);
 
-            // Determine whether the Sudoku remains unique after digging the number
-            // by trying whether the Sudoku is solvable with any other number filled
-            // in at the cell.
-            let mut remains_unique = true;
+            // Determine whether the Sudoku remains unique after digging the
+            // number by trying whether the Sudoku is solvable with any other
+            // number filled in at the cell.
             for other_n in 1..=9 {
                 let other_n = NonZeroU8::new(other_n).unwrap();
                 if Some(other_n) != n
                     && start.may_set(x, y, other_n)
                     && solve(start.set(x, y, other_n)).is_some()
                 {
-                    remains_unique = false;
-                    break;
+                    continue 'dig; // It wouldn't remain unique otherwise.
                 }
             }
-            if remains_unique {
-                let new_start = start.unset(x, y);
-                if difficulty < 4 {
-                    let rated_difficulty = rate_difficulty(new_start.clone())
-                        .context("Oh uh, I could not even rate my own starting position...")?;
-                    if rated_difficulty > difficulty {
-                        continue; // Digging this number would make it too hard...
-                    }
-                }
 
-                start = new_start;
-                num_cells_dug += 1;
-                if num_cells_dug >= num_cells_to_dig {
-                    break;
+            let new_start = start.unset(x, y);
+            if difficulty < 4 {
+                let rated_difficulty = rate_difficulty(new_start.clone())
+                    .context("Oh uh, I could not even rate my own starting position...")?;
+                if rated_difficulty > difficulty {
+                    continue 'dig; // It would become too difficult otherwise.
                 }
+            }
+
+            start = new_start;
+            num_cells_dug += 1;
+            if num_cells_dug >= num_cells_to_dig {
+                break;
             }
         }
 
@@ -164,7 +161,7 @@ impl DiggingStrategy {
                 num_cells_to_dig: 54,
             }),
             4 => Ok(Self {
-                digging_order: get_expert_digging_order(),
+                digging_order: get_spiraling_digging_order(),
                 min_numbers_per_line: 0,
                 num_cells_to_dig: 59,
             }),
@@ -181,65 +178,6 @@ fn get_checkered_digging_order() -> [usize; 81] {
     digging_order.try_into().unwrap()
 }
 
-fn get_expert_digging_order() -> [usize; 81] {
-    enum Direction {
-        Up,
-        Right,
-        Down,
-        Left,
-    }
-
-    let (mut x, mut y, mut direction) = match rand::thread_rng().gen_range(0..4) {
-        0 => (0, 0, Direction::Right),
-        1 => (8, 0, Direction::Down),
-        2 => (8, 8, Direction::Left),
-        3 => (0, 8, Direction::Up),
-        _ => unreachable!(),
-    };
-
-    let mut digging_order = [0; 81];
-    for i in 0..81 {
-        digging_order[i] = get_pos(x, y);
-
-        match direction {
-            Direction::Right => {
-                if x == 8 || digging_order.contains(&get_pos(x + 1, y)) {
-                    y += 1;
-                    direction = Direction::Down;
-                } else {
-                    x += 1;
-                }
-            }
-            Direction::Down => {
-                if y == 8 || digging_order.contains(&get_pos(x, y + 1)) {
-                    x -= 1;
-                    direction = Direction::Left;
-                } else {
-                    y += 1;
-                }
-            }
-            Direction::Left => {
-                if x == 0 || digging_order.contains(&get_pos(x - 1, y)) {
-                    y -= 1;
-                    direction = Direction::Up;
-                } else {
-                    x -= 1;
-                }
-            }
-            Direction::Up => {
-                if y == 0 || digging_order.contains(&get_pos(x, y - 1)) {
-                    x += 1;
-                    direction = Direction::Right;
-                } else {
-                    y -= 1;
-                }
-            }
-        }
-    }
-
-    digging_order
-}
-
 fn get_linear_digging_order() -> [usize; 81] {
     let digging_order: Vec<usize> = if rand::thread_rng().gen_bool(0.5) {
         (0..81).rev().collect()
@@ -253,4 +191,62 @@ fn get_random_digging_order() -> [usize; 81] {
     let mut digging_order: Vec<usize> = (0..81).collect();
     digging_order.shuffle(&mut rand::thread_rng());
     digging_order.try_into().unwrap()
+}
+
+fn get_spiraling_digging_order() -> [usize; 81] {
+    enum Direction {
+        Up,
+        Right,
+        Down,
+        Left,
+    }
+
+    let (mut x, mut y, mut direction) = match rand::thread_rng().gen_range(0..4) {
+        0 => (0, 0, Direction::Right),
+        1 => (8, 0, Direction::Down),
+        2 => (8, 8, Direction::Left),
+        _ => (0, 8, Direction::Up),
+    };
+
+    let mut digging_order = [0; 81];
+    for i in 0..81 {
+        digging_order[i] = get_pos(x, y);
+
+        match direction {
+            Direction::Right => {
+                if x == 8 || digging_order[0..i].contains(&get_pos(x + 1, y)) {
+                    y += 1;
+                    direction = Direction::Down;
+                } else {
+                    x += 1;
+                }
+            }
+            Direction::Down => {
+                if y == 8 || digging_order[0..i].contains(&get_pos(x, y + 1)) {
+                    x -= 1;
+                    direction = Direction::Left;
+                } else {
+                    y += 1;
+                }
+            }
+            Direction::Left => {
+                if x == 0 || digging_order[0..i].contains(&get_pos(x - 1, y)) {
+                    y -= 1;
+                    direction = Direction::Up;
+                } else {
+                    x -= 1;
+                }
+            }
+            Direction::Up => {
+                if y == 0 || digging_order[0..i].contains(&get_pos(x, y - 1)) {
+                    x += 1;
+                    direction = Direction::Right;
+                } else {
+                    y -= 1;
+                }
+            }
+        }
+    }
+
+    digging_order
 }
