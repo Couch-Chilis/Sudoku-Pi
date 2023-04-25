@@ -4,11 +4,13 @@ mod notes;
 mod solver;
 
 use bevy::prelude::Resource;
-use math::{get_block_offset, get_pos, get_x_and_y_from_pos};
+use math::get_block_offset;
 use notes::Notes;
 use solver::solve;
 use std::fmt::{self, Write};
 use std::num::NonZeroU8;
+
+pub use math::{get_pos, get_x_and_y_from_pos};
 
 /// A Sudoku game with a starting board and a solution, a current state, and
 /// notes.
@@ -18,6 +20,17 @@ pub struct Game {
     pub solution: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+}
+
+impl Game {
+    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8) {
+        if self.start.has(x, y) {
+            return; // Starting numbers are fixed and may not be replaced.
+        }
+
+        self.current = self.current.set(x, y, n);
+        self.notes.remove_all_notes_affected_by_set(x, y, n);
+    }
 }
 
 /// Keeps track of all the cells within the Sudoku board.

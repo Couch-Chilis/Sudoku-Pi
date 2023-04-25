@@ -5,7 +5,11 @@ mod board_numbers;
 use std::num::NonZeroU8;
 
 use self::{board_builder::build_board, board_numbers::fill_numbers};
-use crate::{despawn, sudoku::Game, ScreenState, WindowSize};
+use crate::{
+    despawn,
+    sudoku::{self, get_pos, get_x_and_y_from_pos, Game},
+    ScreenState, WindowSize,
+};
 use bevy::{prelude::*, window::PrimaryWindow};
 
 pub struct GamePlugin;
@@ -19,7 +23,10 @@ impl Plugin for GamePlugin {
             mouse_button_input.run_if(in_state(ScreenState::Game)),
             render_numbers.run_if(in_state(ScreenState::Game)),
             render_notes.run_if(in_state(ScreenState::Game)),
+            render_hint.run_if(in_state(ScreenState::Game)),
             render_selection.run_if(in_state(ScreenState::Game)),
+            update_highlights.run_if(in_state(ScreenState::Game)),
+            remove_hint.run_if(in_state(ScreenState::Game)),
         ));
     }
 }
@@ -36,6 +43,15 @@ struct Number(u8, u8);
 #[derive(Component)]
 struct SelectedNumber(u8, u8);
 
+#[derive(Component)]
+struct HighlightedNumber(usize);
+
+#[derive(Component)]
+struct Hint(u8, u8);
+
+type SelectionQuery<'world, 'state, 'selection> =
+    Query<'world, 'state, &'selection mut SelectedNumber>;
+
 fn board_setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -49,7 +65,8 @@ fn keyboard_input(
     mut commands: Commands,
     keys: Res<Input<KeyCode>>,
     mut game: ResMut<Game>,
-    mut selected_number: Query<&mut SelectedNumber>,
+    hint: Query<&Hint>,
+    mut selected_number: SelectionQuery,
 ) {
     for key in keys.get_just_pressed() {
         use KeyCode::*;
@@ -69,6 +86,8 @@ fn keyboard_input(
             Key8 => handle_number_key(game.as_mut(), &keys, &selected_number, 8),
             Key9 => handle_number_key(game.as_mut(), &keys, &selected_number, 9),
 
+            Slash => give_hint(&mut commands, game.as_mut(), &hint),
+
             Back | Delete => clear_selected_number(game.as_mut(), &selected_number),
             _ => {}
         }
@@ -78,7 +97,7 @@ fn keyboard_input(
 fn handle_number_key(
     game: &mut Game,
     keys: &Input<KeyCode>,
-    selected_number: &Query<&mut SelectedNumber>,
+    selected_number: &SelectionQuery,
     n: u8,
 ) {
     let n = NonZeroU8::new(n).unwrap();
@@ -93,7 +112,7 @@ fn handle_number_key(
 fn mouse_button_input(
     mut commands: Commands,
     buttons: Res<Input<MouseButton>>,
-    mut selected_number: Query<&mut SelectedNumber>,
+    mut selected_number: SelectionQuery,
     window_query: Query<&Window, With<PrimaryWindow>>,
     window_size: Res<WindowSize>,
 ) {
@@ -146,15 +165,103 @@ fn render_selection(
     mut selected_number_query: Query<(&SelectedNumber, &mut Transform), Changed<SelectedNumber>>,
     window_size: Res<WindowSize>,
 ) {
-    for (selected_number, mut transform) in &mut selected_number_query {
+    for (SelectedNumber(x, y), mut transform) in &mut selected_number_query {
         let scale = 10. * window_size.vmin_scale;
-        let SelectedNumber(x, y) = selected_number;
         transform.scale = Vec3::new(scale, scale, 0.);
-        transform.translation = Vec3::new((*x as f32 - 4.) * scale, (*y as f32 - 4.) * scale, 1.);
+        transform.translation = translate_to_cell_size(*x, *y, scale);
     }
 }
 
-fn clear_selected_number(game: &mut Game, selected_number: &Query<&mut SelectedNumber>) {
+fn render_hint(
+    mut hint_query: Query<(&Hint, &mut Transform), Changed<Hint>>,
+    window_size: Res<WindowSize>,
+) {
+    for (Hint(x, y), mut transform) in &mut hint_query {
+        let scale = 10. * window_size.vmin_scale;
+        transform.scale = Vec3::new(scale, scale, 0.);
+        transform.translation = translate_to_cell_size(*x, *y, scale);
+    }
+}
+
+fn remove_hint(
+    commands: Commands,
+    hint_query: Query<&Hint>,
+    hint_entity: Query<Entity, With<Hint>>,
+    game: Res<Game>,
+) {
+    if !game.is_changed() {
+        return;
+    }
+
+    let Ok((x, y)) = hint_query.get_single().map(|hint| (hint.0, hint.1)) else {
+        return;
+    };
+
+    if game.current.has(x, y) {
+        despawn(hint_entity, commands)
+    }
+}
+
+fn update_highlights(
+    mut commands: Commands,
+    selected_number_query: Query<&SelectedNumber>,
+    selected_number_changed_query: Query<&SelectedNumber, Changed<SelectedNumber>>,
+    highlighted_number_query: Query<Entity, With<HighlightedNumber>>,
+    game: Res<Game>,
+    window_size: Res<WindowSize>,
+) {
+    if !game.is_changed() && !selected_number_changed_query.get_single().is_ok() {
+        return;
+    }
+
+    let Ok((x, y)) = selected_number_query.get_single().map(|number| (number.0, number.1)) else {
+        return;
+    };
+
+    for entity in &highlighted_number_query {
+        commands.entity(entity).despawn();
+    }
+
+    let selected_cell = game.current.get(x, y);
+    if selected_cell.is_none() {
+        return;
+    };
+
+    let current_pos = get_pos(x, y);
+    let scale = 10. * window_size.vmin_scale;
+
+    commands.spawn_batch(
+        (0..81)
+            .filter(|pos| *pos != current_pos)
+            .filter(|pos| game.current.get_by_pos(*pos) == selected_cell)
+            .map(|pos| {
+                let (x, y) = get_x_and_y_from_pos(pos);
+                (
+                    HighlightedNumber(pos),
+                    SpriteBundle {
+                        sprite: Sprite {
+                            color: Color::rgba(0.8, 0.7, 0.0, 0.35),
+                            ..default()
+                        },
+                        transform: Transform {
+                            scale: Vec3::new(scale, scale, 0.),
+                            translation: translate_to_cell_size(x, y, scale),
+                            ..default()
+                        },
+                        ..default()
+                    },
+                    OnGameScreen,
+                )
+            })
+            .collect::<Vec<_>>(),
+    );
+}
+
+fn translate_to_cell_size(x: u8, y: u8, scale: f32) -> Vec3 {
+    Vec3::new((x as f32 - 4.) * scale, (y as f32 - 4.) * scale, 1.)
+}
+
+fn clear_selected_number(game: &mut Game, selected_number: &SelectionQuery) {
     let Ok((x, y)) = selected_number.get_single().map(|number| (number.0, number.1)) else {
         return;
     };
@@ -164,24 +271,16 @@ fn clear_selected_number(game: &mut Game, selected_number: &Query<&mut SelectedN
     }
 }
 
-fn fill_selected_number(
-    game: &mut Game,
-    selected_number: &Query<&mut SelectedNumber>,
-    n: NonZeroU8,
-) {
-    let Ok((x, y)) = selected_number.get_single().map(|number| (number.0, number.1)) else {
-        return;
-    };
-
-    if game.start.has(x, y) {
-        return; // Starting numbers are fixed and may not be replaced.
+fn fill_selected_number(game: &mut Game, selected_number: &SelectionQuery, n: NonZeroU8) {
+    if let Ok((x, y)) = selected_number
+        .get_single()
+        .map(|number| (number.0, number.1))
+    {
+        game.set(x, y, n);
     }
-
-    game.current = game.current.set(x, y, n);
-    game.notes.remove_all_notes_affected_by_set(x, y, n);
 }
 
-fn toggle_note(game: &mut Game, selected_number: &Query<&mut SelectedNumber>, n: NonZeroU8) {
+fn toggle_note(game: &mut Game, selected_number: &SelectionQuery, n: NonZeroU8) {
     let Ok((x, y)) = selected_number.get_single().map(|number| (number.0, number.1)) else {
         return;
     };
@@ -191,7 +290,7 @@ fn toggle_note(game: &mut Game, selected_number: &Query<&mut SelectedNumber>, n:
 
 fn move_selected_number(
     commands: &mut Commands,
-    selected_number: &mut Query<&mut SelectedNumber>,
+    selected_number: &mut SelectionQuery,
     x: u8,
     y: u8,
 ) {
@@ -215,7 +314,7 @@ fn move_selected_number(
 
 fn move_selected_number_relative(
     commands: &mut Commands,
-    selected_number: &mut Query<&mut SelectedNumber>,
+    selected_number: &mut SelectionQuery,
     dx: i8,
     dy: i8,
 ) {
@@ -250,4 +349,24 @@ fn get_board_x_and_y(window_size: &WindowSize, cursor_position: Vec2) -> Option<
     let board_x = ((x - board_offset_x) / board_size * 9.).floor();
     let board_y = ((y - board_offset_y) / board_size * 9.).floor();
     Some((board_x as u8, board_y as u8))
+}
+
+fn give_hint(commands: &mut Commands, game: &mut Game, hint: &Query<&Hint>) {
+    if let Ok(Hint(x, y)) = hint.get_single() {
+        if let Some(n) = game.solution.get(*x, *y) {
+            game.set(*x, *y, n);
+        }
+    } else if let Some(sudoku::Hint { x, y }) = game.current.get_hint() {
+        commands.spawn((
+            Hint(x, y),
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::rgba(0.2, 0.9, 0.0, 0.35),
+                    ..default()
+                },
+                ..default()
+            },
+            OnGameScreen,
+        ));
+    }
 }
