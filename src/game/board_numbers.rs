@@ -8,26 +8,26 @@ pub fn fill_numbers(commands: &mut Commands, asset_server: &AssetServer, window_
     let font = asset_server.load("OpenSans-Regular.ttf");
     let square_size = 10. * window_size.vmin_scale;
 
+    let mut numbers = Vec::with_capacity(81);
+    let mut notes = Vec::with_capacity(9 * 81);
+
     for x in 0..9 {
         for y in 0..9 {
-            spawn_number(commands, font.clone(), square_size, x, y);
+            numbers.push(build_number(font.clone(), square_size, x, y));
 
             for n in 1..=9 {
-                spawn_note(
-                    commands,
-                    font.clone(),
-                    square_size,
-                    x,
-                    y,
-                    NonZeroU8::new(n).unwrap(),
-                );
+                let n = NonZeroU8::new(n).unwrap();
+                notes.push(build_note(font.clone(), square_size, x, y, n));
             }
         }
     }
+
+    commands.spawn_batch(numbers);
+    commands.spawn_batch(notes);
 }
 
-fn spawn_number(commands: &mut Commands, font: Handle<Font>, square_size: f32, x: u8, y: u8) {
-    commands.spawn((
+fn build_number(font: Handle<Font>, square_size: f32, x: u8, y: u8) -> impl Bundle {
+    (
         Text2dBundle {
             text: Text::from_section(
                 "",
@@ -50,20 +50,13 @@ fn spawn_number(commands: &mut Commands, font: Handle<Font>, square_size: f32, x
         },
         Number(x, y),
         OnGameScreen,
-    ));
+    )
 }
 
-fn spawn_note(
-    commands: &mut Commands,
-    font: Handle<Font>,
-    square_size: f32,
-    x: u8,
-    y: u8,
-    n: NonZeroU8,
-) {
+fn build_note(font: Handle<Font>, square_size: f32, x: u8, y: u8, n: NonZeroU8) -> impl Bundle {
     let (note_x, note_y) = get_note_coordinates(n);
 
-    commands.spawn((
+    (
         Text2dBundle {
             text: Text::from_section(
                 n.to_string(),
@@ -86,7 +79,7 @@ fn spawn_note(
         },
         Note(x, y, n),
         OnGameScreen,
-    ));
+    )
 }
 
 fn get_note_coordinates(n: NonZeroU8) -> (f32, f32) {

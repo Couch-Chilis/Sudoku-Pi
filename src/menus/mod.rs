@@ -24,6 +24,7 @@ impl Plugin for MenuPlugin {
 #[derive(Component)]
 pub enum MenuButtonAction {
     BackToMain,
+    ContinueGame,
     GoToHowToPlay,
     GoToNewGame,
     //GoToOptions,
@@ -45,6 +46,7 @@ fn button_actions(
         if *interaction == Interaction::Clicked {
             match action {
                 MenuButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
+                MenuButtonAction::ContinueGame => screen_state.set(ScreenState::Game),
                 MenuButtonAction::GoToHowToPlay => screen_state.set(ScreenState::HowToPlay),
                 MenuButtonAction::GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
                 //MenuButtonAction::GoToOptions => screen_state.set(ScreenState::Options),

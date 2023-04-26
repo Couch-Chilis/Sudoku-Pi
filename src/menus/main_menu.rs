@@ -1,5 +1,5 @@
 use super::{ButtonBuilder, LogoBundle, MenuButtonAction};
-use crate::{despawn, ScreenState, WindowSize};
+use crate::{despawn, sudoku::Game, ScreenState, WindowSize};
 use bevy::prelude::*;
 
 pub struct MainMenuPlugin;
@@ -20,6 +20,7 @@ fn main_menu_setup(
     mut commands: Commands,
     window_size: Res<WindowSize>,
     asset_server: Res<AssetServer>,
+    game: Res<Game>,
 ) {
     if window_size.vmin_scale == 0.0 {
         return; // Don't do anything until we've initialized.
@@ -53,6 +54,9 @@ fn main_menu_setup(
         ))
         .with_children(|parent| {
             use MenuButtonAction::*;
+            if game.may_continue() {
+                button_builder.add_with_text_and_action(parent, "Continue", ContinueGame);
+            }
             button_builder.add_with_text_and_action(parent, "New Game", GoToNewGame);
             button_builder.add_with_text_and_action(parent, "How to Play", GoToHowToPlay);
             button_builder.add_with_text_and_action(parent, "Quit", Quit);

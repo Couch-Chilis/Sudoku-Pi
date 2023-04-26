@@ -1,7 +1,7 @@
 mod generator;
 mod math;
 mod notes;
-mod serde;
+mod persistence;
 mod solver;
 
 use bevy::prelude::Resource;
@@ -23,6 +23,10 @@ pub struct Game {
 }
 
 impl Game {
+    pub fn may_continue(&self) -> bool {
+        self.start != Sudoku::default() && !self.current.is_solved()
+    }
+
     pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8) {
         if self.start.has(x, y) {
             return; // Starting numbers are fixed and may not be replaced.
@@ -34,7 +38,7 @@ impl Game {
 }
 
 /// Keeps track of all the cells within the Sudoku board.
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct Sudoku {
     cells: [Cell; 81],
 }

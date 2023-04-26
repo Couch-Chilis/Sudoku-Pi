@@ -44,8 +44,8 @@ fn main() {
         .add_state::<ScreenState>()
         .add_system(skip_splash_screen.in_schedule(OnEnter(ScreenState::Splash)))
         .add_startup_system(setup)
-        .add_plugin(menus::MenuPlugin)
         .add_plugin(game::GamePlugin)
+        .add_plugin(menus::MenuPlugin)
         .run();
 }
 

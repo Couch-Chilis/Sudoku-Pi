@@ -82,7 +82,7 @@ impl super::Game {
             solution,
             start: start.clone(),
             current: start,
-            ..Default::default()
+            notes: Default::default(),
         })
     }
 }

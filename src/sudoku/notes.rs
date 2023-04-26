@@ -252,19 +252,6 @@ impl Notes {
         }
     }
 
-    /// Returns an arbitrary number that is present in the notes for the cell at
-    /// the given position, if any.
-    pub fn get_some_number(&self, pos: usize) -> Option<NonZeroU8> {
-        for n in 1..=9 {
-            let val = 1 << n;
-            if self.cells[pos] & val == val {
-                return Some(NonZeroU8::new(n).unwrap());
-            }
-        }
-
-        None
-    }
-
     /// Returns whether the notes for the cell at the given position contain the
     /// given number.
     pub fn has(&self, x: u8, y: u8, n: NonZeroU8) -> bool {

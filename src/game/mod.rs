@@ -16,12 +16,15 @@ pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Game::default()).add_systems((
+        app.insert_resource(Game::load()).add_systems((
             board_setup.in_schedule(OnEnter(ScreenState::Game)),
+            render_numbers
+                .in_schedule(OnEnter(ScreenState::Game))
+                .after(board_setup),
             despawn::<OnGameScreen>.in_schedule(OnExit(ScreenState::Game)),
             keyboard_input.run_if(in_state(ScreenState::Game)),
             mouse_button_input.run_if(in_state(ScreenState::Game)),
-            render_numbers.run_if(in_state(ScreenState::Game)),
+            render_changed_numbers.run_if(in_state(ScreenState::Game)),
             render_notes.run_if(in_state(ScreenState::Game)),
             render_hint.run_if(in_state(ScreenState::Game)),
             render_selection.run_if(in_state(ScreenState::Game)),
@@ -129,11 +132,13 @@ fn mouse_button_input(
     }
 }
 
-fn render_numbers(game: Res<Game>, mut number_query: Query<(&Number, &mut Text)>) {
-    if !game.is_changed() {
-        return;
+fn render_changed_numbers(game: Res<Game>, number_query: Query<(&Number, &mut Text)>) {
+    if game.is_changed() {
+        render_numbers(game, number_query);
     }
+}
 
+fn render_numbers(game: Res<Game>, mut number_query: Query<(&Number, &mut Text)>) {
     for (Number(x, y), mut text) in &mut number_query {
         if let Some(n) = game.current.get(*x, *y) {
             text.sections[0].value = n.to_string();
