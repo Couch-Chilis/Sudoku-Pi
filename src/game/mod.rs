@@ -1,16 +1,16 @@
 mod board_builder;
 mod board_line_bundle;
 mod board_numbers;
+mod ui;
 
-use std::num::NonZeroU8;
-
-use self::{board_builder::build_board, board_numbers::fill_numbers};
-use crate::{
-    despawn,
-    sudoku::{self, get_pos, get_x_and_y_from_pos, Game},
-    ScreenState, WindowSize,
-};
+use crate::despawn;
+use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
+use crate::{ScreenState, WindowSize};
 use bevy::{prelude::*, window::PrimaryWindow};
+use board_builder::build_board;
+use board_numbers::fill_numbers;
+use std::num::NonZeroU8;
+use ui::{init_ui, UiButtonAction};
 
 pub struct GamePlugin;
 
@@ -27,6 +27,7 @@ impl Plugin for GamePlugin {
             render_selection.run_if(in_state(ScreenState::Game)),
             update_highlights.run_if(in_state(ScreenState::Game)),
             remove_hint.run_if(in_state(ScreenState::Game)),
+            button_actions.run_if(in_state(ScreenState::Game)),
         ));
     }
 }
@@ -59,6 +60,7 @@ fn board_setup(
 ) {
     build_board(&mut commands, &window_size);
     fill_numbers(&mut commands, &asset_server, &window_size);
+    init_ui(&asset_server, &mut commands, &window_size);
 }
 
 fn keyboard_input(
@@ -349,6 +351,23 @@ fn get_board_x_and_y(window_size: &WindowSize, cursor_position: Vec2) -> Option<
     let board_x = ((x - board_offset_x) / board_size * 9.).floor();
     let board_y = ((y - board_offset_y) / board_size * 9.).floor();
     Some((board_x as u8, board_y as u8))
+}
+
+fn button_actions(
+    mut commands: Commands,
+    query: Query<(&Interaction, &UiButtonAction), (Changed<Interaction>, With<Button>)>,
+    mut game: ResMut<Game>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
+    hint: Query<&Hint>,
+) {
+    for (interaction, action) in &query {
+        if *interaction == Interaction::Clicked {
+            match action {
+                UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
+                UiButtonAction::Hint => give_hint(&mut commands, game.as_mut(), &hint),
+            }
+        }
+    }
 }
 
 fn give_hint(commands: &mut Commands, game: &mut Game, hint: &Query<&Hint>) {
