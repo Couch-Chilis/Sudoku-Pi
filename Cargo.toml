@@ -13,3 +13,5 @@ opt-level = 3
 anyhow = "1"
 bevy = { version = "0.10", features = ["dynamic_linking", "jpeg", "wayland"] }
 rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }

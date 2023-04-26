@@ -2829,6 +2829,8 @@ dependencies = [
  "anyhow",
  "bevy",
  "rand",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

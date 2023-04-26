@@ -1,6 +1,5 @@
 use super::math::get_x_and_y_from_pos;
-use super::notes::Notes;
-use super::Sudoku;
+use super::{Notes, Sudoku};
 use std::num::NonZeroU8;
 
 /// Rates a Sudoku by difficulty level.
@@ -10,7 +9,7 @@ pub fn rate_difficulty(sudoku: Sudoku) -> Option<u8> {
     solve_intelligently(sudoku).map(|result| result.difficulty)
 }
 
-/// Solves the Sudoku, if possible, and returns the solutions.
+/// Solves the Sudoku, if possible, and returns one of its solutions.
 pub fn solve(sudoku: Sudoku) -> Option<Sudoku> {
     solve_intelligently(sudoku).map(|result| result.solution)
 }

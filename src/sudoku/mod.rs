@@ -1,11 +1,11 @@
 mod generator;
 mod math;
 mod notes;
+mod serde;
 mod solver;
 
 use bevy::prelude::Resource;
 use math::get_block_offset;
-use notes::Notes;
 use solver::solve;
 use std::fmt::{self, Write};
 use std::num::NonZeroU8;
@@ -43,6 +43,40 @@ impl Sudoku {
     /// Creates a new, empty Sudoku without any of the cells filled in.
     pub fn new() -> Self {
         Self { cells: [None; 81] }
+    }
+
+    /// Returns the only unique solution to this Sudoku.
+    ///
+    /// Returns `None` if there are multiple solutions.
+    pub fn find_unique_solution(&self) -> Option<Self> {
+        let mut sudoku = self.clone();
+        for y in 0..9 {
+            for x in 0..9 {
+                if sudoku.has(x, y) {
+                    continue;
+                }
+
+                let mut number: Option<NonZeroU8> = None;
+                for n in 1..=9 {
+                    let n = NonZeroU8::new(n).unwrap();
+                    if self.may_set(x, y, n) && solve(sudoku.set(x, y, n)).is_some() {
+                        if number.is_some() {
+                            return None; // Only a single number is allowed.
+                        } else {
+                            number = Some(n);
+                        }
+                    }
+                }
+
+                if let Some(n) = number {
+                    // Filling in the numbers that are known speeds up
+                    // follow-up calls to `solve()`.
+                    sudoku = sudoku.set(x, y, n);
+                }
+            }
+        }
+
+        Some(sudoku)
     }
 
     /// Returns the value of the cell at the given coordinates.
@@ -123,38 +157,6 @@ impl Sudoku {
                     }
                 } else {
                     return false;
-                }
-            }
-        }
-
-        true
-    }
-
-    /// Returns whether there is a single, unique solution to this Sudoku.
-    pub fn has_unique_solution(&self) -> bool {
-        let mut sudoku = self.clone();
-        for y in 0..9 {
-            for x in 0..9 {
-                if sudoku.has(x, y) {
-                    continue;
-                }
-
-                let mut number: Option<NonZeroU8> = None;
-                for n in 1..=9 {
-                    let n = NonZeroU8::new(n).unwrap();
-                    if self.may_set(x, y, n) && solve(sudoku.set(x, y, n)).is_some() {
-                        if number.is_some() {
-                            return false; // Only a single number is allowed.
-                        } else {
-                            number = Some(n);
-                        }
-                    }
-                }
-
-                if let Some(n) = number {
-                    // Filling in the numbers that are known speeds up
-                    // follow-up calls to `solve()`.
-                    sudoku = sudoku.set(x, y, n);
                 }
             }
         }
@@ -247,4 +249,13 @@ impl From<(u8, u8)> for Hint {
     fn from((x, y): (u8, u8)) -> Self {
         Self { x, y }
     }
+}
+
+/// Keeps track of notes within the Sudoku board.
+///
+/// Every cell can have 9 notes, which are represented using bit flags encoded
+/// in `u16` fields.
+#[derive(Clone)]
+pub struct Notes {
+    cells: [u16; 81],
 }

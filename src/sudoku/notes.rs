@@ -1,9 +1,6 @@
+use super::math::{get_block_offset, get_pos, get_x_and_y_from_pos};
+use super::{Notes, Sudoku};
 use std::num::NonZeroU8;
-
-use super::{
-    math::{get_block_offset, get_pos, get_x_and_y_from_pos},
-    Sudoku,
-};
 
 pub struct Twins {
     pub x1: u8,
@@ -19,15 +16,6 @@ pub struct Triplets {
     pub y2: u8,
     pub x3: u8,
     pub y3: u8,
-}
-
-/// Keeps track of notes within the Sudoku board.
-///
-/// Every cell can have 9 notes, which are represented using bit flags encoded
-/// in `u16` fields.
-#[derive(Clone)]
-pub struct Notes {
-    cells: [u16; 81],
 }
 
 impl Notes {
