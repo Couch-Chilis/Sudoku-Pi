@@ -60,10 +60,11 @@ enum HighlightKind {
 fn board_setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
+    game: Res<Game>,
     window_size: Res<WindowSize>,
 ) {
     let mut board = build_board(&mut commands, &window_size);
-    fill_numbers(&mut board, &asset_server);
+    fill_numbers(&mut board, &asset_server, &game);
     init_game_ui(&asset_server, &mut commands, &window_size);
 }
 
@@ -114,11 +115,11 @@ fn mouse_button_input(
     window_query: Query<&Window, With<PrimaryWindow>>,
     window_size: Res<WindowSize>,
 ) {
-    let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
-        return;
-    };
-
     if buttons.just_pressed(MouseButton::Left) {
+        let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
+            return;
+        };
+
         if let Some((x, y)) = get_board_x_and_y(&window_size, cursor_position) {
             move_selection(&mut selection, x, y);
         }
@@ -126,22 +127,33 @@ fn mouse_button_input(
 }
 
 fn render_numbers(mut numbers: Query<(&Number, &mut Text)>, game: Res<Game>) {
+    if !game.is_changed() {
+        return;
+    }
+
     for (Number(x, y), mut text) in &mut numbers {
         if let Some(n) = game.current.get(*x, *y) {
             text.sections[0].value = n.to_string();
-
-            text.sections[0].style.color = if game.start.has(*x, *y) {
-                Color::BLACK
-            } else {
-                Color::BLUE
-            }
+            text.sections[0].style.color = get_number_color(&game, *x, *y);
         } else {
             text.sections[0].style.color = Color::NONE;
         };
     }
 }
 
+fn get_number_color(game: &Game, x: u8, y: u8) -> Color {
+    if game.start.has(x, y) {
+        Color::BLACK
+    } else {
+        Color::BLUE
+    }
+}
+
 fn render_notes(mut notes: Query<(&Note, &mut Text)>, game: Res<Game>) {
+    if !game.is_changed() {
+        return;
+    }
+
     for (Note(x, y, n), mut text) in &mut notes {
         text.sections[0].style.color = if game.notes.has(*x, *y, *n) && !game.current.has(*x, *y) {
             Color::BLACK

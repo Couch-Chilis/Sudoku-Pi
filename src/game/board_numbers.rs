@@ -1,5 +1,8 @@
-use super::{get_cell_transform, Note, Number};
-use crate::constants::CELL_SIZE;
+use super::{get_cell_transform, get_number_color, Note, Number};
+use crate::{
+    constants::CELL_SIZE,
+    sudoku::{Cell, Game},
+};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
@@ -8,7 +11,7 @@ use std::num::NonZeroU8;
 const CELL_FONT_SIZE: f32 = 0.01667 * CELL_SIZE;
 const FONT_SCALE: Vec3 = Vec3::new(CELL_FONT_SIZE, CELL_FONT_SIZE, 1.);
 
-pub fn fill_numbers(board: &mut EntityCommands, asset_server: &AssetServer) {
+pub fn fill_numbers(board: &mut EntityCommands, asset_server: &AssetServer, game: &Game) {
     let font = asset_server.load("OpenSans-Regular.ttf");
 
     let number_style = TextStyle {
@@ -26,7 +29,14 @@ pub fn fill_numbers(board: &mut EntityCommands, asset_server: &AssetServer) {
     board.with_children(|parent| {
         for x in 0..9 {
             for y in 0..9 {
-                parent.spawn(build_number(x, y, number_style.clone()));
+                let cell = game.current.get(x, y);
+
+                let mut style = number_style.clone();
+                if cell.is_some() {
+                    style.color = get_number_color(game, x, y);
+                }
+
+                parent.spawn(build_number(x, y, cell, style));
 
                 for n in 1..=9 {
                     let n = NonZeroU8::new(n).unwrap();
@@ -37,11 +47,14 @@ pub fn fill_numbers(board: &mut EntityCommands, asset_server: &AssetServer) {
     });
 }
 
-fn build_number(x: u8, y: u8, number_style: TextStyle) -> impl Bundle {
+fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundle {
     (
         Number(x, y),
         Text2dBundle {
-            text: Text::from_section("", number_style),
+            text: Text::from_section(
+                cell.map(|n| n.to_string()).unwrap_or_default(),
+                number_style,
+            ),
             transform: get_cell_transform(x, y).with_scale(FONT_SCALE),
             ..default()
         },
