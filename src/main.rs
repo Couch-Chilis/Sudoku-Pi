@@ -83,6 +83,7 @@ fn skip_splash_screen(mut screen_state: ResMut<NextState<ScreenState>>) {
 
 fn on_resize(
     mut events: EventReader<WindowResized>,
+    current_state: Res<State<ScreenState>>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut window_size: ResMut<WindowSize>,
 ) {
@@ -90,7 +91,10 @@ fn on_resize(
         window_size.width = width;
         window_size.height = height;
         window_size.vmin_scale = 0.01 * if width < height { width } else { height };
-        screen_state.set(ScreenState::Splash);
+
+        if current_state.0 != ScreenState::Game {
+            screen_state.set(ScreenState::Splash);
+        }
     }
 }
 

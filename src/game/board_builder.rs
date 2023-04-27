@@ -1,32 +1,99 @@
-use super::{board_line_bundle::*, OnGameScreen};
+use super::OnGameScreen;
+use crate::constants::CELL_SIZE;
 use crate::WindowSize;
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 
-pub fn build_board(commands: &mut Commands, window_size: &WindowSize) {
+#[derive(Component)]
+pub struct Board;
+
+pub fn build_board<'w, 's, 'a>(
+    commands: &'a mut Commands<'w, 's>,
+    window_size: &WindowSize,
+) -> EntityCommands<'w, 's, 'a> {
+    let scale = 90. * window_size.vmin_scale;
+
+    let mut board = commands.spawn((
+        Board,
+        SpriteBundle {
+            transform: Transform {
+                scale: Vec3::new(scale, scale, 1.),
+                translation: Vec3::new(0., 0., 2.),
+                ..default()
+            },
+            ..default()
+        },
+        OnGameScreen,
+    ));
+
+    board.with_children(|parent| {
+        use Orientation::*;
+        use Thickness::*;
+
+        parent.spawn(build_line(0, Horizontal, Thick));
+        parent.spawn(build_line(1, Horizontal, Thin));
+        parent.spawn(build_line(2, Horizontal, Thin));
+        parent.spawn(build_line(3, Horizontal, Medium));
+        parent.spawn(build_line(4, Horizontal, Thin));
+        parent.spawn(build_line(5, Horizontal, Thin));
+        parent.spawn(build_line(6, Horizontal, Medium));
+        parent.spawn(build_line(7, Horizontal, Thin));
+        parent.spawn(build_line(8, Horizontal, Thin));
+        parent.spawn(build_line(9, Horizontal, Thick));
+        parent.spawn(build_line(0, Vertical, Thick));
+        parent.spawn(build_line(1, Vertical, Thin));
+        parent.spawn(build_line(2, Vertical, Thin));
+        parent.spawn(build_line(3, Vertical, Medium));
+        parent.spawn(build_line(4, Vertical, Thin));
+        parent.spawn(build_line(5, Vertical, Thin));
+        parent.spawn(build_line(6, Vertical, Medium));
+        parent.spawn(build_line(7, Vertical, Thin));
+        parent.spawn(build_line(8, Vertical, Thin));
+        parent.spawn(build_line(9, Vertical, Thick));
+    });
+
+    board
+}
+
+pub enum Orientation {
+    Horizontal,
+    Vertical,
+}
+
+pub enum Thickness {
+    Thin,
+    Medium,
+    Thick,
+}
+
+pub fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
     use Orientation::*;
-    use Thickness::*;
+    let translation = match orientation {
+        Horizontal => Vec3::new(0., (n as f32 - 4.5) * CELL_SIZE, 2.),
+        Vertical => Vec3::new((n as f32 - 4.5) * CELL_SIZE, 0., 2.),
+    };
 
-    #[rustfmt::skip]
-    commands.spawn_batch([
-        (BoardLineBundle::new(window_size, 0, Horizontal, Thick), OnGameScreen),
-        (BoardLineBundle::new(window_size, 1, Horizontal, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 2, Horizontal, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 3, Horizontal, Medium), OnGameScreen),
-        (BoardLineBundle::new(window_size, 4, Horizontal, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 5, Horizontal, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 6, Horizontal, Medium), OnGameScreen),
-        (BoardLineBundle::new(window_size, 7, Horizontal, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 8, Horizontal, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 9, Horizontal, Thick), OnGameScreen),
-        (BoardLineBundle::new(window_size, 0, Vertical, Thick), OnGameScreen),
-        (BoardLineBundle::new(window_size, 1, Vertical, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 2, Vertical, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 3, Vertical, Medium), OnGameScreen),
-        (BoardLineBundle::new(window_size, 4, Vertical, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 5, Vertical, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 6, Vertical, Medium), OnGameScreen),
-        (BoardLineBundle::new(window_size, 7, Vertical, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 8, Vertical, Thin), OnGameScreen),
-        (BoardLineBundle::new(window_size, 9, Vertical, Thick), OnGameScreen),
-    ]);
+    use Thickness::*;
+    let thickness = match thickness {
+        Thin => 0.05 * CELL_SIZE,
+        Medium => 0.1 * CELL_SIZE,
+        Thick => 0.15 * CELL_SIZE,
+    };
+
+    let scale = match orientation {
+        Horizontal => Vec3::new(9.075 * CELL_SIZE, thickness, 1.),
+        Vertical => Vec3::new(thickness, 9.075 * CELL_SIZE, 1.),
+    };
+
+    SpriteBundle {
+        sprite: Sprite {
+            color: Color::BLACK,
+            ..default()
+        },
+        transform: Transform {
+            translation,
+            scale,
+            ..default()
+        },
+        ..default()
+    }
 }

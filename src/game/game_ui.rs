@@ -9,7 +9,7 @@ pub enum UiButtonAction {
     Hint,
 }
 
-pub fn init_ui(asset_server: &AssetServer, commands: &mut Commands, window_size: &WindowSize) {
+pub fn init_game_ui(asset_server: &AssetServer, commands: &mut Commands, window_size: &WindowSize) {
     let font = asset_server.load(MENU_FONT);
     let scale = window_size.vmin_scale;
 

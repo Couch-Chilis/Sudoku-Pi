@@ -1,84 +1,68 @@
+use super::{get_cell_transform, Note, Number};
+use crate::constants::CELL_SIZE;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
-use super::{Note, Number, OnGameScreen};
-use crate::WindowSize;
-use bevy::prelude::*;
+// Font sizes are given with high values, to make sure we render the font at a
+// high-enough resolution, then we scale back down to fit the squares.
+const CELL_FONT_SIZE: f32 = 0.01667 * CELL_SIZE;
+const FONT_SCALE: Vec3 = Vec3::new(CELL_FONT_SIZE, CELL_FONT_SIZE, 1.);
 
-pub fn fill_numbers(commands: &mut Commands, asset_server: &AssetServer, window_size: &WindowSize) {
+pub fn fill_numbers(board: &mut EntityCommands, asset_server: &AssetServer) {
     let font = asset_server.load("OpenSans-Regular.ttf");
-    let square_size = 10. * window_size.vmin_scale;
 
-    let mut numbers = Vec::with_capacity(81);
-    let mut notes = Vec::with_capacity(9 * 81);
+    let number_style = TextStyle {
+        font: font.clone(),
+        font_size: 60.,
+        color: Color::NONE,
+    };
 
-    for x in 0..9 {
-        for y in 0..9 {
-            numbers.push(build_number(font.clone(), square_size, x, y));
+    let note_style = TextStyle {
+        font,
+        font_size: 20.,
+        color: Color::NONE,
+    };
 
-            for n in 1..=9 {
-                let n = NonZeroU8::new(n).unwrap();
-                notes.push(build_note(font.clone(), square_size, x, y, n));
+    board.with_children(|parent| {
+        for x in 0..9 {
+            for y in 0..9 {
+                parent.spawn(build_number(x, y, number_style.clone()));
+
+                for n in 1..=9 {
+                    let n = NonZeroU8::new(n).unwrap();
+                    parent.spawn(build_note(x, y, n, note_style.clone()));
+                }
             }
         }
-    }
-
-    commands.spawn_batch(numbers);
-    commands.spawn_batch(notes);
+    });
 }
 
-fn build_number(font: Handle<Font>, square_size: f32, x: u8, y: u8) -> impl Bundle {
+fn build_number(x: u8, y: u8, number_style: TextStyle) -> impl Bundle {
     (
+        Number(x, y),
         Text2dBundle {
-            text: Text::from_section(
-                "",
-                TextStyle {
-                    font,
-                    font_size: 0.6 * square_size,
-                    color: Color::NONE,
-                },
-            ),
-            transform: Transform {
-                translation: Vec3::new(
-                    (x as f32 - 4.) * square_size,
-                    (y as f32 - 4.) * square_size,
-                    2.,
-                ),
-                ..default()
-            },
-
+            text: Text::from_section("", number_style),
+            transform: get_cell_transform(x, y).with_scale(FONT_SCALE),
             ..default()
         },
-        Number(x, y),
-        OnGameScreen,
     )
 }
 
-fn build_note(font: Handle<Font>, square_size: f32, x: u8, y: u8, n: NonZeroU8) -> impl Bundle {
+fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
     let (note_x, note_y) = get_note_coordinates(n);
 
     (
+        Note(x, y, n),
         Text2dBundle {
-            text: Text::from_section(
-                n.to_string(),
-                TextStyle {
-                    font,
-                    font_size: 0.3 * square_size,
-                    color: Color::NONE,
-                },
-            ),
-            transform: Transform {
-                translation: Vec3::new(
-                    ((x as f32 - 4.) + note_x) * square_size,
-                    ((y as f32 - 4.) + note_y) * square_size,
-                    2.,
-                ),
-                ..default()
-            },
-
+            text: Text::from_section(n.to_string(), note_style),
+            transform: Transform::from_translation(Vec3::new(
+                ((x as f32 - 4.) + note_x) * CELL_SIZE,
+                ((y as f32 - 4.) + note_y) * CELL_SIZE,
+                1.,
+            ))
+            .with_scale(FONT_SCALE),
             ..default()
         },
-        Note(x, y, n),
-        OnGameScreen,
     )
 }
 
