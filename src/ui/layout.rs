@@ -236,13 +236,7 @@ fn layout(flex_query: &mut FlexQuery) {
             // Set the child's transform.
             if transform.scale != scale || transform.translation != translation {
                 transform.scale = scale;
-
-                // Be careful not to lower any Z-indices, or sprites may not
-                // be shown anymore.
-                transform.translation = Vec3 {
-                    z: transform.translation.z.max(translation.z),
-                    ..translation
-                };
+                transform.translation = translation;
             }
 
             // Set the position for use by other containers, and store it in the

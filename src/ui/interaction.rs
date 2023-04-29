@@ -13,7 +13,7 @@ pub enum Interaction {
 pub fn mouse_interaction(
     mut interaction_query: Query<(&mut Interaction, &ComputedPosition)>,
     mouse_buttons: Res<Input<MouseButton>>,
-    window_query: Query<&Window, (Changed<Window>, With<PrimaryWindow>)>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
         return;
@@ -21,7 +21,7 @@ pub fn mouse_interaction(
 
     for (mut interaction, computed_position) in &mut interaction_query {
         let new_interaction = if computed_position.contains(cursor_position) {
-            if mouse_buttons.just_pressed(MouseButton::Left) {
+            if mouse_buttons.pressed(MouseButton::Left) {
                 Interaction::Clicked
             } else {
                 Interaction::Hovered

@@ -51,23 +51,28 @@ impl ButtonBuilder {
             .with_children(|button| {
                 button.spawn(Text2dBundle {
                     text: Text::from_section(text, self.text_style.clone()),
-                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 2.)),
+                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 6.)),
                     ..default()
                 });
             });
     }
 
-    pub fn add_back_with_text(&self, parent: &mut ChildBuilder, text: &str) {
+    pub fn add_secondary_with_text_and_action(
+        &self,
+        parent: &mut ChildBuilder,
+        text: &str,
+        action: MenuButtonAction,
+    ) {
         parent
             .spawn((
                 ButtonBundle::with_style(self.button_style.clone()),
-                MenuButtonAction::BackToMain,
                 Secondary,
+                action,
             ))
             .with_children(|button| {
                 button.spawn(Text2dBundle {
-                    text: Text::from_section(text, self.text_style.clone()),
-                    transform: Transform::from_scale(Vec3::new(1., 1., 2.)),
+                    text: Text::from_section(text, self.secondary_text_style.clone()),
+                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 6.)),
                     ..default()
                 });
             });

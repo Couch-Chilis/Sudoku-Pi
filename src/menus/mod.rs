@@ -7,7 +7,7 @@ mod select_difficulty;
 mod settings;
 
 use crate::sudoku::Game;
-use crate::ui::{Button, Interaction};
+use crate::ui::{Button, Interaction, Secondary};
 use crate::ScreenState;
 use bevy::{app::AppExit, prelude::*};
 use button_builder::ButtonBuilder;
@@ -34,9 +34,6 @@ pub enum MenuButtonAction {
     StartGameAtDifficulty(u8),
     Quit,
 }
-
-#[derive(Component)]
-pub struct Secondary;
 
 // Handles screen navigation based on button actions.
 fn button_actions(

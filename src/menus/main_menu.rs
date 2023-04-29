@@ -20,7 +20,7 @@ pub fn main_menu_setup(main_screen: &mut EntityCommands, asset_server: &AssetSer
                 // Buttons.
                 use MenuButtonAction::*;
                 let button_builder = ButtonBuilder::new(asset_server);
-                button_builder.add_with_text_and_action(column, "Quit", Quit);
+                button_builder.add_secondary_with_text_and_action(column, "Quit", Quit);
                 button_builder.add_with_text_and_action(column, "How to Play", GoToHowToPlay);
                 button_builder.add_with_text_and_action(column, "New Game", GoToNewGame);
                 if game.may_continue() {
