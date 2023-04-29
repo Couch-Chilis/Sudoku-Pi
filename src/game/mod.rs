@@ -4,10 +4,11 @@ mod game_ui;
 
 use crate::constants::{CELL_SCALE, CELL_SIZE};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
-use crate::{despawn, ScreenState, WindowSize};
+use crate::ui::{Button, Interaction};
+use crate::{GameScreen, Screen, ScreenState};
+use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
-use board_numbers::fill_numbers;
 use game_ui::{init_game_ui, UiButtonAction};
 use std::num::NonZeroU8;
 
@@ -18,21 +19,15 @@ impl Plugin for GamePlugin {
         app.insert_resource(Game::load())
             .insert_resource(Selection::default())
             .add_systems((
-                board_setup.in_schedule(OnEnter(ScreenState::Game)),
-                despawn::<OnGameScreen>.in_schedule(OnExit(ScreenState::Game)),
                 keyboard_input.run_if(in_state(ScreenState::Game)),
                 mouse_button_input.run_if(in_state(ScreenState::Game)),
                 render_numbers.run_if(in_state(ScreenState::Game)),
                 render_notes.run_if(in_state(ScreenState::Game)),
                 render_highlights.run_if(in_state(ScreenState::Game)),
                 button_actions.run_if(in_state(ScreenState::Game)),
-                resize_board.run_if(in_state(ScreenState::Game)),
             ));
     }
 }
-
-#[derive(Component)]
-struct OnGameScreen;
 
 #[derive(Component)]
 struct Note(u8, u8, NonZeroU8);
@@ -57,15 +52,10 @@ enum HighlightKind {
     Hint,
 }
 
-fn board_setup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    game: Res<Game>,
-    window_size: Res<WindowSize>,
-) {
-    let mut board = build_board(&mut commands, &window_size);
-    fill_numbers(&mut board, &asset_server, &game);
-    init_game_ui(&asset_server, &mut commands, &window_size);
+pub fn board_setup(game_screen: &mut EntityCommands, asset_server: &AssetServer, game: &Game) {
+    init_game_ui(game_screen, asset_server, |parent| {
+        build_board(parent, asset_server, game)
+    });
 }
 
 fn keyboard_input(
@@ -113,14 +103,18 @@ fn mouse_button_input(
     mut selection: ResMut<Selection>,
     buttons: Res<Input<MouseButton>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
-    window_size: Res<WindowSize>,
+    screen: Query<&Screen, With<GameScreen>>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
         let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
             return;
         };
 
-        if let Some((x, y)) = get_board_x_and_y(&window_size, cursor_position) {
+        let Ok(screen) = screen.get_single() else {
+            return;
+        };
+
+        if let Some((x, y)) = get_board_x_and_y(screen, cursor_position) {
             move_selection(&mut selection, x, y);
         }
     }
@@ -189,6 +183,17 @@ fn render_highlights(
 
         let selected_cell = game.current.get(x, y);
         if selected_cell.is_some() {
+            // Find all the cells within range.
+            for pos in 0..81 {
+                if game.current.get_by_pos(pos) == selected_cell {
+                    let (x, y) = get_x_and_y_from_pos(pos);
+                    for i in 0..9 {
+                        highlights[get_pos(x, i)] = Some(HighlightKind::InRange);
+                        highlights[get_pos(i, y)] = Some(HighlightKind::InRange);
+                    }
+                }
+            }
+
             // Find all the cells with the same number.
             for pos in 0..81 {
                 if pos != selected_pos && game.current.get_by_pos(pos) == selected_cell {
@@ -208,9 +213,9 @@ fn render_highlights(
             if let Some(highlight_kind) = highlight {
                 let (x, y) = get_x_and_y_from_pos(pos);
                 let color = match highlight_kind {
-                    HighlightKind::Selection => Color::rgba(0.8, 0.7, 0.0, 0.5),
-                    HighlightKind::SameNumber => Color::rgba(0.8, 0.7, 0.0, 0.35),
-                    HighlightKind::InRange => Color::rgba(0.8, 0.7, 0.0, 0.2),
+                    HighlightKind::Selection => Color::rgba(0.9, 0.8, 0.0, 0.7),
+                    HighlightKind::SameNumber => Color::rgba(0.9, 0.8, 0.0, 0.45),
+                    HighlightKind::InRange => Color::rgba(0.9, 0.8, 0.0, 0.2),
                     HighlightKind::Hint => Color::rgba(0.2, 0.9, 0.0, 0.35),
                 };
 
@@ -276,17 +281,22 @@ fn move_selection_relative(selection: &mut Selection, dx: i8, dy: i8) {
     );
 }
 
-fn get_board_x_and_y(window_size: &WindowSize, cursor_position: Vec2) -> Option<(u8, u8)> {
+fn get_board_x_and_y(screen: &Screen, cursor_position: Vec2) -> Option<(u8, u8)> {
     let Vec2 { x, y } = cursor_position;
 
-    let board_size = 90. * window_size.vmin_scale;
-    let board_offset_x = 0.5 * (window_size.width - board_size);
-    let board_offset_y = 0.5 * (window_size.height - board_size);
+    let board_size = 0.9
+        * if screen.width > screen.height {
+            screen.height
+        } else {
+            screen.width
+        };
+    let board_offset_x = 0.5 * (screen.width - board_size);
+    let board_offset_y = 0.5 * (screen.height - board_size);
 
     if x < board_offset_x
-        || x > window_size.width - board_offset_x
+        || x > screen.width - board_offset_x
         || y < board_offset_y
-        || y > window_size.height - board_offset_y
+        || y > screen.height - board_offset_y
     {
         return None;
     }
@@ -320,14 +330,5 @@ fn give_hint(game: &mut Game, selection: &mut Selection) {
         }
     } else if let Some(sudoku::Hint { x, y }) = game.current.get_hint() {
         selection.hint = Some((x, y));
-    }
-}
-
-fn resize_board(mut board: Query<&mut Transform, With<Board>>, window_size: Res<WindowSize>) {
-    if window_size.is_changed() {
-        for mut transform in &mut board {
-            let scale = 90. * window_size.vmin_scale;
-            transform.scale = Vec3::new(scale, scale, 1.);
-        }
     }
 }

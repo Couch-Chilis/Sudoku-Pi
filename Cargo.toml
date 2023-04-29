@@ -11,7 +11,27 @@ opt-level = 3
 
 [dependencies]
 anyhow = "1"
-bevy = { version = "0.10", features = ["dynamic_linking", "jpeg", "wayland"] }
+bevy = { version = "0.10", default-features = false, features = [
+    "animation",
+    "bevy_asset",
+    "bevy_audio",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "dynamic_linking",
+    "jpeg",
+    "png",
+    "vorbis",
+    "wayland",
+    "x11",
+    "android_shared_stdcxx",
+] }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }

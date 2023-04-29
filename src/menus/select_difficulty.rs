@@ -1,34 +1,17 @@
-use super::{ButtonBuilder, LogoBundle, MenuButtonAction};
-use crate::{despawn, ScreenState, WindowSize};
+/*use super::{ButtonBuilder, LogoBundle, MenuButtonAction};
+use crate::{Screen, WindowSize};
 use bevy::prelude::*;
 
 #[derive(Component)]
 struct Difficulty(u8);
 
-#[derive(Component)]
-struct OnSelectDifficultyMenuScreen;
-
-pub struct SelectDifficultyPlugin;
-
-impl Plugin for SelectDifficultyPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems((
-            select_difficulty_setup.in_schedule(OnEnter(ScreenState::SelectDifficulty)),
-            despawn::<OnSelectDifficultyMenuScreen>
-                .in_schedule(OnExit(ScreenState::SelectDifficulty)),
-        ));
-    }
-}
-fn select_difficulty_setup(
-    mut commands: Commands,
-    window_size: Res<WindowSize>,
-    asset_server: Res<AssetServer>,
+pub fn select_difficulty_setup(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    window_size: &WindowSize,
 ) {
     // Logo.
-    commands.spawn((
-        LogoBundle::new(&asset_server, &window_size),
-        OnSelectDifficultyMenuScreen,
-    ));
+    commands.spawn((LogoBundle::new(&asset_server, &window_size),));
 
     // Buttons.
     let button_builder = ButtonBuilder::new(&asset_server, &window_size);
@@ -48,7 +31,7 @@ fn select_difficulty_setup(
                 },
                 ..default()
             },
-            OnSelectDifficultyMenuScreen,
+            Screen,
         ))
         .with_children(|parent| {
             use MenuButtonAction::*;
@@ -58,4 +41,4 @@ fn select_difficulty_setup(
             button_builder.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(4));
             button_builder.add_back_with_text(parent, "Cancel");
         });
-}
+}*/

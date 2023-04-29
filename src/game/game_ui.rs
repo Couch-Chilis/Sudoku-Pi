@@ -1,7 +1,5 @@
-use crate::{constants::*, utils::*, WindowSize};
-use bevy::prelude::*;
-
-use super::OnGameScreen;
+use crate::{constants::*, ui::*};
+use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
 pub enum UiButtonAction {
@@ -9,64 +7,67 @@ pub enum UiButtonAction {
     Hint,
 }
 
-pub fn init_game_ui(asset_server: &AssetServer, commands: &mut Commands, window_size: &WindowSize) {
+pub fn init_game_ui(
+    game_screen: &mut EntityCommands,
+    asset_server: &AssetServer,
+    board_builder: impl FnOnce(&mut EntityCommands),
+) {
     let font = asset_server.load(MENU_FONT);
-    let scale = window_size.vmin_scale;
 
     // Regular button styling.
-    let button_style = Style {
-        size: vmin_size(&window_size, 25.0, 9.0),
-        margin: UiRect::all(Val::Px(1.5 * scale)),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
+    let button_style = FlexItemStyle {
+        flex_base: Size::new(Val::Percent(25.0), Val::Percent(9.0)),
+        margin: Size::all(Val::Percent(1.5)),
         ..default()
     };
 
     let text_style = TextStyle {
         font: font.clone(),
-        font_size: 6.5 * scale,
+        font_size: 60.,
         color: BUTTON_TEXT,
     };
 
-    commands
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    position: UiRect {
-                        left: Val::Px(5. * scale),
-                        top: Val::Px((window_size.height - window_size.width) / 4. - 9.),
-                        ..default()
-                    },
-                    position_type: PositionType::Absolute,
-                    ..button_style.clone()
+    // Top button row.
+    game_screen.with_children(|screen| {
+        screen
+            .spawn(FlexBundle::new(
+                FlexContainerStyle::with_direction(FlexDirection::Row),
+                FlexItemStyle {
+                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(90.)),
+                    margin: Size::all(Val::Vmin(5.)),
+                    ..default()
                 },
-                ..default()
-            },
-            UiButtonAction::BackToMain,
-            OnGameScreen,
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section("Menu", text_style.clone()));
-        });
+            ))
+            .with_children(|top_row| {
+                top_row
+                    .spawn((
+                        ButtonBundle::with_style(button_style.clone()),
+                        UiButtonAction::BackToMain,
+                    ))
+                    .with_children(|button| {
+                        button.spawn(Text2dBundle {
+                            text: Text::from_section("Menu", text_style.clone()),
+                            transform: Transform::from_scale(Vec3::new(0.004, 0.01, 1.)),
+                            ..default()
+                        });
+                    });
 
-    commands
-        .spawn((
-            ButtonBundle {
-                style: Style {
-                    position: UiRect {
-                        right: Val::Px(5. * scale),
-                        top: Val::Px((window_size.height - window_size.width) / 4. - 9.),
-                        ..default()
-                    },
-                    position_type: PositionType::Absolute,
-                    ..button_style.clone()
-                },
-                ..default()
-            },
-            UiButtonAction::Hint,
-            OnGameScreen,
-        ))
-        .with_children(|parent| {
-            parent.spawn(TextBundle::from_section("Hint", text_style));
-        });
+                top_row.spawn(FlexItemBundle::spacer());
+
+                top_row
+                    .spawn((
+                        ButtonBundle::with_style(button_style.clone()),
+                        UiButtonAction::Hint,
+                    ))
+                    .with_children(|button| {
+                        button.spawn(Text2dBundle {
+                            text: Text::from_section("Hint", text_style.clone()),
+                            transform: Transform::from_scale(Vec3::new(0.004, 0.01, 1.)),
+                            ..default()
+                        });
+                    });
+            });
+    });
+
+    board_builder(game_screen);
 }

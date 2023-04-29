@@ -1,29 +1,28 @@
 use super::{MenuButtonAction, Secondary};
-use crate::{constants::*, utils::*, WindowSize};
+use crate::constants::*;
+use crate::ui::*;
 use bevy::prelude::*;
 
 pub struct ButtonBuilder {
-    button_style: Style,
+    button_style: FlexItemStyle,
     text_style: TextStyle,
     secondary_text_style: TextStyle,
 }
 
 impl ButtonBuilder {
-    pub fn new(asset_server: &AssetServer, window_size: &WindowSize) -> Self {
+    pub fn new(asset_server: &AssetServer) -> Self {
         let font = asset_server.load(MENU_FONT);
 
         // Regular button styling.
-        let button_style = Style {
-            size: vmin_size(&window_size, 40.0, 9.0),
-            margin: UiRect::all(Val::Px(1.5 * window_size.vmin_scale)),
-            justify_content: JustifyContent::Center,
-            align_items: AlignItems::Center,
+        let button_style = FlexItemStyle {
+            flex_base: Size::new(Val::Vmin(40.), Val::Vmin(9.)),
+            margin: Size::all(Val::Vmin(1.5)),
             ..default()
         };
 
         let text_style = TextStyle {
             font: font.clone(),
-            font_size: 6.5 * window_size.vmin_scale,
+            font_size: 60.,
             color: BUTTON_TEXT,
         };
 
@@ -48,33 +47,29 @@ impl ButtonBuilder {
         action: MenuButtonAction,
     ) {
         parent
-            .spawn((
-                ButtonBundle {
-                    style: self.button_style.clone(),
+            .spawn((ButtonBundle::with_style(self.button_style.clone()), action))
+            .with_children(|button| {
+                button.spawn(Text2dBundle {
+                    text: Text::from_section(text, self.text_style.clone()),
+                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 2.)),
                     ..default()
-                },
-                action,
-            ))
-            .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(text, self.text_style.clone()));
+                });
             });
     }
 
     pub fn add_back_with_text(&self, parent: &mut ChildBuilder, text: &str) {
         parent
             .spawn((
-                ButtonBundle {
-                    style: self.button_style.clone(),
-                    ..default()
-                },
+                ButtonBundle::with_style(self.button_style.clone()),
                 MenuButtonAction::BackToMain,
                 Secondary,
             ))
-            .with_children(|parent| {
-                parent.spawn(TextBundle::from_section(
-                    text,
-                    self.secondary_text_style.clone(),
-                ));
+            .with_children(|button| {
+                button.spawn(Text2dBundle {
+                    text: Text::from_section(text, self.text_style.clone()),
+                    transform: Transform::from_scale(Vec3::new(1., 1., 2.)),
+                    ..default()
+                });
             });
     }
 }

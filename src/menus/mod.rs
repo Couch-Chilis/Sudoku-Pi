@@ -1,23 +1,26 @@
 mod button_builder;
 mod how_to_play;
-mod logo_bundle;
+mod logo_builder;
 mod main_menu;
 mod score;
 mod select_difficulty;
 mod settings;
 
-use crate::{constants::*, sudoku::Game, ScreenState};
+use crate::sudoku::Game;
+use crate::ui::{Button, Interaction};
+use crate::ScreenState;
 use bevy::{app::AppExit, prelude::*};
 use button_builder::ButtonBuilder;
-use logo_bundle::LogoBundle;
+use logo_builder::build_logo;
+
+pub use main_menu::main_menu_setup;
+//pub use select_difficulty::select_difficulty_setup;
 
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(main_menu::MainMenuPlugin)
-            .add_plugin(select_difficulty::SelectDifficultyPlugin)
-            .add_systems((button_actions, button_hovers));
+        app.add_system(button_actions);
     }
 }
 
@@ -56,57 +59,6 @@ fn button_actions(
                 }
                 MenuButtonAction::Quit => app_exit_events.send(AppExit),
             }
-        }
-    }
-}
-
-// Handles changing button color based on mouse interaction.
-fn button_hovers(
-    mut interaction_query: Query<
-        (
-            &Interaction,
-            &Children,
-            &mut BackgroundColor,
-            Option<&Secondary>,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mut text_query: Query<&mut Text>,
-) {
-    for (interaction, children, mut bg_color, secondary) in &mut interaction_query {
-        if secondary.is_some() {
-            if let Some(mut text) = children
-                .get(0)
-                .and_then(|child| text_query.get_mut(*child).ok())
-            {
-                text.sections[0].style.color = match *interaction {
-                    Interaction::Clicked => SECONDARY_PRESSED_BUTTON_TEXT.into(),
-                    Interaction::Hovered | Interaction::None => SECONDARY_BUTTON_TEXT.into(),
-                };
-            }
-
-            *bg_color = match *interaction {
-                Interaction::Hovered => SECONDARY_HOVERED_BUTTON.into(),
-                Interaction::Clicked | Interaction::None => SECONDARY_BUTTON.into(),
-            };
-        } else {
-            *bg_color = match *interaction {
-                Interaction::Clicked => PRESSED_BUTTON.into(),
-                Interaction::Hovered => HOVERED_BUTTON.into(),
-                Interaction::None => NORMAL_BUTTON.into(),
-            };
-        }
-    }
-}
-
-// Updates the difficulty based on the button that was selected
-fn _setting_button<T: Resource + Component + PartialEq + Copy>(
-    interaction_query: Query<(&Interaction, &T), (Changed<Interaction>, With<Button>)>,
-    mut setting: ResMut<T>,
-) {
-    for (interaction, button_setting) in &interaction_query {
-        if *interaction == Interaction::Clicked && *setting != *button_setting {
-            *setting = *button_setting;
         }
     }
 }

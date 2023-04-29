@@ -5,12 +5,11 @@ mod persistence;
 mod solver;
 
 use bevy::prelude::Resource;
-use math::get_block_offset;
 use solver::solve;
 use std::fmt::{self, Write};
 use std::num::NonZeroU8;
 
-pub use math::{get_pos, get_x_and_y_from_pos};
+pub use math::*;
 
 /// A Sudoku game with a starting board and a solution, a current state, and
 /// notes.

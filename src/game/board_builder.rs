@@ -1,30 +1,42 @@
-use super::OnGameScreen;
-use crate::constants::CELL_SIZE;
-use crate::WindowSize;
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use super::board_numbers::fill_numbers;
+use crate::{constants::*, sudoku::Game, ui::*, utils::*};
+use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
 pub struct Board;
 
-pub fn build_board<'w, 's, 'a>(
-    commands: &'a mut Commands<'w, 's>,
-    window_size: &WindowSize,
-) -> EntityCommands<'w, 's, 'a> {
-    let scale = 90. * window_size.vmin_scale;
-
-    let mut board = commands.spawn((
-        Board,
-        SpriteBundle {
-            transform: Transform {
-                scale: Vec3::new(scale, scale, 1.),
-                translation: Vec3::new(0., 0., 2.),
+pub fn build_board(parent: &mut EntityCommands, asset_server: &AssetServer, game: &Game) {
+    parent.with_children(|screen| {
+        let mut board = screen.spawn((
+            Board,
+            FlexItemBundle::with_style(FlexItemStyle {
+                flex_base: Size::all(Val::Vmin(90.)),
+                flex_shrink: 1.,
+                min_size: Size::all(Val::Vmin(50.)),
+                preserve_aspect_ratio: true,
                 ..default()
-            },
-            ..default()
-        },
-        OnGameScreen,
-    ));
+            }),
+            SpriteBundle::default(),
+        ));
 
+        draw_lines(&mut board);
+
+        fill_numbers(&mut board, asset_server, game)
+    });
+}
+
+enum Orientation {
+    Horizontal,
+    Vertical,
+}
+
+enum Thickness {
+    Thin,
+    Medium,
+    Thick,
+}
+
+fn draw_lines(board: &mut EntityCommands) {
     board.with_children(|parent| {
         use Orientation::*;
         use Thickness::*;
@@ -50,22 +62,9 @@ pub fn build_board<'w, 's, 'a>(
         parent.spawn(build_line(8, Vertical, Thin));
         parent.spawn(build_line(9, Vertical, Thick));
     });
-
-    board
 }
 
-pub enum Orientation {
-    Horizontal,
-    Vertical,
-}
-
-pub enum Thickness {
-    Thin,
-    Medium,
-    Thick,
-}
-
-pub fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
+fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
     use Orientation::*;
     let translation = match orientation {
         Horizontal => Vec3::new(0., (n as f32 - 4.5) * CELL_SIZE, 2.),
@@ -85,10 +84,7 @@ pub fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl
     };
 
     SpriteBundle {
-        sprite: Sprite {
-            color: Color::BLACK,
-            ..default()
-        },
+        sprite: Sprite::from_color(Color::BLACK),
         transform: Transform {
             translation,
             scale,

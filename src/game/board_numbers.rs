@@ -1,8 +1,6 @@
-use super::{get_cell_transform, get_number_color, Note, Number};
-use crate::{
-    constants::CELL_SIZE,
-    sudoku::{Cell, Game},
-};
+use super::{get_number_color, Note, Number};
+use crate::constants::*;
+use crate::sudoku::{Cell, Game};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
@@ -55,7 +53,12 @@ fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundl
                 cell.map(|n| n.to_string()).unwrap_or_default(),
                 number_style,
             ),
-            transform: get_cell_transform(x, y).with_scale(FONT_SCALE),
+            transform: Transform::from_translation(Vec3::new(
+                (x as f32 - 4.) * CELL_SIZE,
+                (y as f32 - 4.) * CELL_SIZE,
+                2.,
+            ))
+            .with_scale(FONT_SCALE),
             ..default()
         },
     )
