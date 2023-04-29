@@ -233,10 +233,13 @@ fn layout(flex_query: &mut FlexQuery) {
                 Vec3::new(-0.5 + offset + margin + 0.5 * scale.x, 0., 1.)
             };
 
-            // Set the child's transform.
+            // Set the child's transform, but preserve the z-index.
             if transform.scale != scale || transform.translation != translation {
                 transform.scale = scale;
-                transform.translation = translation;
+                transform.translation = Vec3 {
+                    z: transform.translation.z,
+                    ..translation
+                };
             }
 
             // Set the position for use by other containers, and store it in the

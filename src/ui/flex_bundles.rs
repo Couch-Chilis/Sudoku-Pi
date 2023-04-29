@@ -102,13 +102,6 @@ pub struct FlexItemBundle {
 }
 
 impl FlexItemBundle {
-    /// Returns a "spacer", a flex item whose only purpose is to eat up unused
-    /// space, thereby pushing surrounding items to the outer edges of the
-    /// container.
-    pub fn spacer() -> Self {
-        Self::with_style(FlexItemStyle::maximum_size())
-    }
-
     pub fn with_style(style: FlexItemStyle) -> Self {
         Self { style, ..default() }
     }
@@ -149,7 +142,8 @@ pub struct FlexItemStyle {
 }
 
 impl FlexItemStyle {
-    /// Returns the style for an item that takes all available space.
+    /// Returns the style for an item that has no base size, but takes all the
+    /// space that is available.
     pub fn maximum_size() -> Self {
         Self {
             flex_grow: 1.,
@@ -204,7 +198,7 @@ impl FlexItemStyle {
     }
 }
 
-/// A leaf item intended to parent non-flex entities.
+/// A leaf item intended to parent non-flex entities or to act as a spacer.
 #[derive(Bundle, Clone, Default)]
 pub struct FlexLeafBundle {
     pub flex: FlexItemBundle,
@@ -217,6 +211,13 @@ pub struct FlexLeafBundle {
 }
 
 impl FlexLeafBundle {
+    /// Returns a "spacer", a flex item whose only purpose is to eat up unused
+    /// space, thereby pushing surrounding items to the outer edges of the
+    /// container.
+    pub fn spacer() -> Self {
+        Self::with_style(FlexItemStyle::maximum_size())
+    }
+
     pub fn with_style(style: FlexItemStyle) -> Self {
         Self {
             flex: FlexItemBundle::with_style(style),

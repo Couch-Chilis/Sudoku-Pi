@@ -51,7 +51,7 @@ pub fn init_game_ui(
                         });
                     });
 
-                top_row.spawn(FlexItemBundle::spacer());
+                top_row.spawn(FlexLeafBundle::spacer());
 
                 top_row
                     .spawn((

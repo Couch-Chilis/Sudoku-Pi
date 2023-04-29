@@ -51,7 +51,7 @@ impl ButtonBuilder {
             .with_children(|button| {
                 button.spawn(Text2dBundle {
                     text: Text::from_section(text, self.text_style.clone()),
-                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 6.)),
+                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 1.)),
                     ..default()
                 });
             });
@@ -72,7 +72,7 @@ impl ButtonBuilder {
             .with_children(|button| {
                 button.spawn(Text2dBundle {
                     text: Text::from_section(text, self.secondary_text_style.clone()),
-                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 6.)),
+                    transform: Transform::from_scale(Vec3::new(0.002, 0.01, 1.)),
                     ..default()
                 });
             });
