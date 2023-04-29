@@ -32,6 +32,11 @@ bevy = { version = "0.10", default-features = false, features = [
     "x11",
     "android_shared_stdcxx",
 ] }
+bevy_tweening = { version = "0.7", default-features = false, features = [
+    "bevy_asset",
+    "bevy_sprite",
+    "bevy_text",
+] }
 rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
