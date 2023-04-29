@@ -46,13 +46,13 @@ fn layout(flex_query: &mut FlexQuery) {
         }
 
         if let Some(screen) = screen {
-            // Assumption: Screens only get translated, so determining their
-            // computed position is easy.
+            // Assumption: Screens always get aligned with the real
+            // screen/window viewport, so they act as our frame of reference.
             let position = ComputedPosition {
                 width: screen.width,
                 height: screen.height,
-                x: transform.translation.x,
-                y: transform.translation.y,
+                x: 0.,
+                y: 0.,
             };
             position_map.insert(entity, position);
         }

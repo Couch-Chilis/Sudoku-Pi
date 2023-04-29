@@ -106,10 +106,7 @@ impl FlexItemBundle {
     /// space, thereby pushing surrounding items to the outer edges of the
     /// container.
     pub fn spacer() -> Self {
-        Self::with_style(FlexItemStyle {
-            flex_grow: 1.,
-            ..default()
-        })
+        Self::with_style(FlexItemStyle::maximum_size())
     }
 
     pub fn with_style(style: FlexItemStyle) -> Self {

@@ -9,14 +9,13 @@ pub fn build_board(parent: &mut EntityCommands, asset_server: &AssetServer, game
     parent.with_children(|screen| {
         let mut board = screen.spawn((
             Board,
-            FlexItemBundle::with_style(FlexItemStyle {
+            FlexLeafBundle::with_style(FlexItemStyle {
                 flex_base: Size::all(Val::Vmin(90.)),
                 flex_shrink: 1.,
                 min_size: Size::all(Val::Vmin(50.)),
                 preserve_aspect_ratio: true,
                 ..default()
             }),
-            SpriteBundle::default(),
         ));
 
         draw_lines(&mut board);

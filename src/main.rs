@@ -150,7 +150,7 @@ fn on_screen_change(
     for (entity, screen, transform) in &screens {
         let tween = Tween::new(
             EaseFunction::QuadraticInOut,
-            Duration::from_millis(300),
+            Duration::from_millis(200),
             TransformPositionLens {
                 start: transform.translation,
                 end: Vec3::new(

@@ -4,8 +4,8 @@ mod game_ui;
 
 use crate::constants::{CELL_SCALE, CELL_SIZE};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
-use crate::ui::{Button, Interaction};
-use crate::{GameScreen, Screen, ScreenState};
+use crate::ui::{Button, ComputedPosition, Interaction};
+use crate::ScreenState;
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
@@ -102,19 +102,19 @@ fn handle_number_key(game: &mut Game, keys: &Input<KeyCode>, selection: &Selecti
 fn mouse_button_input(
     mut selection: ResMut<Selection>,
     buttons: Res<Input<MouseButton>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    screen: Query<&Screen, With<GameScreen>>,
+    primary_window: Query<&Window, With<PrimaryWindow>>,
+    board: Query<&ComputedPosition, With<Board>>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
-        let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
+        let Some(cursor_position) = primary_window.get_single().ok().and_then(|window| window.cursor_position()) else {
             return;
         };
 
-        let Ok(screen) = screen.get_single() else {
+        let Ok(board_position) = board.get_single() else {
             return;
         };
 
-        if let Some((x, y)) = get_board_x_and_y(screen, cursor_position) {
+        if let Some((x, y)) = get_board_x_and_y(board_position, cursor_position) {
             move_selection(&mut selection, x, y);
         }
     }
@@ -281,28 +281,15 @@ fn move_selection_relative(selection: &mut Selection, dx: i8, dy: i8) {
     );
 }
 
-fn get_board_x_and_y(screen: &Screen, cursor_position: Vec2) -> Option<(u8, u8)> {
+fn get_board_x_and_y(board_position: &ComputedPosition, cursor_position: Vec2) -> Option<(u8, u8)> {
     let Vec2 { x, y } = cursor_position;
 
-    let board_size = 0.9
-        * if screen.width > screen.height {
-            screen.height
-        } else {
-            screen.width
-        };
-    let board_offset_x = 0.5 * (screen.width - board_size);
-    let board_offset_y = 0.5 * (screen.height - board_size);
-
-    if x < board_offset_x
-        || x > screen.width - board_offset_x
-        || y < board_offset_y
-        || y > screen.height - board_offset_y
-    {
+    if !board_position.contains(cursor_position) {
         return None;
     }
 
-    let board_x = ((x - board_offset_x) / board_size * 9.).floor();
-    let board_y = ((y - board_offset_y) / board_size * 9.).floor();
+    let board_x = ((x - board_position.x) / board_position.width * 9.).floor();
+    let board_y = ((y - board_position.y) / board_position.height * 9.).floor();
     Some((board_x as u8, board_y as u8))
 }
 

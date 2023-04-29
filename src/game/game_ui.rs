@@ -16,8 +16,7 @@ pub fn init_game_ui(
 
     // Regular button styling.
     let button_style = FlexItemStyle {
-        flex_base: Size::new(Val::Percent(25.0), Val::Percent(9.0)),
-        margin: Size::all(Val::Percent(1.5)),
+        flex_base: Size::new(Val::Percent(25.0), Val::Percent(100.0)),
         ..default()
     };
 
@@ -33,7 +32,7 @@ pub fn init_game_ui(
             .spawn(FlexBundle::new(
                 FlexContainerStyle::with_direction(FlexDirection::Row),
                 FlexItemStyle {
-                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(90.)),
+                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(9.)),
                     margin: Size::all(Val::Vmin(5.)),
                     ..default()
                 },
