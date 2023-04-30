@@ -21,7 +21,7 @@ pub fn mouse_interaction(
 
     for (mut interaction, computed_position) in &mut interaction_query {
         let new_interaction = if computed_position.contains(cursor_position) {
-            if mouse_buttons.pressed(MouseButton::Left) {
+            if mouse_buttons.just_pressed(MouseButton::Left) {
                 Interaction::Clicked
             } else {
                 Interaction::Hovered

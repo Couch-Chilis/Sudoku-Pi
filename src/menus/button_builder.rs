@@ -1,7 +1,4 @@
-use super::{MenuButtonAction, Secondary};
-use crate::constants::*;
-use crate::ui::*;
-use crate::Fonts;
+use crate::{constants::*, ui::*, Fonts};
 use bevy::prelude::*;
 
 pub struct ButtonBuilder {
@@ -14,8 +11,8 @@ impl ButtonBuilder {
     pub fn new(fonts: &Fonts) -> Self {
         // Regular button styling.
         let button_style = FlexItemStyle {
-            flex_base: Size::new(Val::Vmin(40.), Val::Vmin(9.)),
-            margin: Size::all(Val::Vmin(1.5)),
+            flex_base: Size::new(Val::Vmin(60.), Val::Vmin(14.)),
+            margin: Size::all(Val::Vmin(2.)),
             ..default()
         };
 
@@ -43,7 +40,7 @@ impl ButtonBuilder {
         &self,
         parent: &mut ChildBuilder,
         text: &str,
-        action: MenuButtonAction,
+        action: impl Component,
     ) {
         parent
             .spawn((ButtonBundle::with_style(self.button_style.clone()), action))
@@ -64,7 +61,7 @@ impl ButtonBuilder {
         &self,
         parent: &mut ChildBuilder,
         text: &str,
-        action: MenuButtonAction,
+        action: impl Component,
     ) {
         parent
             .spawn((

@@ -13,10 +13,7 @@ pub fn init_game_ui(
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
     // Regular button styling.
-    let button_style = FlexItemStyle {
-        flex_base: Size::new(Val::Percent(25.0), Val::Percent(100.0)),
-        ..default()
-    };
+    let button_style = FlexItemStyle::fixed_size(Val::Percent(25.0), Val::Percent(100.0));
 
     let text_style = TextStyle {
         font: fonts.menu.clone(),
@@ -29,11 +26,8 @@ pub fn init_game_ui(
         screen
             .spawn(FlexBundle::new(
                 FlexContainerStyle::with_direction(FlexDirection::Row),
-                FlexItemStyle {
-                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(9.)),
-                    margin: Size::all(Val::Vmin(5.)),
-                    ..default()
-                },
+                FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(9.))
+                    .with_margin(Size::all(Val::Vmin(5.))),
             ))
             .with_children(|top_row| {
                 top_row

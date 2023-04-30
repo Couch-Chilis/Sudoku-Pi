@@ -117,7 +117,7 @@ impl Default for FlexItemBundle {
     }
 }
 
-#[derive(Clone, Component, Default)]
+#[derive(Clone, Component)]
 pub struct FlexItemStyle {
     /// The base size that should be reserved for this item.
     pub flex_base: Size,
@@ -136,15 +136,28 @@ pub struct FlexItemStyle {
     /// Minimum size to accept in case of shrinking.
     pub min_size: Size,
 
+    /// Whether this item occupies space. If `false`, this item does not count
+    /// towards the total space taken by the items inside a container and the
+    /// next item (if any) may be rendered in exactly the same space. This can
+    /// still be useful if you use a transform to move the item elsewhere, for
+    /// instance.
+    pub occupies_space: bool,
+
     /// Set to `true` if aspect ratio relative to the base size must be
     /// preserved in case of shrinking or growing.
     pub preserve_aspect_ratio: bool,
+
+    /// A custom transform to apply on top of the transform determined by the
+    /// layout system. Do note that the computed position of the item does *not*
+    /// take this transform into account, so if interaction is required inside
+    /// this item, there may be a mismatch in coordinates.
+    pub transform: Transform,
 }
 
 impl FlexItemStyle {
     /// Returns the style for an item that has no base size, but takes all the
     /// space that is available.
-    pub fn maximum_size() -> Self {
+    pub fn available_size() -> Self {
         Self {
             flex_grow: 1.,
             ..default()
@@ -152,9 +165,9 @@ impl FlexItemStyle {
     }
 
     /// Returns the style for an item with a fixed size, relative to its parent.
-    pub fn with_fixed_size(flex_base: Size) -> Self {
+    pub fn fixed_size(width: Val, height: Val) -> Self {
         Self {
-            flex_base,
+            flex_base: Size::new(width, height),
             ..default()
         }
     }
@@ -163,9 +176,9 @@ impl FlexItemStyle {
     /// parent.
     ///
     /// The item may grow if more space is available.
-    pub fn with_minimum_size(flex_base: Size) -> Self {
+    pub fn minimum_size(width: Val, height: Val) -> Self {
         Self {
-            flex_base,
+            flex_base: Size::new(width, height),
             flex_grow: 1.,
             ..default()
         }
@@ -175,9 +188,9 @@ impl FlexItemStyle {
     /// parent.
     ///
     /// The item may shrink if necessary.
-    pub fn with_preferred_size(flex_base: Size) -> Self {
+    pub fn preferred_size(width: Val, height: Val) -> Self {
         Self {
-            flex_base,
+            flex_base: Size::new(width, height),
             flex_shrink: 1.,
             ..default()
         }
@@ -188,12 +201,53 @@ impl FlexItemStyle {
     ///
     /// The item may shrink if necessary, but not smaller than the given minimum
     /// size.
-    pub fn with_preferred_and_minimum_size(flex_base: Size, min_size: Size) -> Self {
+    pub fn preferred_and_minimum_size(flex_base: Size, min_size: Size) -> Self {
         Self {
             flex_base,
             flex_shrink: 1.,
             min_size,
             ..default()
+        }
+    }
+
+    /// Sets the `preserve_aspect_ratio` boolean to `true`.
+    pub fn with_fixed_aspect_ratio(self) -> Self {
+        Self {
+            preserve_aspect_ratio: true,
+            ..self
+        }
+    }
+
+    /// Adds the given margin to the style.
+    pub fn with_margin(self, margin: Size) -> Self {
+        Self { margin, ..self }
+    }
+
+    /// Adds the given transform to the style.
+    pub fn with_transform(self, transform: Transform) -> Self {
+        Self { transform, ..self }
+    }
+
+    /// Sets the `occupies_space` boolean to `false`.
+    pub fn without_occupying_space(self) -> Self {
+        Self {
+            occupies_space: false,
+            ..self
+        }
+    }
+}
+
+impl Default for FlexItemStyle {
+    fn default() -> Self {
+        Self {
+            flex_base: Default::default(),
+            flex_grow: 0.,
+            flex_shrink: 0.,
+            margin: Default::default(),
+            min_size: Default::default(),
+            occupies_space: true,
+            preserve_aspect_ratio: false,
+            transform: Default::default(),
         }
     }
 }
@@ -215,7 +269,7 @@ impl FlexLeafBundle {
     /// space, thereby pushing surrounding items to the outer edges of the
     /// container.
     pub fn spacer() -> Self {
-        Self::with_style(FlexItemStyle::maximum_size())
+        Self::with_style(FlexItemStyle::available_size())
     }
 
     pub fn with_style(style: FlexItemStyle) -> Self {

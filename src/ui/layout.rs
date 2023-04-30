@@ -114,10 +114,14 @@ fn layout(flex_query: &mut FlexQuery) {
                 .iter()
                 .filter_map(|entity| item_map.get(entity))
                 .map(|(item_style, _, _)| {
-                    (
-                        get_main_axis(&item_style.flex_base),
-                        get_main_axis(&item_style.margin),
-                    )
+                    if item_style.occupies_space {
+                        (
+                            get_main_axis(&item_style.flex_base),
+                            get_main_axis(&item_style.margin),
+                        )
+                    } else {
+                        (Val::None, Val::None)
+                    }
                 })
                 .fold(0., |acc, (size, margin)| {
                     acc + size.evaluate(vmin_scale) + 2. * margin.evaluate(vmin_scale)
@@ -227,19 +231,29 @@ fn layout(flex_query: &mut FlexQuery) {
             let margin = get_main_axis(&item_style.margin).evaluate(vmin_scale);
 
             // Determine translation.
+            let z = transform.translation.z; // Preserve the z-index.
             let translation = if container_style.direction == FlexDirection::Column {
-                Vec3::new(0., 0.5 - offset - margin - 0.5 * scale.y, 1.)
+                Vec3::new(0., 0.5 - offset - margin - 0.5 * scale.y, z)
             } else {
-                Vec3::new(-0.5 + offset + margin + 0.5 * scale.x, 0., 1.)
+                Vec3::new(-0.5 + offset + margin + 0.5 * scale.x, 0., z)
             };
 
+            let mut layout_transform = Transform {
+                scale,
+                translation,
+                ..default()
+            };
+
+            // Apply custom transformation, if requested.
+            if item_style.transform != Transform::IDENTITY {
+                layout_transform.scale *= item_style.transform.scale;
+                layout_transform.translation += item_style.transform.translation;
+                layout_transform.rotation = item_style.transform.rotation;
+            }
+
             // Set the child's transform, but preserve the z-index.
-            if transform.scale != scale || transform.translation != translation {
-                transform.scale = scale;
-                transform.translation = Vec3 {
-                    z: transform.translation.z,
-                    ..translation
-                };
+            if *transform != layout_transform {
+                *transform = layout_transform;
             }
 
             // Set the position for use by other containers, and store it in the
@@ -253,12 +267,14 @@ fn layout(flex_query: &mut FlexQuery) {
             }
 
             // Update offset for the next child.
-            offset += 2. * margin
-                + if container_style.direction == FlexDirection::Column {
-                    scale.y
-                } else {
-                    scale.x
-                };
+            if item_style.occupies_space {
+                offset += 2. * margin
+                    + if container_style.direction == FlexDirection::Column {
+                        scale.y
+                    } else {
+                        scale.x
+                    };
+            }
         }
     }
 }

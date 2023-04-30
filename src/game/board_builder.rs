@@ -9,13 +9,13 @@ pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game) {
     parent.with_children(|screen| {
         let mut board = screen.spawn((
             Board,
-            FlexLeafBundle::with_style(FlexItemStyle {
-                flex_base: Size::all(Val::Vmin(90.)),
-                flex_shrink: 1.,
-                min_size: Size::all(Val::Vmin(50.)),
-                preserve_aspect_ratio: true,
-                ..default()
-            }),
+            FlexLeafBundle::with_style(
+                FlexItemStyle::preferred_and_minimum_size(
+                    Size::all(Val::Vmin(90.)),
+                    Size::all(Val::Vmin(50.)),
+                )
+                .with_fixed_aspect_ratio(),
+            ),
         ));
 
         draw_lines(&mut board);

@@ -157,7 +157,7 @@ fn on_screen_change(
     mut commands: Commands,
     screen_state: Res<State<ScreenState>>,
     screens: Query<(Entity, &Screen, &Transform)>,
-    animators: Query<Entity, With<Animator<Transform>>>,
+    animators: Query<Entity, (With<Screen>, With<Animator<Transform>>)>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
         return;
