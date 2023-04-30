@@ -1,6 +1,7 @@
 use super::{MenuButtonAction, Secondary};
 use crate::constants::*;
 use crate::ui::*;
+use crate::Fonts;
 use bevy::prelude::*;
 
 pub struct ButtonBuilder {
@@ -10,9 +11,7 @@ pub struct ButtonBuilder {
 }
 
 impl ButtonBuilder {
-    pub fn new(asset_server: &AssetServer) -> Self {
-        let font = asset_server.load(MENU_FONT);
-
+    pub fn new(fonts: &Fonts) -> Self {
         // Regular button styling.
         let button_style = FlexItemStyle {
             flex_base: Size::new(Val::Vmin(40.), Val::Vmin(9.)),
@@ -21,14 +20,14 @@ impl ButtonBuilder {
         };
 
         let text_style = TextStyle {
-            font: font.clone(),
+            font: fonts.menu.clone(),
             font_size: 60.,
             color: BUTTON_TEXT,
         };
 
         // Secondary button styling.
         let secondary_text_style = TextStyle {
-            font,
+            font: fonts.menu.clone(),
             font_size: text_style.font_size,
             color: SECONDARY_BUTTON_TEXT,
         };

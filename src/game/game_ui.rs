@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*};
+use crate::{constants::*, ui::*, Fonts};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
@@ -9,11 +9,9 @@ pub enum UiButtonAction {
 
 pub fn init_game_ui(
     game_screen: &mut EntityCommands,
-    asset_server: &AssetServer,
+    fonts: &Fonts,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
-    let font = asset_server.load(MENU_FONT);
-
     // Regular button styling.
     let button_style = FlexItemStyle {
         flex_base: Size::new(Val::Percent(25.0), Val::Percent(100.0)),
@@ -21,7 +19,7 @@ pub fn init_game_ui(
     };
 
     let text_style = TextStyle {
-        font: font.clone(),
+        font: fonts.menu.clone(),
         font_size: 60.,
         color: BUTTON_TEXT,
     };

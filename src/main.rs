@@ -16,6 +16,15 @@ use sudoku::Game;
 use ui::*;
 use utils::SpriteExt;
 
+const MENU_FONT: &[u8] = include_bytes!("../assets/Yuppy-TC-Regular.ttf");
+const BOARD_FONT: &[u8] = include_bytes!("../assets/OpenSans-Regular.ttf");
+
+#[derive(Clone, Default, Resource)]
+pub struct Fonts {
+    menu: Handle<Font>,
+    board: Handle<Font>,
+}
+
 /// Screens are laid out in tiles next to one another.
 #[derive(Clone, Component, Default)]
 struct Screen {
@@ -62,6 +71,7 @@ fn main() {
         .add_system(on_escape)
         .add_system(on_resize)
         .add_system(on_screen_change)
+        .init_resource::<Fonts>()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
@@ -79,8 +89,18 @@ fn main() {
         .run();
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, game: Res<Game>) {
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut fonts: ResMut<Assets<Font>>,
+    game: Res<Game>,
+) {
     commands.spawn(Camera2dBundle::default());
+
+    let fonts = Fonts {
+        menu: fonts.add(Font::try_from_bytes(Vec::from(MENU_FONT)).unwrap()),
+        board: fonts.add(Font::try_from_bytes(Vec::from(BOARD_FONT)).unwrap()),
+    };
 
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
@@ -105,7 +125,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, game: Res<Game>
         MainScreen,
         flex_container.clone(),
     ));
-    main_menu_setup(&mut main_screen, &asset_server, &game);
+    main_menu_setup(&mut main_screen, &asset_server, &fonts, &game);
 
     let mut game_screen = commands.spawn((
         Screen::for_state(ScreenState::Game),
@@ -113,7 +133,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, game: Res<Game>
         GameScreen,
         flex_container,
     ));
-    board_setup(&mut game_screen, &asset_server, &game);
+    board_setup(&mut game_screen, &fonts, &game);
+
+    commands.insert_resource(fonts);
 }
 
 fn on_escape(

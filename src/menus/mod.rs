@@ -20,7 +20,7 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(button_actions);
+        app.add_system(button_actions.run_if(in_state(ScreenState::MainMenu)));
     }
 }
 

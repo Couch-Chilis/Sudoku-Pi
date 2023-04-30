@@ -10,8 +10,5 @@ pub const SECONDARY_BUTTON_TEXT: Color = Color::rgb(0.067, 0.0, 0.0);
 pub const SECONDARY_HOVERED_BUTTON: Color = Color::rgba(0.8, 0.733, 0.667, 0.3);
 pub const SECONDARY_PRESSED_BUTTON_TEXT: Color = Color::rgb(0.4, 0.333, 0.333);
 
-//pub const BUTTON_FONT: &str = "OpenSans-Regular.ttf";
-pub const MENU_FONT: &str = "Yuppy-TC-Regular.ttf";
-
 pub const CELL_SIZE: f32 = 0.111111;
 pub const CELL_SCALE: Vec3 = Vec3::new(CELL_SIZE, CELL_SIZE, 1.);

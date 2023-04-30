@@ -5,7 +5,7 @@ mod game_ui;
 use crate::constants::{CELL_SCALE, CELL_SIZE};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
 use crate::ui::{Button, ComputedPosition, Interaction};
-use crate::ScreenState;
+use crate::{Fonts, ScreenState};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
@@ -52,9 +52,9 @@ enum HighlightKind {
     Hint,
 }
 
-pub fn board_setup(game_screen: &mut EntityCommands, asset_server: &AssetServer, game: &Game) {
-    init_game_ui(game_screen, asset_server, |parent| {
-        build_board(parent, asset_server, game)
+pub fn board_setup(game_screen: &mut EntityCommands, fonts: &Fonts, game: &Game) {
+    init_game_ui(game_screen, fonts, |parent| {
+        build_board(parent, fonts, game)
     });
 }
 

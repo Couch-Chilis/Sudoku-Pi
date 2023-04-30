@@ -1,6 +1,6 @@
 use super::{get_number_color, Note, Number};
-use crate::constants::*;
 use crate::sudoku::{Cell, Game};
+use crate::{constants::*, Fonts};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
@@ -9,17 +9,15 @@ use std::num::NonZeroU8;
 const CELL_FONT_SIZE: f32 = 0.01667 * CELL_SIZE;
 const FONT_SCALE: Vec3 = Vec3::new(CELL_FONT_SIZE, CELL_FONT_SIZE, 1.);
 
-pub fn fill_numbers(board: &mut EntityCommands, asset_server: &AssetServer, game: &Game) {
-    let font = asset_server.load("OpenSans-Regular.ttf");
-
+pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game) {
     let number_style = TextStyle {
-        font: font.clone(),
+        font: fonts.board.clone(),
         font_size: 60.,
         color: Color::NONE,
     };
 
     let note_style = TextStyle {
-        font,
+        font: fonts.board.clone(),
         font_size: 20.,
         color: Color::NONE,
     };
