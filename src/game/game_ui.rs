@@ -44,7 +44,11 @@ pub fn init_game_ui(
                     .with_children(|button| {
                         button.spawn(Text2dBundle {
                             text: Text::from_section("Menu", text_style.clone()),
-                            transform: Transform::from_scale(Vec3::new(0.004, 0.01, 1.)),
+                            transform: Transform {
+                                scale: Vec3::new(0.004, 0.01, 1.),
+                                translation: Vec3::new(0., 0., 1.),
+                                ..default()
+                            },
                             ..default()
                         });
                     });
@@ -59,7 +63,11 @@ pub fn init_game_ui(
                     .with_children(|button| {
                         button.spawn(Text2dBundle {
                             text: Text::from_section("Hint", text_style.clone()),
-                            transform: Transform::from_scale(Vec3::new(0.004, 0.01, 1.)),
+                            transform: Transform {
+                                scale: Vec3::new(0.004, 0.01, 1.),
+                                translation: Vec3::new(0., 0., 1.),
+                                ..default()
+                            },
                             ..default()
                         });
                     });
