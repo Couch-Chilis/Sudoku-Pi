@@ -15,18 +15,15 @@ type FlexEntity<'a> = (
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
 /// Note we do not support dynamic changing of containers or items. This is not
-/// a problem for us, since all the UI layouts are created at
-pub(crate) fn ui_layout_system(
-    changed_containers: Query<Entity, (With<FlexContainerStyle>, Changed<Children>)>,
+/// a problem for us, since all the UI layouts are created at startup. We *do*
+/// support changing styles at runtime however.
+pub(crate) fn layout_system(
     mut flex_query: FlexQuery,
+    changed_containers: Query<Entity, Changed<FlexContainerStyle>>,
+    changed_items: Query<Entity, Changed<FlexItemStyle>>,
+    events: EventReader<WindowResized>,
 ) {
-    if !changed_containers.is_empty() {
-        layout(&mut flex_query);
-    }
-}
-
-pub(crate) fn on_resize_layout(events: EventReader<WindowResized>, mut flex_query: FlexQuery) {
-    if !events.is_empty() {
+    if !changed_containers.is_empty() || !changed_items.is_empty() || !events.is_empty() {
         layout(&mut flex_query);
     }
 }

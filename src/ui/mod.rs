@@ -13,10 +13,9 @@ pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems((
+            layout::layout_system,
             interaction::mouse_interaction,
             interaction::button_interaction,
-            layout::ui_layout_system,
-            layout::on_resize_layout,
         ));
     }
 }

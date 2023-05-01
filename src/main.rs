@@ -157,14 +157,9 @@ fn on_screen_change(
     mut commands: Commands,
     screen_state: Res<State<ScreenState>>,
     screens: Query<(Entity, &Screen, &Transform)>,
-    animators: Query<Entity, (With<Screen>, With<Animator<Transform>>)>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
         return;
-    }
-
-    for entity in &animators {
-        commands.entity(entity).remove::<Animator<Transform>>();
     }
 
     let (offset_x, offset_y) = get_tile_offset_for_screen(screen_state.0);

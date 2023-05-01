@@ -3,7 +3,7 @@ use crate::sudoku::Game;
 use crate::ui::*;
 use crate::{Fonts, ScreenState};
 use bevy::{ecs::system::EntityCommands, prelude::*};
-use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
+use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
 use std::f32::consts::PI;
 use std::time::Duration;
 
@@ -115,21 +115,16 @@ pub fn on_screen_change(
     mut commands: Commands,
     screen_state: Res<State<ScreenState>>,
     mut button_sections: Query<(Entity, &mut ButtonSection)>,
-    animators: Query<Entity, (With<ButtonSection>, With<Animator<Transform>>)>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
         return;
     }
 
     let new_rotation = match screen_state.0 {
-        ScreenState::MainMenu => 0.,
+        ScreenState::MainMenu | ScreenState::Game => 0.,
         ScreenState::SelectDifficulty => 0.5 * PI,
         _ => return,
     };
-
-    for entity in &animators {
-        commands.entity(entity).remove::<Animator<Transform>>();
-    }
 
     for (entity, mut button_section) in &mut button_sections {
         let start = button_section.current_rotation;
@@ -138,13 +133,25 @@ pub fn on_screen_change(
             continue;
         }
 
-        let tween = Tween::new(
-            EaseFunction::QuadraticInOut,
-            Duration::from_millis(200),
-            TransformRotationZLens { start, end },
-        );
+        let animator = match screen_state.0 {
+            // When going from the difficulty selection to the game, we just
+            // reset the transform without animation so everything is back to
+            // the starting when position when going out of the game.
+            ScreenState::Game => {
+                Animator::new(Delay::new(Duration::from_millis(200)).then(Tween::new(
+                    EaseMethod::Discrete(0.),
+                    Duration::from_millis(1),
+                    TransformRotationZLens { start, end },
+                )))
+            }
+            _ => Animator::new(Tween::new(
+                EaseFunction::QuadraticInOut,
+                Duration::from_millis(200),
+                TransformRotationZLens { start, end },
+            )),
+        };
 
-        commands.entity(entity).insert(Animator::new(tween));
+        commands.entity(entity).insert(animator);
 
         button_section.current_rotation = end;
     }
