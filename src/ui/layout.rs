@@ -100,35 +100,47 @@ fn layout(flex_query: &mut FlexQuery) {
         };
 
         let container_position = position_map.remove(&container_entity);
-        let vmin_scales = container_position
+        let (vmin_scales, vmax_scales) = container_position
             .as_ref()
-            .map(|value| value.vmin_scales())
-            .unwrap_or(Vec2::new(0.01, 0.01));
+            .map(|value| value.vminmax_scales())
+            .unwrap_or((Vec2::new(0.01, 0.01), Vec2::new(0.01, 0.01)));
 
         let vmin_scale = get_main_scale(vmin_scales);
-        let total_size = 2. * get_main_axis(&container_style.padding).evaluate(vmin_scale)
-            + children
-                .iter()
-                .filter_map(|entity| item_map.get(entity))
-                .map(|(item_style, _, _)| {
-                    if item_style.occupies_space {
-                        (
-                            get_main_axis(&item_style.flex_base),
-                            get_main_axis(&item_style.margin),
-                        )
-                    } else {
-                        (Val::None, Val::None)
-                    }
-                })
-                .fold(0., |acc, (size, margin)| {
-                    acc + size.evaluate(vmin_scale) + 2. * margin.evaluate(vmin_scale)
-                });
+        let vmax_scale = get_main_scale(vmax_scales);
+        let (total_size, total_grow, total_shrink) = children
+            .iter()
+            .filter_map(|entity| item_map.get(entity))
+            .map(|(item_style, _, _)| {
+                if item_style.occupies_space {
+                    (
+                        get_main_axis(&item_style.flex_base),
+                        get_main_axis(&item_style.margin),
+                        item_style.flex_grow,
+                        item_style.flex_shrink,
+                    )
+                } else {
+                    (Val::None, Val::None, 0., 0.)
+                }
+            })
+            .fold(
+                (
+                    2. * get_main_axis(&container_style.padding).evaluate(vmin_scale, vmax_scale),
+                    0.,
+                    0.,
+                ),
+                |(size, grow, shrink), (item_size, item_margin, item_grow, item_shrink)| {
+                    (
+                        size + item_size.evaluate(vmin_scale, vmax_scale)
+                            + 2. * item_margin.evaluate(vmin_scale, vmax_scale),
+                        grow + item_grow,
+                        shrink + item_shrink,
+                    )
+                },
+            );
 
         // We keep track of the offset for positioning children along the axis.
         let mut offset = 0.;
 
-        // Shortcut: For now we assume only one item may want to grow or shrink,
-        // so we can do this in a single pass.
         for item_entity in children {
             let Some((item_style, mut computed_position, mut transform)) =
                 item_map.remove(&item_entity) else {
@@ -138,8 +150,14 @@ fn layout(flex_query: &mut FlexQuery) {
 
             // Start by assuming the base size.
             let mut scale = Vec3::new(
-                item_style.flex_base.width.evaluate(vmin_scales.x),
-                item_style.flex_base.height.evaluate(vmin_scales.y),
+                item_style
+                    .flex_base
+                    .width
+                    .evaluate(vmin_scales.x, vmax_scales.x),
+                item_style
+                    .flex_base
+                    .height
+                    .evaluate(vmin_scales.y, vmax_scales.y),
                 1.,
             );
 
@@ -147,18 +165,22 @@ fn layout(flex_query: &mut FlexQuery) {
             if total_size < 1. {
                 if item_style.flex_grow > 0. {
                     let spare_size = 1. - total_size;
-                    let base_size = get_main_axis(&item_style.flex_base).evaluate(vmin_scale);
-                    let mut item_size = base_size + spare_size;
+                    let base_size =
+                        get_main_axis(&item_style.flex_base).evaluate(vmin_scale, vmax_scale);
+                    let mut item_size =
+                        base_size + spare_size * item_style.flex_grow / total_grow.max(1.);
 
                     // Preserve the aspect ratio, if requested.
                     if item_style.preserve_aspect_ratio {
-                        let cross_scale = get_cross_scale(vmin_scales);
-                        let base_cross_size =
-                            get_cross_axis(&item_style.flex_base).evaluate(cross_scale);
+                        let cross_min_scale = get_cross_scale(vmin_scales);
+                        let cross_max_scale = get_cross_scale(vmax_scales);
+                        let base_cross_size = get_cross_axis(&item_style.flex_base)
+                            .evaluate(cross_min_scale, cross_max_scale);
                         let mut cross_size = (item_size / base_size) * base_cross_size;
 
                         // Make sure we don't grow too large along the cross axis.
-                        let cross_margin = get_cross_axis(&item_style.margin).evaluate(cross_scale);
+                        let cross_margin = get_cross_axis(&item_style.margin)
+                            .evaluate(cross_min_scale, cross_max_scale);
                         let total_cross_size = cross_size + 2. * cross_margin;
                         if total_cross_size > 1. {
                             let previous_cross_size = cross_size;
@@ -181,19 +203,24 @@ fn layout(flex_query: &mut FlexQuery) {
                 }
             } else if item_style.flex_shrink > 0. {
                 let excess_size = total_size - 1.;
-                let base_size = get_main_axis(&item_style.flex_base).evaluate(vmin_scale);
-                let min_size = get_main_axis(&item_style.min_size).evaluate(vmin_scale);
-                let mut item_size = (base_size - excess_size).max(min_size);
+                let base_size =
+                    get_main_axis(&item_style.flex_base).evaluate(vmin_scale, vmax_scale);
+                let min_size = get_main_axis(&item_style.min_size).evaluate(vmin_scale, vmax_scale);
+                let mut item_size = (base_size
+                    - excess_size * item_style.flex_shrink / total_shrink.max(1.))
+                .max(min_size);
 
                 // Preserve the aspect ratio, if requested.
                 if item_style.preserve_aspect_ratio {
-                    let cross_scale = get_cross_scale(vmin_scales);
-                    let base_cross_size =
-                        get_cross_axis(&item_style.flex_base).evaluate(cross_scale);
+                    let cross_min_scale = get_cross_scale(vmin_scales);
+                    let cross_max_scale = get_cross_scale(vmax_scales);
+                    let base_cross_size = get_cross_axis(&item_style.flex_base)
+                        .evaluate(cross_min_scale, cross_max_scale);
                     let mut cross_size = (item_size / base_size) * base_cross_size;
 
                     // Make sure we don't shrink too small.
-                    let min_cross_size = get_cross_axis(&item_style.min_size).evaluate(cross_scale);
+                    let min_cross_size = get_cross_axis(&item_style.min_size)
+                        .evaluate(cross_min_scale, cross_max_scale);
                     if cross_size < min_cross_size {
                         let previous_cross_size = cross_size;
                         cross_size = min_cross_size;
@@ -218,14 +245,14 @@ fn layout(flex_query: &mut FlexQuery) {
             // may take all available space on the cross axis.
             if item_style.flex_grow > 0. && !item_style.preserve_aspect_ratio {
                 if container_style.direction == FlexDirection::Column {
-                    scale.x = 1.;
+                    scale.x = 1. - 2. * item_style.margin.width.evaluate(vmin_scale, vmax_scale);
                 } else {
-                    scale.y = 1.;
+                    scale.y = 1. - 2. * item_style.margin.height.evaluate(vmin_scale, vmax_scale);
                 }
             }
 
             // Determine the main axis margin.
-            let margin = get_main_axis(&item_style.margin).evaluate(vmin_scale);
+            let margin = get_main_axis(&item_style.margin).evaluate(vmin_scale, vmax_scale);
 
             // Determine translation.
             let z = transform.translation.z; // Preserve the z-index.

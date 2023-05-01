@@ -5,6 +5,9 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 pub enum UiButtonAction {
     BackToMain,
     Hint,
+    ModeNormal,
+    ModeNotes,
+    ModeDrawing,
 }
 
 pub fn init_game_ui(
@@ -12,8 +15,37 @@ pub fn init_game_ui(
     fonts: &Fonts,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
-    // Regular button styling.
-    let button_style = FlexItemStyle::fixed_size(Val::Percent(25.0), Val::Percent(100.0));
+    // Top button row.
+    build_button_row(game_screen, |top_row| {
+        build_button(top_row, fonts, "Menu", UiButtonAction::BackToMain);
+        top_row.spawn(FlexLeafBundle::spacer());
+        build_button(top_row, fonts, "Hint", UiButtonAction::Hint);
+    });
+
+    board_builder(game_screen);
+
+    // Bottom button row.
+    build_button_row(game_screen, |bottom_row| {
+        build_button(bottom_row, fonts, "Normal", UiButtonAction::ModeNormal);
+        build_button(bottom_row, fonts, "Notes", UiButtonAction::ModeNotes);
+        build_button(bottom_row, fonts, "Draw", UiButtonAction::ModeDrawing);
+    });
+}
+
+fn build_button_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut ChildBuilder)) {
+    screen.with_children(|screen| {
+        screen
+            .spawn(FlexBundle::new(
+                FlexContainerStyle::with_direction(FlexDirection::Row),
+                FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(9.))
+                    .with_margin(Size::all(Val::Vmin(5.))),
+            ))
+            .with_children(child_builder);
+    });
+}
+
+fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiButtonAction) {
+    let button_style = FlexItemStyle::fixed_size(Val::Vmax(25.0), Val::Vmax(9.0));
 
     let text_style = TextStyle {
         font: fonts.menu.clone(),
@@ -21,52 +53,16 @@ pub fn init_game_ui(
         color: BUTTON_TEXT,
     };
 
-    // Top button row.
-    game_screen.with_children(|screen| {
-        screen
-            .spawn(FlexBundle::new(
-                FlexContainerStyle::with_direction(FlexDirection::Row),
-                FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(9.))
-                    .with_margin(Size::all(Val::Vmin(5.))),
-            ))
-            .with_children(|top_row| {
-                top_row
-                    .spawn((
-                        ButtonBundle::with_style(button_style.clone()),
-                        UiButtonAction::BackToMain,
-                    ))
-                    .with_children(|button| {
-                        button.spawn(Text2dBundle {
-                            text: Text::from_section("Menu", text_style.clone()),
-                            transform: Transform {
-                                scale: Vec3::new(0.004, 0.01, 1.),
-                                translation: Vec3::new(0., 0., 1.),
-                                ..default()
-                            },
-                            ..default()
-                        });
-                    });
-
-                top_row.spawn(FlexLeafBundle::spacer());
-
-                top_row
-                    .spawn((
-                        ButtonBundle::with_style(button_style.clone()),
-                        UiButtonAction::Hint,
-                    ))
-                    .with_children(|button| {
-                        button.spawn(Text2dBundle {
-                            text: Text::from_section("Hint", text_style.clone()),
-                            transform: Transform {
-                                scale: Vec3::new(0.004, 0.01, 1.),
-                                translation: Vec3::new(0., 0., 1.),
-                                ..default()
-                            },
-                            ..default()
-                        });
-                    });
+    row.spawn((ButtonBundle::with_style(button_style), action))
+        .with_children(|button| {
+            button.spawn(Text2dBundle {
+                text: Text::from_section(text, text_style.clone()),
+                transform: Transform {
+                    scale: Vec3::new(0.004, 0.01, 1.),
+                    translation: Vec3::new(0., 0., 1.),
+                    ..default()
+                },
+                ..default()
             });
-    });
-
-    board_builder(game_screen);
+        });
 }

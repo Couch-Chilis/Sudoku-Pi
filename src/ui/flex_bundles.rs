@@ -312,6 +312,13 @@ pub enum Val {
     /// Percentage along the relevant axis. This is a percentage of the width or
     /// height of the parent entity, not the entire window.
     Percent(f32),
+    /// Percentage along the longest axis. This is a percentage of the width or
+    /// height of the parent entity, not the entire window.
+    ///
+    /// Note that currently `Vmax` is only supported as long as there is a
+    /// direct chain from the `Screen` to the flex item through (nested) flex
+    /// containers.
+    Vmax(f32),
     /// Percentage along the shortest axis. This is a percentage of the width or
     /// height of the parent entity, not the entire window.
     ///
@@ -322,10 +329,11 @@ pub enum Val {
 }
 
 impl Val {
-    pub fn evaluate(&self, vmin_scale: f32) -> f32 {
+    pub fn evaluate(&self, vmin_scale: f32, vmax_scale: f32) -> f32 {
         match self {
             Self::None => 0.,
             Self::Percent(value) => 0.01 * value,
+            Self::Vmax(value) => vmax_scale * value,
             Self::Vmin(value) => vmin_scale * value,
         }
     }
@@ -360,10 +368,16 @@ impl ComputedPosition {
         }
     }
 
-    pub fn vmin_scales(&self) -> Vec2 {
+    pub fn vminmax_scales(&self) -> (Vec2, Vec2) {
         match self.width < self.height {
-            true => Vec2::new(0.01, 0.01 * self.width / self.height),
-            false => Vec2::new(0.01 * self.height / self.width, 0.01),
+            true => (
+                Vec2::new(0.01, 0.01 * self.width / self.height),
+                Vec2::new(0.01 * self.height / self.width, 0.01),
+            ),
+            false => (
+                Vec2::new(0.01 * self.height / self.width, 0.01),
+                Vec2::new(0.01, 0.01 * self.width / self.height),
+            ),
         }
     }
 }

@@ -304,6 +304,7 @@ fn button_actions(
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
                 UiButtonAction::Hint => give_hint(&mut game, &mut selection),
+                _ => {}
             }
         }
     }
