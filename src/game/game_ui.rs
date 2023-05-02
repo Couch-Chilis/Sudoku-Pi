@@ -18,7 +18,6 @@ pub fn init_game_ui(
     // Top button row.
     build_button_row(game_screen, |top_row| {
         build_button(top_row, fonts, "Menu", UiButtonAction::BackToMain);
-        top_row.spawn(FlexLeafBundle::spacer());
         build_button(top_row, fonts, "Hint", UiButtonAction::Hint);
     });
 
@@ -36,7 +35,7 @@ fn build_button_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::with_direction(FlexDirection::Row),
+                FlexContainerStyle::row().with_gap(Val::Auto),
                 FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(9.))
                     .with_margin(Size::all(Val::Vmin(5.))),
             ))

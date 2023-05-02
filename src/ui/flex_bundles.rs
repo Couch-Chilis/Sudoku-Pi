@@ -64,16 +64,28 @@ impl Default for FlexContainerBundle {
 pub struct FlexContainerStyle {
     /// Direction to lay out children.
     pub direction: FlexDirection,
+
+    /// Gap to display between items.
+    ///
+    /// Using `Val::Auto` will distribute any remaining space evenly across the
+    /// space between items. The effect would be the same as if between every
+    /// item there was an empty "spacer" item with `flex_grow: 1.`.
+    pub gap: Val,
+
     /// Padding to keep within the container and around the items.
     pub padding: Size,
 }
 
 impl FlexContainerStyle {
-    pub fn with_direction(direction: FlexDirection) -> Self {
+    pub fn row() -> Self {
         Self {
-            direction,
+            direction: FlexDirection::Row,
             ..default()
         }
+    }
+
+    pub fn with_gap(self, gap: Val) -> Self {
+        Self { gap, ..self }
     }
 }
 
@@ -82,6 +94,16 @@ pub enum FlexDirection {
     #[default]
     Column,
     Row,
+}
+
+impl FlexDirection {
+    /// Returns the cross, or perpendicular, direction.
+    pub fn cross(&self) -> Self {
+        match self {
+            Self::Column => Self::Row,
+            Self::Row => Self::Column,
+        }
+    }
 }
 
 /// A layout bundle based on the flex system, though we're only bothering with
@@ -252,7 +274,7 @@ impl Default for FlexItemStyle {
     }
 }
 
-/// A leaf item intended to parent non-flex entities or to act as a spacer.
+/// A leaf item intended to parent non-flex entities.
 #[derive(Bundle, Clone, Default)]
 pub struct FlexLeafBundle {
     pub flex: FlexItemBundle,
@@ -265,13 +287,6 @@ pub struct FlexLeafBundle {
 }
 
 impl FlexLeafBundle {
-    /// Returns a "spacer", a flex item whose only purpose is to eat up unused
-    /// space, thereby pushing surrounding items to the outer edges of the
-    /// container.
-    pub fn spacer() -> Self {
-        Self::with_style(FlexItemStyle::available_size())
-    }
-
     pub fn with_style(style: FlexItemStyle) -> Self {
         Self {
             flex: FlexItemBundle::with_style(style),
@@ -295,6 +310,13 @@ impl Size {
         Self { width, height }
     }
 
+    pub fn for_direction(&self, direction: FlexDirection) -> Val {
+        match direction {
+            FlexDirection::Column => self.height,
+            FlexDirection::Row => self.width,
+        }
+    }
+
     pub fn width(&self) -> Val {
         self.width
     }
@@ -309,6 +331,9 @@ pub enum Val {
     /// Nada.
     #[default]
     None,
+    /// Context-dependent "automatic" value. Will act as `None` in most cases,
+    /// unless otherwise specified.
+    Auto,
     /// Percentage along the relevant axis. This is a percentage of the width or
     /// height of the parent entity, not the entire window.
     Percent(f32),
@@ -329,12 +354,12 @@ pub enum Val {
 }
 
 impl Val {
-    pub fn evaluate(&self, vmin_scale: f32, vmax_scale: f32) -> f32 {
+    pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
         match self {
-            Self::None => 0.,
+            Self::Auto | Self::None => 0.,
             Self::Percent(value) => 0.01 * value,
-            Self::Vmax(value) => vmax_scale * value,
-            Self::Vmin(value) => vmin_scale * value,
+            Self::Vmax(value) => axis_scaling.vmax_scale * value,
+            Self::Vmin(value) => axis_scaling.vmin_scale * value,
         }
     }
 }
@@ -368,16 +393,62 @@ impl ComputedPosition {
         }
     }
 
-    pub fn vminmax_scales(&self) -> (Vec2, Vec2) {
-        match self.width < self.height {
-            true => (
-                Vec2::new(0.01, 0.01 * self.width / self.height),
-                Vec2::new(0.01 * self.height / self.width, 0.01),
-            ),
-            false => (
-                Vec2::new(0.01 * self.height / self.width, 0.01),
-                Vec2::new(0.01, 0.01 * self.width / self.height),
-            ),
+    pub fn vminmax_scales(&self) -> VminmaxScales {
+        match self.width > self.height {
+            true => VminmaxScales {
+                horizontal: AxisScaling {
+                    vmin_scale: 0.01 * self.height / self.width,
+                    vmax_scale: 0.01,
+                },
+                vertical: AxisScaling {
+                    vmin_scale: 0.01,
+                    vmax_scale: 0.01 * self.width / self.height,
+                },
+            },
+            false => VminmaxScales {
+                horizontal: AxisScaling {
+                    vmin_scale: 0.01,
+                    vmax_scale: 0.01 * self.height / self.width,
+                },
+                vertical: AxisScaling {
+                    vmin_scale: 0.01 * self.width / self.height,
+                    vmax_scale: 0.01,
+                },
+            },
+        }
+    }
+}
+
+/// Scales for evaluating the `Vmin` and `Vmax` values.
+///
+/// Tracks the scales for both axes.
+#[derive(Clone, Debug, Default)]
+pub struct VminmaxScales {
+    pub horizontal: AxisScaling,
+    pub vertical: AxisScaling,
+}
+
+impl VminmaxScales {
+    pub fn scaling_for_direction(&self, direction: FlexDirection) -> AxisScaling {
+        match direction {
+            FlexDirection::Row => self.horizontal,
+            FlexDirection::Column => self.vertical,
+        }
+    }
+}
+
+/// Scales for evaluating the `Vmin` and `Vmax` values for a single axis.
+#[derive(Clone, Copy, Debug)]
+pub struct AxisScaling {
+    pub vmin_scale: f32,
+    pub vmax_scale: f32,
+}
+
+impl Default for AxisScaling {
+    fn default() -> Self {
+        Self {
+            vmin_scale: 0.01,
+            vmax_scale: 0.01,
         }
     }
 }

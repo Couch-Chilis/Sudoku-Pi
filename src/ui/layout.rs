@@ -76,62 +76,57 @@ fn layout(flex_query: &mut FlexQuery) {
             bevy::log::warn!("No children for container {container_entity:?}");
             return;
         };
+
         children.sort();
 
-        let get_main_axis = if container_style.direction == FlexDirection::Column {
-            Size::height
-        } else {
-            Size::width
-        };
-        let get_cross_axis = if container_style.direction == FlexDirection::Column {
-            Size::width
-        } else {
-            Size::height
-        };
-        let get_main_scale = if container_style.direction == FlexDirection::Column {
-            |vec: Vec2| vec.y
-        } else {
-            |vec: Vec2| vec.x
-        };
-        let get_cross_scale = if container_style.direction == FlexDirection::Column {
-            |vec: Vec2| vec.x
-        } else {
-            |vec: Vec2| vec.y
-        };
-
         let container_position = position_map.remove(&container_entity);
-        let (vmin_scales, vmax_scales) = container_position
+        let vminmax_scales = container_position
             .as_ref()
             .map(|value| value.vminmax_scales())
-            .unwrap_or((Vec2::new(0.01, 0.01), Vec2::new(0.01, 0.01)));
+            .unwrap_or_default();
 
-        let vmin_scale = get_main_scale(vmin_scales);
-        let vmax_scale = get_main_scale(vmax_scales);
+        let direction = container_style.direction;
+        let scaling = vminmax_scales.scaling_for_direction(direction);
+        let num_gaps = match container_style.gap {
+            Val::None => 0.,
+            _ => {
+                (children
+                    .iter()
+                    .filter_map(|entity| item_map.get(entity))
+                    .filter(|(item_style, _, _)| item_style.occupies_space)
+                    .count()
+                    .max(1)
+                    - 1) as f32
+            }
+        };
         let (total_size, total_grow, total_shrink) = children
             .iter()
             .filter_map(|entity| item_map.get(entity))
+            .filter(|(item_style, _, _)| item_style.occupies_space)
             .map(|(item_style, _, _)| {
-                if item_style.occupies_space {
-                    (
-                        get_main_axis(&item_style.flex_base),
-                        get_main_axis(&item_style.margin),
-                        item_style.flex_grow,
-                        item_style.flex_shrink,
-                    )
-                } else {
-                    (Val::None, Val::None, 0., 0.)
-                }
+                (
+                    item_style.flex_base.for_direction(direction),
+                    item_style.margin.for_direction(direction),
+                    item_style.flex_grow,
+                    item_style.flex_shrink,
+                )
             })
             .fold(
                 (
-                    2. * get_main_axis(&container_style.padding).evaluate(vmin_scale, vmax_scale),
-                    0.,
+                    2. * container_style
+                        .padding
+                        .for_direction(direction)
+                        .evaluate(&scaling)
+                        + num_gaps * container_style.gap.evaluate(&scaling),
+                    match container_style.gap {
+                        Val::Auto => num_gaps,
+                        _ => 0.,
+                    },
                     0.,
                 ),
                 |(size, grow, shrink), (item_size, item_margin, item_grow, item_shrink)| {
                     (
-                        size + item_size.evaluate(vmin_scale, vmax_scale)
-                            + 2. * item_margin.evaluate(vmin_scale, vmax_scale),
+                        size + item_size.evaluate(&scaling) + 2. * item_margin.evaluate(&scaling),
                         grow + item_grow,
                         shrink + item_shrink,
                     )
@@ -149,38 +144,34 @@ fn layout(flex_query: &mut FlexQuery) {
                 };
 
             // Start by assuming the base size.
+            let flex_base = item_style.flex_base;
             let mut scale = Vec3::new(
-                item_style
-                    .flex_base
-                    .width
-                    .evaluate(vmin_scales.x, vmax_scales.x),
-                item_style
-                    .flex_base
-                    .height
-                    .evaluate(vmin_scales.y, vmax_scales.y),
+                flex_base.width.evaluate(&vminmax_scales.horizontal),
+                flex_base.height.evaluate(&vminmax_scales.vertical),
                 1.,
             );
 
             // Grow or shrink as needed and if allowed.
-            if total_size < 1. {
+            let spare_size = 1. - total_size;
+            if spare_size > 0. {
                 if item_style.flex_grow > 0. {
-                    let spare_size = 1. - total_size;
-                    let base_size =
-                        get_main_axis(&item_style.flex_base).evaluate(vmin_scale, vmax_scale);
+                    let base_size = flex_base.for_direction(direction).evaluate(&scaling);
                     let mut item_size =
                         base_size + spare_size * item_style.flex_grow / total_grow.max(1.);
 
                     // Preserve the aspect ratio, if requested.
                     if item_style.preserve_aspect_ratio {
-                        let cross_min_scale = get_cross_scale(vmin_scales);
-                        let cross_max_scale = get_cross_scale(vmax_scales);
-                        let base_cross_size = get_cross_axis(&item_style.flex_base)
-                            .evaluate(cross_min_scale, cross_max_scale);
+                        let cross = direction.cross();
+                        let cross_scaling = vminmax_scales.scaling_for_direction(cross);
+                        let base_cross_size =
+                            flex_base.for_direction(cross).evaluate(&cross_scaling);
                         let mut cross_size = (item_size / base_size) * base_cross_size;
 
                         // Make sure we don't grow too large along the cross axis.
-                        let cross_margin = get_cross_axis(&item_style.margin)
-                            .evaluate(cross_min_scale, cross_max_scale);
+                        let cross_margin = item_style
+                            .margin
+                            .for_direction(cross)
+                            .evaluate(&cross_scaling);
                         let total_cross_size = cross_size + 2. * cross_margin;
                         if total_cross_size > 1. {
                             let previous_cross_size = cross_size;
@@ -188,14 +179,14 @@ fn layout(flex_query: &mut FlexQuery) {
                             item_size *= cross_size / previous_cross_size;
                         }
 
-                        if container_style.direction == FlexDirection::Column {
+                        if direction == FlexDirection::Column {
                             scale.x = cross_size;
                             scale.y = item_size;
                         } else {
                             scale.x = item_size;
                             scale.y = cross_size;
                         }
-                    } else if container_style.direction == FlexDirection::Column {
+                    } else if direction == FlexDirection::Column {
                         scale.y = item_size;
                     } else {
                         scale.x = item_size;
@@ -203,38 +194,41 @@ fn layout(flex_query: &mut FlexQuery) {
                 }
             } else if item_style.flex_shrink > 0. {
                 let excess_size = total_size - 1.;
-                let base_size =
-                    get_main_axis(&item_style.flex_base).evaluate(vmin_scale, vmax_scale);
-                let min_size = get_main_axis(&item_style.min_size).evaluate(vmin_scale, vmax_scale);
+                let base_size = flex_base.for_direction(direction).evaluate(&scaling);
+                let min_size = item_style
+                    .min_size
+                    .for_direction(direction)
+                    .evaluate(&scaling);
                 let mut item_size = (base_size
                     - excess_size * item_style.flex_shrink / total_shrink.max(1.))
                 .max(min_size);
 
                 // Preserve the aspect ratio, if requested.
                 if item_style.preserve_aspect_ratio {
-                    let cross_min_scale = get_cross_scale(vmin_scales);
-                    let cross_max_scale = get_cross_scale(vmax_scales);
-                    let base_cross_size = get_cross_axis(&item_style.flex_base)
-                        .evaluate(cross_min_scale, cross_max_scale);
+                    let cross = direction.cross();
+                    let cross_scaling = vminmax_scales.scaling_for_direction(cross);
+                    let base_cross_size = flex_base.for_direction(cross).evaluate(&cross_scaling);
                     let mut cross_size = (item_size / base_size) * base_cross_size;
 
                     // Make sure we don't shrink too small.
-                    let min_cross_size = get_cross_axis(&item_style.min_size)
-                        .evaluate(cross_min_scale, cross_max_scale);
+                    let min_cross_size = item_style
+                        .min_size
+                        .for_direction(cross)
+                        .evaluate(&cross_scaling);
                     if cross_size < min_cross_size {
                         let previous_cross_size = cross_size;
                         cross_size = min_cross_size;
                         item_size *= cross_size / previous_cross_size;
                     }
 
-                    if container_style.direction == FlexDirection::Column {
+                    if direction == FlexDirection::Column {
                         scale.x = cross_size;
                         scale.y = item_size;
                     } else {
                         scale.x = item_size;
                         scale.y = cross_size;
                     }
-                } else if container_style.direction == FlexDirection::Column {
+                } else if direction == FlexDirection::Column {
                     scale.y = item_size;
                 } else {
                     scale.x = item_size;
@@ -244,19 +238,22 @@ fn layout(flex_query: &mut FlexQuery) {
             // An item that wants to grow and doesn't care about aspect ratio,
             // may take all available space on the cross axis.
             if item_style.flex_grow > 0. && !item_style.preserve_aspect_ratio {
-                if container_style.direction == FlexDirection::Column {
-                    scale.x = 1. - 2. * item_style.margin.width.evaluate(vmin_scale, vmax_scale);
+                if direction == FlexDirection::Column {
+                    scale.x = 1. - 2. * item_style.margin.width.evaluate(&scaling);
                 } else {
-                    scale.y = 1. - 2. * item_style.margin.height.evaluate(vmin_scale, vmax_scale);
+                    scale.y = 1. - 2. * item_style.margin.height.evaluate(&scaling);
                 }
             }
 
             // Determine the main axis margin.
-            let margin = get_main_axis(&item_style.margin).evaluate(vmin_scale, vmax_scale);
+            let margin = item_style
+                .margin
+                .for_direction(direction)
+                .evaluate(&scaling);
 
             // Determine translation.
             let z = transform.translation.z; // Preserve the z-index.
-            let translation = if container_style.direction == FlexDirection::Column {
+            let translation = if direction == FlexDirection::Column {
                 Vec3::new(0., 0.5 - offset - margin - 0.5 * scale.y, z)
             } else {
                 Vec3::new(-0.5 + offset + margin + 0.5 * scale.x, 0., z)
@@ -293,10 +290,13 @@ fn layout(flex_query: &mut FlexQuery) {
             // Update offset for the next child.
             if item_style.occupies_space {
                 offset += 2. * margin
-                    + if container_style.direction == FlexDirection::Column {
-                        scale.y
-                    } else {
-                        scale.x
+                    + match container_style.gap {
+                        Val::Auto if spare_size > 0. => spare_size / total_grow,
+                        _ => container_style.gap.evaluate(&scaling),
+                    }
+                    + match direction {
+                        FlexDirection::Column => scale.y,
+                        FlexDirection::Row => scale.x,
                     };
             }
         }
