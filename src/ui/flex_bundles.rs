@@ -316,14 +316,6 @@ impl Size {
             FlexDirection::Row => self.width,
         }
     }
-
-    pub fn width(&self) -> Val {
-        self.width
-    }
-
-    pub fn height(&self) -> Val {
-        self.height
-    }
 }
 
 #[derive(Clone, Copy, Default)]
