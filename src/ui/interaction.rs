@@ -7,7 +7,8 @@ pub enum Interaction {
     #[default]
     None,
     Hovered,
-    Clicked,
+    JustPressed,
+    Pressed,
 }
 
 pub fn mouse_interaction(
@@ -22,7 +23,9 @@ pub fn mouse_interaction(
     for (mut interaction, computed_position) in &mut interaction_query {
         let new_interaction = if computed_position.contains(cursor_position) {
             if mouse_buttons.just_pressed(MouseButton::Left) {
-                Interaction::Clicked
+                Interaction::JustPressed
+            } else if mouse_buttons.pressed(MouseButton::Left) {
+                Interaction::Pressed
             } else {
                 Interaction::Hovered
             }
@@ -51,18 +54,24 @@ pub fn button_interaction(
                 .and_then(|child| text_query.get_mut(*child).ok())
             {
                 text.sections[0].style.color = match *interaction {
-                    Interaction::Clicked => SECONDARY_PRESSED_BUTTON_TEXT.into(),
+                    Interaction::JustPressed | Interaction::Pressed => {
+                        SECONDARY_PRESSED_BUTTON_TEXT.into()
+                    }
                     Interaction::Hovered | Interaction::None => SECONDARY_BUTTON_TEXT.into(),
                 };
             }
 
             *sprite = match *interaction {
                 Interaction::Hovered => Sprite::from_color(SECONDARY_HOVERED_BUTTON),
-                Interaction::Clicked | Interaction::None => Sprite::from_color(SECONDARY_BUTTON),
+                Interaction::JustPressed | Interaction::Pressed | Interaction::None => {
+                    Sprite::from_color(SECONDARY_BUTTON)
+                }
             };
         } else {
             *sprite = match *interaction {
-                Interaction::Clicked => Sprite::from_color(PRESSED_BUTTON),
+                Interaction::JustPressed | Interaction::Pressed => {
+                    Sprite::from_color(PRESSED_BUTTON)
+                }
                 Interaction::Hovered => Sprite::from_color(HOVERED_BUTTON),
                 Interaction::None => Sprite::from_color(NORMAL_BUTTON),
             };

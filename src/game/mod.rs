@@ -300,7 +300,7 @@ fn button_actions(
     query: Query<(&Interaction, &UiButtonAction), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, action) in &query {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::JustPressed {
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
                 UiButtonAction::Hint => give_hint(&mut game, &mut selection),

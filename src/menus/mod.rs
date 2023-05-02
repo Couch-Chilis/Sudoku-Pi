@@ -39,7 +39,7 @@ fn main_button_actions(
     mut app_exit_events: EventWriter<AppExit>,
 ) {
     for (interaction, action) in &query {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::JustPressed {
             match action {
                 MainButtonAction::ContinueGame => screen_state.set(ScreenState::Game),
                 MainButtonAction::GoToHowToPlay => screen_state.set(ScreenState::HowToPlay),
@@ -64,7 +64,7 @@ fn difficulty_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
     for (interaction, action) in &query {
-        if *interaction == Interaction::Clicked {
+        if *interaction == Interaction::JustPressed {
             match action {
                 DifficultyButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
                 DifficultyButtonAction::StartGameAtDifficulty(difficulty) => {
