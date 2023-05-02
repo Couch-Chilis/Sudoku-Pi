@@ -2,7 +2,7 @@ use super::{Button, ButtonType, ComputedPosition};
 use crate::{constants::*, utils::SpriteExt};
 use bevy::{prelude::*, window::PrimaryWindow};
 
-#[derive(Clone, Component, Default, Eq, PartialEq)]
+#[derive(Clone, Component, Debug, Default, Eq, PartialEq)]
 pub enum Interaction {
     #[default]
     None,

@@ -87,6 +87,10 @@ impl FlexContainerStyle {
     pub fn with_gap(self, gap: Val) -> Self {
         Self { gap, ..self }
     }
+
+    pub fn with_padding(self, padding: Size) -> Self {
+        Self { padding, ..self }
+    }
 }
 
 #[derive(Clone, Copy, Default, Eq, PartialEq)]
@@ -113,9 +117,14 @@ impl FlexDirection {
 /// need components that can be mixed and matched with non-UI entities, to allow
 /// custom transforms on them.
 ///
-/// Flex items should be attached to a renderable entities, rather than
-/// inserting the entities as a children of flex items. This also allows a
-/// single entity to act as both flex item and container.
+/// Flex items should be attached to renderable entities, rather than inserting
+/// the entities as children of flex items. Inserting children is allowed too,
+/// but those entities will not have a `ComputedPosition` and thus won't be
+/// usable with the `Interaction` component or be able to host further nested
+/// flex containers.
+///
+/// A single entity may act as both flex item and container, which is the
+/// recommended way of nesting layouts.
 #[derive(Bundle, Clone)]
 pub struct FlexItemBundle {
     pub flex: Flex,
@@ -141,6 +150,9 @@ impl Default for FlexItemBundle {
 
 #[derive(Clone, Component)]
 pub struct FlexItemStyle {
+    /// How the item should be aligned along the container's cross axis.
+    pub align_self: Alignment,
+
     /// The base size that should be reserved for this item.
     pub flex_base: Size,
 
@@ -232,6 +244,11 @@ impl FlexItemStyle {
         }
     }
 
+    /// Sets the given alignment on the `align_self` field.
+    pub fn with_alignment(self, align_self: Alignment) -> Self {
+        Self { align_self, ..self }
+    }
+
     /// Sets the `preserve_aspect_ratio` boolean to `true`.
     pub fn with_fixed_aspect_ratio(self) -> Self {
         Self {
@@ -262,6 +279,7 @@ impl FlexItemStyle {
 impl Default for FlexItemStyle {
     fn default() -> Self {
         Self {
+            align_self: Default::default(),
             flex_base: Default::default(),
             flex_grow: 0.,
             flex_shrink: 0.,
@@ -295,7 +313,15 @@ impl FlexLeafBundle {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
+pub enum Alignment {
+    #[default]
+    Centered,
+    End,
+    Start,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Size {
     pub width: Val,
     pub height: Val,
@@ -318,7 +344,7 @@ impl Size {
     }
 }
 
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub enum Val {
     /// Nada.
     #[default]

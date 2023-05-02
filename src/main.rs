@@ -91,8 +91,10 @@ fn main() {
 
 fn setup(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     mut fonts: ResMut<Assets<Font>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    asset_server: Res<AssetServer>,
     game: Res<Game>,
 ) {
     commands.spawn(Camera2dBundle::default());
@@ -112,20 +114,20 @@ fn setup(
         ..default()
     };
 
-    /*commands.spawn((
-        Screen::for_state(ScreenState::Settings),
-        Flex,
-        SettingsScreen,
-        flex_container.clone(),
-    ));*/
-
     let mut main_screen = commands.spawn((
         Screen::for_state(ScreenState::MainMenu),
         Flex,
         MainScreen,
         flex_container.clone(),
     ));
-    main_menu_setup(&mut main_screen, &asset_server, &fonts, &game);
+    main_menu_setup(
+        &mut main_screen,
+        &mut meshes,
+        &mut materials,
+        &asset_server,
+        &fonts,
+        &game,
+    );
 
     let mut game_screen = commands.spawn((
         Screen::for_state(ScreenState::Game),
@@ -214,9 +216,8 @@ fn on_resize(
 fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
     use ScreenState::*;
     match screen {
-        MainMenu | SelectDifficulty => (0., 0.),
+        MainMenu | SelectDifficulty | Settings => (0., 0.),
         Game | Score => (1., 0.),
         HowToPlay => (-1., 0.),
-        Settings => (0., -1.),
     }
 }

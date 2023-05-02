@@ -32,7 +32,7 @@ pub struct ToggleBundle {
 }
 
 impl ToggleBundle {
-    pub fn with_style(style: FlexItemStyle) -> Self {
+    pub fn from_style(style: FlexItemStyle) -> Self {
         Self {
             flex: FlexItemBundle::from_style(style),
             background: Sprite::from_color(COLOR_BUTTON_BACKGROUND),

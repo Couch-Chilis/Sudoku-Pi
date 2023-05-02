@@ -95,6 +95,10 @@ fn layout(flex_query: &mut FlexQuery) {
             .padding
             .for_direction(direction)
             .evaluate(&scaling);
+        let cross_padding = container_style
+            .padding
+            .for_direction(cross)
+            .evaluate(&cross_scaling);
 
         let num_gaps = match container_style.gap {
             Val::None => 0.,
@@ -156,6 +160,16 @@ fn layout(flex_query: &mut FlexQuery) {
                 1.,
             );
 
+            // Determine the margins along the main and cross axes.
+            let margin = item_style
+                .margin
+                .for_direction(direction)
+                .evaluate(&scaling);
+            let cross_margin = item_style
+                .margin
+                .for_direction(cross)
+                .evaluate(&cross_scaling);
+
             // Grow or shrink as needed and if allowed.
             let spare_size = 1. - total_size;
             if spare_size > 0. {
@@ -171,10 +185,6 @@ fn layout(flex_query: &mut FlexQuery) {
                         let mut cross_size = (item_size / base_size) * base_cross_size;
 
                         // Make sure we don't grow too large along the cross axis.
-                        let cross_margin = item_style
-                            .margin
-                            .for_direction(cross)
-                            .evaluate(&cross_scaling);
                         let total_cross_size = cross_size + 2. * cross_margin;
                         if total_cross_size > 1. {
                             let previous_cross_size = cross_size;
@@ -236,7 +246,7 @@ fn layout(flex_query: &mut FlexQuery) {
                 }
             }
 
-            // An item that wants to grow and doesn't care about aspect ratio,
+            // An item that wants to grow and doesn't care about aspect ratio
             // may take all available space on the cross axis.
             if item_style.flex_grow > 0. && !item_style.preserve_aspect_ratio {
                 if direction == FlexDirection::Column {
@@ -250,18 +260,24 @@ fn layout(flex_query: &mut FlexQuery) {
                 }
             }
 
-            // Determine the main axis margin.
-            let margin = item_style
-                .margin
-                .for_direction(direction)
-                .evaluate(&scaling);
-
             // Determine translation.
             let z = transform.translation.z; // Preserve the z-index.
             let translation = if direction == FlexDirection::Column {
-                Vec3::new(0., 0.5 - offset - margin - 0.5 * scale.y, z)
+                let x = match item_style.align_self {
+                    Alignment::Centered => 0.,
+                    Alignment::End => 0.5 - cross_padding - cross_margin - 0.5 * scale.x,
+                    Alignment::Start => -0.5 + cross_padding + cross_margin + 0.5 * scale.x,
+                };
+                let y = 0.5 - offset - margin - 0.5 * scale.y;
+                Vec3::new(x, y, z)
             } else {
-                Vec3::new(-0.5 + offset + margin + 0.5 * scale.x, 0., z)
+                let x = -0.5 + offset + margin + 0.5 * scale.x;
+                let y = match item_style.align_self {
+                    Alignment::Centered => 0.,
+                    Alignment::End => -0.5 + cross_padding + cross_margin + 0.5 * scale.y,
+                    Alignment::Start => 0.5 - cross_padding - cross_margin - 0.5 * scale.y,
+                };
+                Vec3::new(x, y, z)
             };
 
             let mut layout_transform = Transform {

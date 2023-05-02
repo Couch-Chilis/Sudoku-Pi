@@ -1,4 +1,4 @@
-use super::ButtonBuilder;
+use super::{ButtonBuilder, ToggleBuilder};
 use crate::sudoku::Game;
 use crate::ui::*;
 use crate::{Fonts, ScreenState};
@@ -8,8 +8,13 @@ use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
 use std::f32::consts::PI;
 use std::time::Duration;
 
+#[derive(Component)]
+pub struct SettingsIcon;
+
 pub fn main_menu_setup(
     main_screen: &mut EntityCommands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
     asset_server: &AssetServer,
     fonts: &Fonts,
     game: &Game,
@@ -18,10 +23,17 @@ pub fn main_menu_setup(
         // Logo.
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::default(),
+                FlexContainerStyle::row().with_gap(Val::Auto),
                 FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.)),
             ))
             .with_children(|logo_section| {
+                // Workaround to keep the logo centered.
+                logo_section.spawn(FlexLeafBundle::from_style(
+                    FlexItemStyle::fixed_size(Val::Vmin(10.), Val::Vmin(10.))
+                        .with_margin(Size::all(Val::Vmin(5.))),
+                ));
+
+                // Logo.
                 logo_section
                     .spawn(FlexLeafBundle::from_style(
                         FlexItemStyle::preferred_size(Val::Vmin(38.), Val::Vmin(80.))
@@ -39,15 +51,35 @@ pub fn main_menu_setup(
                             ..default()
                         });
                     });
+
+                // Cog.
+                logo_section.spawn((
+                    SettingsIcon,
+                    Interaction::None,
+                    MenuButtonAction::Settings,
+                    FlexItemBundle::from_style(
+                        FlexItemStyle::fixed_size(Val::Vmin(10.), Val::Vmin(10.))
+                            .with_alignment(Alignment::Start)
+                            .with_margin(Size::all(Val::Vmin(5.)))
+                            .with_transform(Transform {
+                                translation: Vec3::new(0., 0., 1.),
+                                scale: Vec3::new(1. / 64., 1. / 64., 1.),
+                                ..default()
+                            }),
+                    ),
+                    SpriteBundle {
+                        texture: asset_server.load("cog.png"),
+                        ..default()
+                    },
+                ));
             });
 
         // Main menu buttons.
         build_button_section(screen, 0., |main_section| {
-            use MainButtonAction::*;
-            let buttons = ButtonBuilder::new(&fonts);
+            use MainScreenButtonAction::*;
+            let buttons = ButtonBuilder::new(fonts);
             buttons.add_ternary_with_text_and_action(main_section, "Quit", Quit);
             buttons.add_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
-            buttons.add_secondary_with_text_and_action(main_section, "Settings", GoToSettings);
             if game.may_continue() {
                 buttons.add_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
                 buttons.add_with_text_and_action(main_section, "Continue", ContinueGame);
@@ -58,13 +90,28 @@ pub fn main_menu_setup(
 
         // Difficulty buttons.
         build_button_section(screen, -0.5 * PI, |parent| {
-            use DifficultyButtonAction::*;
-            let buttons = ButtonBuilder::new(&fonts);
-            buttons.add_ternary_with_text_and_action(parent, "Cancel", BackToMain);
+            use DifficultyScreenButtonAction::*;
+            let buttons = ButtonBuilder::new(fonts);
+            buttons.add_ternary_with_text_and_action(parent, "Back", BackToMain);
             buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(4));
             buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(3));
             buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(2));
             buttons.add_with_text_and_action(parent, "Easy", StartGameAtDifficulty(1));
+        });
+
+        // Settings buttons and toggles.
+        build_button_section(screen, 0.5 * PI, |parent| {
+            use SettingsButtonAction::*;
+            use SettingsToggle::*;
+            let buttons = ButtonBuilder::new(fonts);
+            let mut toggles = ToggleBuilder::new(fonts, meshes, materials);
+            buttons.add_ternary_with_text_and_action(parent, "Back", Back);
+            toggles.add_with_text_and_action(
+                parent,
+                "Highlight selection lines",
+                HighlightSelectionLines,
+            );
+            toggles.add_with_text_and_action(parent, "Show mistakes", ShowMistakes);
         });
     });
 }
@@ -116,53 +163,81 @@ pub struct ButtonSection {
 }
 
 #[derive(Component)]
-pub enum MainButtonAction {
+pub enum MainScreenButtonAction {
     ContinueGame,
     GoToHowToPlay,
     GoToNewGame,
-    GoToSettings,
     Quit,
 }
 
 // Handles screen navigation based on button actions in the main screen.
-pub fn main_button_actions(
-    query: Query<(&Interaction, &MainButtonAction), (Changed<Interaction>, With<Button>)>,
+pub fn main_screen_button_actions(
+    query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut app_exit_events: EventWriter<AppExit>,
 ) {
     for (interaction, action) in &query {
         if *interaction == Interaction::JustPressed {
+            use MainScreenButtonAction::*;
             match action {
-                MainButtonAction::ContinueGame => screen_state.set(ScreenState::Game),
-                MainButtonAction::GoToHowToPlay => screen_state.set(ScreenState::HowToPlay),
-                MainButtonAction::GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
-                MainButtonAction::GoToSettings => screen_state.set(ScreenState::Settings),
-                MainButtonAction::Quit => app_exit_events.send(AppExit),
+                ContinueGame => screen_state.set(ScreenState::Game),
+                GoToHowToPlay => screen_state.set(ScreenState::HowToPlay),
+                GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
+                Quit => app_exit_events.send(AppExit),
             }
         }
     }
 }
 
 #[derive(Component)]
-pub enum DifficultyButtonAction {
+pub enum DifficultyScreenButtonAction {
     BackToMain,
     StartGameAtDifficulty(u8),
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.
-pub fn difficulty_button_actions(
-    query: Query<(&Interaction, &DifficultyButtonAction), (Changed<Interaction>, With<Button>)>,
+pub fn difficulty_screen_button_actions(
+    query: Query<
+        (&Interaction, &DifficultyScreenButtonAction),
+        (Changed<Interaction>, With<Button>),
+    >,
     mut game: ResMut<Game>,
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
     for (interaction, action) in &query {
         if *interaction == Interaction::JustPressed {
+            use DifficultyScreenButtonAction::*;
             match action {
-                DifficultyButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
-                DifficultyButtonAction::StartGameAtDifficulty(difficulty) => {
+                BackToMain => screen_state.set(ScreenState::MainMenu),
+                StartGameAtDifficulty(difficulty) => {
                     *game = Game::generate(*difficulty).unwrap();
                     screen_state.set(ScreenState::Game);
                 }
+            }
+        }
+    }
+}
+
+#[derive(Component)]
+pub enum SettingsToggle {
+    HighlightSelectionLines,
+    ShowMistakes,
+}
+
+#[derive(Component)]
+pub enum SettingsButtonAction {
+    Back,
+}
+
+// Handles screen navigation based on button actions in the settings screen.
+pub fn settings_toggle_actions(
+    query: Query<(&Interaction, &SettingsButtonAction), (Changed<Interaction>, With<Button>)>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
+) {
+    for (interaction, action) in &query {
+        if *interaction == Interaction::JustPressed {
+            match action {
+                SettingsButtonAction::Back => screen_state.set(ScreenState::MainMenu),
             }
         }
     }
@@ -180,6 +255,7 @@ pub fn on_screen_change(
     let new_rotation = match screen_state.0 {
         ScreenState::MainMenu | ScreenState::Game => 0.,
         ScreenState::SelectDifficulty => 0.5 * PI,
+        ScreenState::Settings => -0.5 * PI,
         _ => return,
     };
 
@@ -224,5 +300,45 @@ impl Lens<Transform> for TransformRotationZLens {
     fn lerp(&mut self, target: &mut Transform, ratio: f32) {
         let value = self.start + (self.end - self.start) * ratio;
         target.rotation = Quat::from_rotation_z(value);
+    }
+}
+
+pub fn menu_interaction(
+    asset_server: Res<AssetServer>,
+    mut interaction_query: Query<
+        (&Interaction, &mut Handle<Image>),
+        (Changed<Interaction>, With<SettingsIcon>),
+    >,
+) {
+    for (interaction, mut image) in &mut interaction_query {
+        *image = match *interaction {
+            Interaction::JustPressed | Interaction::Pressed => asset_server.load("cog_pressed.png"),
+            Interaction::None | Interaction::Hovered => asset_server.load("cog.png"),
+        };
+    }
+}
+
+#[derive(Component)]
+pub enum MenuButtonAction {
+    Settings,
+}
+
+// Handles screen navigation based on button actions that persist across menus.
+pub fn menu_button_actions(
+    query: Query<(&Interaction, &MenuButtonAction), Changed<Interaction>>,
+    current_state: Res<State<ScreenState>>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
+) {
+    for (interaction, action) in &query {
+        if *interaction == Interaction::JustPressed {
+            use MenuButtonAction::*;
+            match action {
+                Settings => screen_state.set(if current_state.0 == ScreenState::Settings {
+                    ScreenState::MainMenu
+                } else {
+                    ScreenState::Settings
+                }),
+            }
+        }
     }
 }
