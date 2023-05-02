@@ -1,16 +1,16 @@
 use super::{Cell, Game, Notes, Sudoku};
+use crate::utils::ensure_sudoku_dir;
 use anyhow::{anyhow, Context};
 use serde::de::{self, SeqAccess, Visitor};
 use serde::ser::SerializeSeq;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
 use std::{fmt, fs};
 
 impl Game {
     /// Loads an existing game from disk, or returns `Self::default()` if no
     /// game could be loaded.
     pub fn load() -> Self {
-        fs::read(get_sudoku_path())
+        fs::read(ensure_sudoku_dir().join("game.json"))
             .context("Can't read file")
             .and_then(|json| Self::from_json(&json))
             .map_err(|err| println!("Can't restore Sudoku game: {err}"))
@@ -21,15 +21,16 @@ impl Game {
     ///
     /// This is called automatically on drop.
     fn save(&self) {
-        let path = get_sudoku_path();
+        let game_path = ensure_sudoku_dir().join("game.json");
+
         if self.current.is_solved() {
-            if path.exists() {
-                fs::remove_file(path)
+            if game_path.exists() {
+                fs::remove_file(game_path)
                     .unwrap_or_else(|err| println!("Can't clean up Sudoku game: {err}"));
             }
         } else {
             self.to_json()
-                .and_then(|json| fs::write(path, json).context("Can't write to file"))
+                .and_then(|json| fs::write(game_path, json).context("Can't write to file"))
                 .unwrap_or_else(|err| println!("Can't save Sudoku game: {err}"));
         }
     }
@@ -191,11 +192,4 @@ impl Serialize for Notes {
         }
         seq.end()
     }
-}
-
-fn get_sudoku_path() -> PathBuf {
-    #[allow(deprecated)]
-    std::env::home_dir()
-        .map(|path| path.join(".sudoku.json"))
-        .unwrap_or(PathBuf::from("/tmp/sudoku.json"))
 }

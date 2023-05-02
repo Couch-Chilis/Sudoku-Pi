@@ -63,7 +63,7 @@ pub enum ScreenState {
     Game,
     Score,
     HowToPlay,
-    Options,
+    Settings,
 }
 
 fn main() {
@@ -113,7 +113,7 @@ fn setup(
     };
 
     /*commands.spawn((
-        Screen::with_tile_x(-1.),
+        Screen::for_state(ScreenState::Settings),
         Flex,
         SettingsScreen,
         flex_container.clone(),
@@ -216,7 +216,7 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
     match screen {
         MainMenu | SelectDifficulty => (0., 0.),
         Game | Score => (1., 0.),
-        HowToPlay => (0., 1.),
-        Options => (-1., 0.),
+        HowToPlay => (-1., 0.),
+        Settings => (0., -1.),
     }
 }

@@ -87,6 +87,15 @@ fn layout(flex_query: &mut FlexQuery) {
 
         let direction = container_style.direction;
         let scaling = vminmax_scales.scaling_for_direction(direction);
+
+        let cross = direction.cross();
+        let cross_scaling = vminmax_scales.scaling_for_direction(cross);
+
+        let padding = container_style
+            .padding
+            .for_direction(direction)
+            .evaluate(&scaling);
+
         let num_gaps = match container_style.gap {
             Val::None => 0.,
             _ => {
@@ -113,11 +122,7 @@ fn layout(flex_query: &mut FlexQuery) {
             })
             .fold(
                 (
-                    2. * container_style
-                        .padding
-                        .for_direction(direction)
-                        .evaluate(&scaling)
-                        + num_gaps * container_style.gap.evaluate(&scaling),
+                    2. * padding + num_gaps * container_style.gap.evaluate(&scaling),
                     match container_style.gap {
                         Val::Auto => num_gaps,
                         _ => 0.,
@@ -134,7 +139,7 @@ fn layout(flex_query: &mut FlexQuery) {
             );
 
         // We keep track of the offset for positioning children along the axis.
-        let mut offset = 0.;
+        let mut offset = padding;
 
         for item_entity in children {
             let Some((item_style, mut computed_position, mut transform)) =
@@ -161,8 +166,6 @@ fn layout(flex_query: &mut FlexQuery) {
 
                     // Preserve the aspect ratio, if requested.
                     if item_style.preserve_aspect_ratio {
-                        let cross = direction.cross();
-                        let cross_scaling = vminmax_scales.scaling_for_direction(cross);
                         let base_cross_size =
                             flex_base.for_direction(cross).evaluate(&cross_scaling);
                         let mut cross_size = (item_size / base_size) * base_cross_size;
@@ -205,8 +208,6 @@ fn layout(flex_query: &mut FlexQuery) {
 
                 // Preserve the aspect ratio, if requested.
                 if item_style.preserve_aspect_ratio {
-                    let cross = direction.cross();
-                    let cross_scaling = vminmax_scales.scaling_for_direction(cross);
                     let base_cross_size = flex_base.for_direction(cross).evaluate(&cross_scaling);
                     let mut cross_size = (item_size / base_size) * base_cross_size;
 
@@ -239,9 +240,13 @@ fn layout(flex_query: &mut FlexQuery) {
             // may take all available space on the cross axis.
             if item_style.flex_grow > 0. && !item_style.preserve_aspect_ratio {
                 if direction == FlexDirection::Column {
-                    scale.x = 1. - 2. * item_style.margin.width.evaluate(&scaling);
+                    scale.x = 1.
+                        - 2. * item_style.margin.width.evaluate(&cross_scaling)
+                        - 2. * container_style.padding.width.evaluate(&cross_scaling);
                 } else {
-                    scale.y = 1. - 2. * item_style.margin.height.evaluate(&scaling);
+                    scale.y = 1.
+                        - 2. * item_style.margin.height.evaluate(&cross_scaling)
+                        - 2. * container_style.padding.height.evaluate(&cross_scaling);
                 }
             }
 

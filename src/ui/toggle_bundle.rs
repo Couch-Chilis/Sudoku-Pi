@@ -2,27 +2,23 @@ use super::{FlexItemBundle, FlexItemStyle, Interaction};
 use crate::{constants::COLOR_BUTTON_BACKGROUND, utils::SpriteExt};
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
 
-/// Marker for buttons.
+/// Marker for toggle.
 #[derive(Clone, Component)]
-pub struct Button;
+pub struct Toggle;
 
-/// Marks a button as secondary.
-#[derive(Clone, Component, Default)]
-pub enum ButtonType {
-    #[default]
-    Primary,
-    Secondary,
-    Ternary,
-}
-
-/// Marker for button borders.
+/// Marker for toggle container. The container usually contains a text label and
+/// the toggle itself.
 #[derive(Clone, Component)]
-pub struct Border;
+pub struct ToggleContainer;
 
-/// A UI button with text that is also a flex item.
+/// Marks a toggle as enabled.
+#[derive(Clone, Component)]
+pub struct Enabled;
+
+/// A UI toggle that is also a flex item.
 #[derive(Bundle, Clone)]
-pub struct ButtonBundle {
-    pub button: Button,
+pub struct ToggleBundle {
+    pub toggle: Toggle,
     pub flex: FlexItemBundle,
     pub interaction: Interaction,
 
@@ -35,8 +31,8 @@ pub struct ButtonBundle {
     pub computed_visibility: ComputedVisibility,
 }
 
-impl ButtonBundle {
-    pub fn from_style(style: FlexItemStyle) -> Self {
+impl ToggleBundle {
+    pub fn with_style(style: FlexItemStyle) -> Self {
         Self {
             flex: FlexItemBundle::from_style(style),
             background: Sprite::from_color(COLOR_BUTTON_BACKGROUND),
@@ -46,10 +42,10 @@ impl ButtonBundle {
     }
 }
 
-impl Default for ButtonBundle {
+impl Default for ToggleBundle {
     fn default() -> Self {
         Self {
-            button: Button,
+            toggle: Toggle,
             flex: Default::default(),
             interaction: Default::default(),
             background: Default::default(),

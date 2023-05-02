@@ -49,10 +49,10 @@ fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiBut
     let text_style = TextStyle {
         font: fonts.menu.clone(),
         font_size: 60.,
-        color: BUTTON_TEXT,
+        color: COLOR_BUTTON_TEXT,
     };
 
-    row.spawn((ButtonBundle::with_style(button_style), action))
+    row.spawn((ButtonBundle::from_style(button_style), action))
         .with_children(|button| {
             button.spawn(Text2dBundle {
                 text: Text::from_section(text, text_style.clone()),

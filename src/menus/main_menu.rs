@@ -1,7 +1,8 @@
-use super::{ButtonBuilder, DifficultyButtonAction, MainButtonAction};
+use super::ButtonBuilder;
 use crate::sudoku::Game;
 use crate::ui::*;
 use crate::{Fonts, ScreenState};
+use bevy::app::AppExit;
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
 use std::f32::consts::PI;
@@ -22,7 +23,7 @@ pub fn main_menu_setup(
             ))
             .with_children(|logo_section| {
                 logo_section
-                    .spawn(FlexLeafBundle::with_style(
+                    .spawn(FlexLeafBundle::from_style(
                         FlexItemStyle::preferred_size(Val::Vmin(38.), Val::Vmin(80.))
                             .with_margin(Size::all(Val::Vmin(10.)))
                             .with_fixed_aspect_ratio(),
@@ -44,11 +45,14 @@ pub fn main_menu_setup(
         build_button_section(screen, 0., |main_section| {
             use MainButtonAction::*;
             let buttons = ButtonBuilder::new(&fonts);
-            buttons.add_secondary_with_text_and_action(main_section, "Quit", Quit);
-            buttons.add_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
-            buttons.add_with_text_and_action(main_section, "New Game", GoToNewGame);
+            buttons.add_ternary_with_text_and_action(main_section, "Quit", Quit);
+            buttons.add_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
+            buttons.add_secondary_with_text_and_action(main_section, "Settings", GoToSettings);
             if game.may_continue() {
+                buttons.add_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
                 buttons.add_with_text_and_action(main_section, "Continue", ContinueGame);
+            } else {
+                buttons.add_with_text_and_action(main_section, "New Game", GoToNewGame);
             }
         });
 
@@ -56,7 +60,7 @@ pub fn main_menu_setup(
         build_button_section(screen, -0.5 * PI, |parent| {
             use DifficultyButtonAction::*;
             let buttons = ButtonBuilder::new(&fonts);
-            buttons.add_secondary_with_text_and_action(parent, "Cancel", BackToMain);
+            buttons.add_ternary_with_text_and_action(parent, "Cancel", BackToMain);
             buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(4));
             buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(3));
             buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(2));
@@ -109,6 +113,59 @@ fn build_button_section(
 pub struct ButtonSection {
     initial_rotation: f32,
     current_rotation: f32,
+}
+
+#[derive(Component)]
+pub enum MainButtonAction {
+    ContinueGame,
+    GoToHowToPlay,
+    GoToNewGame,
+    GoToSettings,
+    Quit,
+}
+
+// Handles screen navigation based on button actions in the main screen.
+pub fn main_button_actions(
+    query: Query<(&Interaction, &MainButtonAction), (Changed<Interaction>, With<Button>)>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
+    mut app_exit_events: EventWriter<AppExit>,
+) {
+    for (interaction, action) in &query {
+        if *interaction == Interaction::JustPressed {
+            match action {
+                MainButtonAction::ContinueGame => screen_state.set(ScreenState::Game),
+                MainButtonAction::GoToHowToPlay => screen_state.set(ScreenState::HowToPlay),
+                MainButtonAction::GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
+                MainButtonAction::GoToSettings => screen_state.set(ScreenState::Settings),
+                MainButtonAction::Quit => app_exit_events.send(AppExit),
+            }
+        }
+    }
+}
+
+#[derive(Component)]
+pub enum DifficultyButtonAction {
+    BackToMain,
+    StartGameAtDifficulty(u8),
+}
+
+// Handles screen navigation based on button actions in the difficulty screen.
+pub fn difficulty_button_actions(
+    query: Query<(&Interaction, &DifficultyButtonAction), (Changed<Interaction>, With<Button>)>,
+    mut game: ResMut<Game>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
+) {
+    for (interaction, action) in &query {
+        if *interaction == Interaction::JustPressed {
+            match action {
+                DifficultyButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
+                DifficultyButtonAction::StartGameAtDifficulty(difficulty) => {
+                    *game = Game::generate(*difficulty).unwrap();
+                    screen_state.set(ScreenState::Game);
+                }
+            }
+        }
+    }
 }
 
 pub fn on_screen_change(

@@ -9,7 +9,7 @@ pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game) {
     parent.with_children(|screen| {
         let mut board = screen.spawn((
             Board,
-            FlexLeafBundle::with_style(
+            FlexLeafBundle::from_style(
                 FlexItemStyle::preferred_and_minimum_size(
                     Size::all(Val::Vmin(90.)),
                     Size::all(Val::Vmin(50.)),
@@ -64,17 +64,17 @@ fn draw_lines(board: &mut EntityCommands) {
 }
 
 fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
-    use Orientation::*;
-    let translation = match orientation {
-        Horizontal => Vec3::new(0., (n as f32 - 4.5) * CELL_SIZE, 2.),
-        Vertical => Vec3::new((n as f32 - 4.5) * CELL_SIZE, 0., 2.),
+    use Thickness::*;
+    let (thickness, color, z) = match thickness {
+        Thin => (0.05 * CELL_SIZE, COLOR_BOARD_LINE_THIN, 2.),
+        Medium => (0.1 * CELL_SIZE, COLOR_BOARD_LINE_MEDIUM, 3.),
+        Thick => (0.15 * CELL_SIZE, COLOR_BOARD_LINE_THICK, 4.),
     };
 
-    use Thickness::*;
-    let thickness = match thickness {
-        Thin => 0.05 * CELL_SIZE,
-        Medium => 0.1 * CELL_SIZE,
-        Thick => 0.15 * CELL_SIZE,
+    use Orientation::*;
+    let translation = match orientation {
+        Horizontal => Vec3::new(0., (n as f32 - 4.5) * CELL_SIZE, z),
+        Vertical => Vec3::new((n as f32 - 4.5) * CELL_SIZE, 0., z),
     };
 
     let scale = match orientation {
@@ -83,7 +83,7 @@ fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bun
     };
 
     SpriteBundle {
-        sprite: Sprite::from_color(Color::BLACK),
+        sprite: Sprite::from_color(color),
         transform: Transform {
             translation,
             scale,
