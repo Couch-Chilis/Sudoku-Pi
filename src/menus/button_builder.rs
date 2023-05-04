@@ -148,7 +148,7 @@ impl ButtonBuilder {
                 button.spawn((
                     FlexItemBundle::from_style(self.alternative_background_style.clone()),
                     SpriteBundle {
-                        sprite: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
+                        sprite: Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
                         transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
                         ..default()
                     },
