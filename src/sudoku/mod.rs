@@ -19,6 +19,7 @@ pub struct Game {
     pub solution: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+    pub elapsed_secs: f32,
 }
 
 impl Game {

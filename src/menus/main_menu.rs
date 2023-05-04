@@ -1,7 +1,7 @@
 use super::{ButtonBuilder, SettingsToggle, ToggleBuilder};
 use crate::settings::Settings;
 use crate::sudoku::Game;
-use crate::{constants::*, ui::*};
+use crate::{constants::*, ui::*, GameTimer};
 use crate::{Fonts, ScreenState};
 use bevy::app::AppExit;
 use bevy::{ecs::system::EntityCommands, prelude::*};
@@ -209,6 +209,7 @@ pub fn difficulty_screen_button_actions(
         (Changed<Interaction>, With<Button>),
     >,
     mut game: ResMut<Game>,
+    mut game_timer: ResMut<GameTimer>,
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
     for (interaction, action) in &query {
@@ -218,6 +219,7 @@ pub fn difficulty_screen_button_actions(
                 BackToMain => screen_state.set(ScreenState::MainMenu),
                 StartGameAtDifficulty(difficulty) => {
                     *game = Game::generate(*difficulty).unwrap();
+                    game_timer.stopwatch.reset();
                     screen_state.set(ScreenState::Game);
                 }
             }

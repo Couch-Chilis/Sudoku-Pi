@@ -6,9 +6,9 @@ mod sudoku;
 mod ui;
 mod utils;
 
-use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy::window::WindowResized;
+use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::board_setup;
 use menus::main_menu_setup;
@@ -25,6 +25,11 @@ const BOARD_FONT: &[u8] = include_bytes!("../assets/OpenSans-Regular.ttf");
 pub struct Fonts {
     menu: Handle<Font>,
     board: Handle<Font>,
+}
+
+#[derive(Default, Resource)]
+pub struct GameTimer {
+    stopwatch: Stopwatch,
 }
 
 /// Screens are laid out in tiles next to one another.
@@ -69,11 +74,23 @@ pub enum ScreenState {
 }
 
 fn main() {
+    let game = Game::load();
+
+    let mut timer = GameTimer::default();
+    if game.elapsed_secs != 0. {
+        timer
+            .stopwatch
+            .set_elapsed(Duration::from_secs_f32(game.elapsed_secs));
+    }
+
     App::new()
         .add_system(on_escape)
         .add_system(on_resize)
         .add_system(on_screen_change)
+        .add_system(on_before_exit)
         .init_resource::<Fonts>()
+        .insert_resource(game)
+        .insert_resource(timer)
         .insert_resource(Settings::load())
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
@@ -87,6 +104,7 @@ fn main() {
         .add_plugin(UiPlugin)
         .add_state::<ScreenState>()
         .add_startup_system(setup)
+        .add_system(on_timer)
         .add_plugin(game::GamePlugin)
         .add_plugin(menus::MenuPlugin)
         .run();
@@ -143,6 +161,19 @@ fn setup(
     board_setup(&mut game_screen, &fonts, &game, &settings);
 
     commands.insert_resource(fonts);
+}
+
+// Synchronize the timer to the game state right before the game exits.
+// We don't keep the timer in the game state updated all the time, because it
+// would trigger full rerenders of the board every frame.
+fn on_before_exit(
+    mut game: ResMut<Game>,
+    game_timer: Res<GameTimer>,
+    exit_events: EventReader<AppExit>,
+) {
+    if !exit_events.is_empty() {
+        game.elapsed_secs = game_timer.stopwatch.elapsed_secs();
+    }
 }
 
 fn on_escape(
@@ -215,6 +246,12 @@ fn on_resize(
             1.,
         );
         transform.scale = Vec3::new(*width, *height, 1.);
+    }
+}
+
+fn on_timer(mut game_timer: ResMut<GameTimer>, screen: Res<State<ScreenState>>, time: Res<Time>) {
+    if screen.0 == ScreenState::Game {
+        game_timer.stopwatch.tick(time.delta());
     }
 }
 

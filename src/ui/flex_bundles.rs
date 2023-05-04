@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
 
 /// Marker for any flex entity, be it an item or a container.
@@ -381,6 +383,20 @@ impl Val {
             Self::Percent(value) => 0.01 * value,
             Self::Vmax(value) => axis_scaling.vmax_scale * value,
             Self::Vmin(value) => axis_scaling.vmin_scale * value,
+        }
+    }
+}
+
+impl Mul<Val> for f32 {
+    type Output = Val;
+
+    fn mul(self, rhs: Val) -> Self::Output {
+        match rhs {
+            Val::None => Val::None,
+            Val::Auto => Val::Auto,
+            Val::Percent(percentage) => Val::Percent(self * percentage),
+            Val::Vmax(percentage) => Val::Vmax(self * percentage),
+            Val::Vmin(percentage) => Val::Vmin(self * percentage),
         }
     }
 }

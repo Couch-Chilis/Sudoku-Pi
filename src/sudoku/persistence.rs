@@ -49,6 +49,7 @@ impl Game {
                     start,
                     current,
                     notes,
+                    elapsed_secs,
                 } = serialized_game;
                 match start.find_unique_solution() {
                     Some(solution) => Ok(Game {
@@ -56,6 +57,7 @@ impl Game {
                         current,
                         solution,
                         notes,
+                        elapsed_secs,
                     }),
                     None => Err(anyhow!("Saved game didn't have a unique solution")),
                 }
@@ -75,6 +77,7 @@ pub struct SerializedGame {
     pub start: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+    pub elapsed_secs: f32,
 }
 
 impl From<&Game> for SerializedGame {
@@ -83,6 +86,7 @@ impl From<&Game> for SerializedGame {
             start: game.start.clone(),
             current: game.current.clone(),
             notes: game.notes.clone(),
+            elapsed_secs: game.elapsed_secs,
         }
     }
 }

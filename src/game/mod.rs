@@ -9,23 +9,22 @@ use crate::{Fonts, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
-use game_ui::{init_game_ui, UiButtonAction};
+use game_ui::{init_game_ui, on_time_changed, UiButtonAction};
 use std::num::NonZeroU8;
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Game::load())
-            .insert_resource(Selection::default())
-            .add_systems((
-                keyboard_input.run_if(in_state(ScreenState::Game)),
-                mouse_button_input.run_if(in_state(ScreenState::Game)),
-                render_numbers.run_if(in_state(ScreenState::Game)),
-                render_notes.run_if(in_state(ScreenState::Game)),
-                render_highlights.run_if(in_state(ScreenState::Game)),
-                button_actions.run_if(in_state(ScreenState::Game)),
-            ));
+        app.insert_resource(Selection::default()).add_systems((
+            keyboard_input.run_if(in_state(ScreenState::Game)),
+            mouse_button_input.run_if(in_state(ScreenState::Game)),
+            render_numbers.run_if(in_state(ScreenState::Game)),
+            render_notes.run_if(in_state(ScreenState::Game)),
+            render_highlights.run_if(in_state(ScreenState::Game)),
+            button_actions.run_if(in_state(ScreenState::Game)),
+            on_time_changed,
+        ));
     }
 }
 

@@ -1,8 +1,7 @@
-use crate::sudoku::math::get_pos;
-
 use super::math::get_x_and_y_from_pos;
 use super::solver::{rate_difficulty, solve};
 use super::Sudoku;
+use crate::sudoku::math::get_pos;
 use anyhow::{bail, Context};
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -83,6 +82,7 @@ impl super::Game {
             start: start.clone(),
             current: start,
             notes: Default::default(),
+            elapsed_secs: 0.,
         })
     }
 }
