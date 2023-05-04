@@ -2,10 +2,10 @@ mod board_builder;
 mod board_numbers;
 mod game_ui;
 
-use crate::constants::{CELL_SCALE, CELL_SIZE};
+use crate::constants::{CELL_SCALE, CELL_SIZE, COLOR_MAIN_POP_DARK};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
 use crate::ui::{Button, ComputedPosition, Interaction};
-use crate::{Fonts, ScreenState};
+use crate::{Fonts, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
@@ -52,9 +52,14 @@ enum HighlightKind {
     Hint,
 }
 
-pub fn board_setup(game_screen: &mut EntityCommands, fonts: &Fonts, game: &Game) {
+pub fn board_setup(
+    game_screen: &mut EntityCommands,
+    fonts: &Fonts,
+    game: &Game,
+    settings: &Settings,
+) {
     init_game_ui(game_screen, fonts, |parent| {
-        build_board(parent, fonts, game)
+        build_board(parent, fonts, game, settings)
     });
 }
 
@@ -120,23 +125,35 @@ fn mouse_button_input(
     }
 }
 
-fn render_numbers(mut numbers: Query<(&Number, &mut Text)>, game: Res<Game>) {
-    if !game.is_changed() {
+fn render_numbers(
+    mut numbers: Query<(&Number, &mut Text)>,
+    game: Res<Game>,
+    settings: Res<Settings>,
+) {
+    if !game.is_changed() && !settings.is_changed() {
         return;
     }
 
     for (Number(x, y), mut text) in &mut numbers {
         if let Some(n) = game.current.get(*x, *y) {
             text.sections[0].value = n.to_string();
-            text.sections[0].style.color = get_number_color(&game, *x, *y);
+            text.sections[0].style.color = get_number_color(&game, &settings, *x, *y);
         } else {
             text.sections[0].style.color = Color::NONE;
         };
     }
 }
 
-fn get_number_color(game: &Game, x: u8, y: u8) -> Color {
-    if game.start.has(x, y) {
+fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
+    if settings.show_mistakes {
+        // If we show mistakes, there's no reason to visually differentiate
+        // between starting numbers and numbers filled in correctly.
+        if game.current.get(x, y) != game.solution.get(x, y) {
+            COLOR_MAIN_POP_DARK
+        } else {
+            Color::BLACK
+        }
+    } else if game.start.has(x, y) {
         Color::BLACK
     } else {
         Color::BLUE
@@ -160,11 +177,12 @@ fn render_notes(mut notes: Query<(&Note, &mut Text)>, game: Res<Game>) {
 fn render_highlights(
     mut commands: Commands,
     game: Res<Game>,
+    settings: Res<Settings>,
     selection: Res<Selection>,
     board: Query<Entity, With<Board>>,
     highlighted_numbers: Query<Entity, With<HighlightedNumber>>,
 ) {
-    if !game.is_changed() && !selection.is_changed() {
+    if !game.is_changed() && !selection.is_changed() && !settings.is_changed() {
         return;
     }
 
@@ -183,13 +201,15 @@ fn render_highlights(
 
         let selected_cell = game.current.get(x, y);
         if selected_cell.is_some() {
-            // Find all the cells within range.
-            for pos in 0..81 {
-                if game.current.get_by_pos(pos) == selected_cell {
-                    let (x, y) = get_x_and_y_from_pos(pos);
-                    for i in 0..9 {
-                        highlights[get_pos(x, i)] = Some(HighlightKind::InRange);
-                        highlights[get_pos(i, y)] = Some(HighlightKind::InRange);
+            if settings.highlight_selection_lines {
+                // Find all the cells within range.
+                for pos in 0..81 {
+                    if game.current.get_by_pos(pos) == selected_cell {
+                        let (x, y) = get_x_and_y_from_pos(pos);
+                        for i in 0..9 {
+                            highlights[get_pos(x, i)] = Some(HighlightKind::InRange);
+                            highlights[get_pos(i, y)] = Some(HighlightKind::InRange);
+                        }
                     }
                 }
             }

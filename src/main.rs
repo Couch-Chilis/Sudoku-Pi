@@ -1,6 +1,7 @@
 mod constants;
 mod game;
 mod menus;
+mod settings;
 mod sudoku;
 mod ui;
 mod utils;
@@ -11,6 +12,7 @@ use bevy::window::WindowResized;
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::board_setup;
 use menus::main_menu_setup;
+use settings::Settings;
 use std::time::Duration;
 use sudoku::Game;
 use ui::*;
@@ -72,6 +74,7 @@ fn main() {
         .add_system(on_resize)
         .add_system(on_screen_change)
         .init_resource::<Fonts>()
+        .insert_resource(Settings::load())
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
@@ -95,6 +98,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
+    settings: Res<Settings>,
     game: Res<Game>,
 ) {
     commands.spawn(Camera2dBundle::default());
@@ -125,6 +129,7 @@ fn setup(
         &mut meshes,
         &mut materials,
         &asset_server,
+        &settings,
         &fonts,
         &game,
     );
@@ -135,7 +140,7 @@ fn setup(
         GameScreen,
         flex_container,
     ));
-    board_setup(&mut game_screen, &fonts, &game);
+    board_setup(&mut game_screen, &fonts, &game, &settings);
 
     commands.insert_resource(fonts);
 }

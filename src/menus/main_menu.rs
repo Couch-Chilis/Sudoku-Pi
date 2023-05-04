@@ -1,6 +1,7 @@
-use super::{ButtonBuilder, ToggleBuilder};
+use super::{ButtonBuilder, SettingsToggle, ToggleBuilder};
+use crate::settings::Settings;
 use crate::sudoku::Game;
-use crate::ui::*;
+use crate::{constants::*, ui::*};
 use crate::{Fonts, ScreenState};
 use bevy::app::AppExit;
 use bevy::{ecs::system::EntityCommands, prelude::*};
@@ -16,6 +17,7 @@ pub fn main_menu_setup(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
     asset_server: &AssetServer,
+    settings: &Settings,
     fonts: &Fonts,
     game: &Game,
 ) {
@@ -106,12 +108,17 @@ pub fn main_menu_setup(
             let buttons = ButtonBuilder::new(fonts);
             let mut toggles = ToggleBuilder::new(fonts, meshes, materials);
             buttons.add_ternary_with_text_and_action(parent, "Back", Back);
+            parent.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
+                Val::Auto,
+                Val::Vmin(8.),
+            )));
             toggles.add_with_text_and_action(
                 parent,
+                settings,
                 "Highlight selection lines",
                 HighlightSelectionLines,
             );
-            toggles.add_with_text_and_action(parent, "Show mistakes", ShowMistakes);
+            toggles.add_with_text_and_action(parent, settings, "Show mistakes", ShowMistakes);
         });
     });
 }
@@ -219,18 +226,12 @@ pub fn difficulty_screen_button_actions(
 }
 
 #[derive(Component)]
-pub enum SettingsToggle {
-    HighlightSelectionLines,
-    ShowMistakes,
-}
-
-#[derive(Component)]
 pub enum SettingsButtonAction {
     Back,
 }
 
 // Handles screen navigation based on button actions in the settings screen.
-pub fn settings_toggle_actions(
+pub fn settings_screen_button_actions(
     query: Query<(&Interaction, &SettingsButtonAction), (Changed<Interaction>, With<Button>)>,
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
@@ -240,6 +241,44 @@ pub fn settings_toggle_actions(
                 SettingsButtonAction::Back => screen_state.set(ScreenState::MainMenu),
             }
         }
+    }
+}
+
+// Handles toggling of settings.
+pub fn settings_toggle_actions(
+    query: Query<(&Interaction, &SettingsToggle), Changed<Interaction>>,
+    mut settings: ResMut<Settings>,
+) {
+    for (interaction, toggle) in &query {
+        if *interaction == Interaction::JustPressed {
+            match toggle {
+                SettingsToggle::HighlightSelectionLines => {
+                    settings.highlight_selection_lines = !settings.highlight_selection_lines;
+                }
+                SettingsToggle::ShowMistakes => {
+                    settings.show_mistakes = !settings.show_mistakes;
+                }
+            }
+        }
+    }
+}
+
+// Updates the toggle styling when the setting is switched.
+pub fn on_setting_change(
+    mut query: Query<(&mut Handle<ColorMaterial>, &SettingsToggle), With<Toggle>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    settings: Res<Settings>,
+) {
+    if !settings.is_changed() {
+        return;
+    }
+
+    for (mut material, toggle) in &mut query {
+        *material = materials.add(ColorMaterial::from(if toggle.is_enabled(&settings) {
+            COLOR_TOGGLE_ON
+        } else {
+            COLOR_TOGGLE_OFF
+        }));
     }
 }
 

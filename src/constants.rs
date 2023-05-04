@@ -30,7 +30,7 @@ pub const COLOR_TERNARY_BUTTON_BORDER_HOVER: Color = COLOR_MAIN_OPACITY_08;
 pub const COLOR_TERNARY_BUTTON_BORDER_PRESS: Color = COLOR_MAIN_POP_DARK;
 
 // Toggle colors.
-pub const COLOR_TOGGLE_OFF: Color = COLOR_MAIN;
+pub const COLOR_TOGGLE_OFF: Color = Color::WHITE;
 pub const COLOR_TOGGLE_ON: Color = COLOR_MAIN_POP_DARK;
 
 /// Board colors.

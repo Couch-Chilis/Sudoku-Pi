@@ -267,7 +267,10 @@ impl FlexItemStyle {
         Self { transform, ..self }
     }
 
-    /// Sets the `occupies_space` boolean to `false`.
+    /// Makes this item not count towards the space taken by the container's
+    /// items.
+    ///
+    /// For more information, see the `occupies_space` field.
     pub fn without_occupying_space(self) -> Self {
         Self {
             occupies_space: false,

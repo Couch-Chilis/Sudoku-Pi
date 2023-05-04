@@ -1,11 +1,11 @@
 use super::board_numbers::fill_numbers;
-use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts};
+use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
 pub struct Board;
 
-pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game) {
+pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game, settings: &Settings) {
     parent.with_children(|screen| {
         let mut board = screen.spawn((
             Board,
@@ -20,7 +20,7 @@ pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game) {
 
         draw_lines(&mut board);
 
-        fill_numbers(&mut board, fonts, game)
+        fill_numbers(&mut board, fonts, game, settings)
     });
 }
 
