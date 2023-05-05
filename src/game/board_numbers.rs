@@ -11,13 +11,13 @@ const FONT_SCALE: Vec3 = Vec3::new(CELL_FONT_SIZE, CELL_FONT_SIZE, 1.);
 
 pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, settings: &Settings) {
     let number_style = TextStyle {
-        font: fonts.board.clone(),
+        font: fonts.medium.clone(),
         font_size: 60.,
         color: Color::NONE,
     };
 
     let note_style = TextStyle {
-        font: fonts.board.clone(),
+        font: fonts.bold.clone(),
         font_size: 20.,
         color: Color::NONE,
     };
@@ -53,7 +53,7 @@ fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundl
             ),
             transform: Transform::from_translation(Vec3::new(
                 (x as f32 - 4.) * CELL_SIZE,
-                (y as f32 - 4.) * CELL_SIZE,
+                (y as f32 - 4.2) * CELL_SIZE,
                 2.,
             ))
             .with_scale(FONT_SCALE),
@@ -71,7 +71,7 @@ fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle 
             text: Text::from_section(n.to_string(), note_style),
             transform: Transform::from_translation(Vec3::new(
                 ((x as f32 - 4.) + note_x) * CELL_SIZE,
-                ((y as f32 - 4.) + note_y) * CELL_SIZE,
+                ((y as f32 - 4.06) + note_y) * CELL_SIZE,
                 1.,
             ))
             .with_scale(FONT_SCALE),

@@ -22,8 +22,8 @@ impl<'a> ToggleBuilder<'a> {
         };
 
         let text_style = TextStyle {
-            font: fonts.menu.clone(),
-            font_size: 60.,
+            font: fonts.medium.clone(),
+            font_size: 80.,
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };
 
@@ -58,7 +58,11 @@ impl<'a> ToggleBuilder<'a> {
                     .with_children(|label_container| {
                         label_container.spawn(Text2dBundle {
                             text: Text::from_section(text, self.text_style.clone()),
-                            transform: Transform::from_2d_scale(0.0015, 0.01),
+                            transform: Transform {
+                                scale: Vec3::new(0.0012, 0.01, 1.),
+                                translation: Vec3::new(0., -0.08, 1.),
+                                ..default()
+                            },
                             ..default()
                         });
                     });

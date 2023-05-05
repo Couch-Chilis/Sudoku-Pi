@@ -20,13 +20,15 @@ use sudoku::Game;
 use ui::*;
 use utils::{SpriteExt, TransformExt};
 
-const MENU_FONT: &[u8] = include_bytes!("../assets/Yuppy-TC-Regular.ttf");
-const BOARD_FONT: &[u8] = include_bytes!("../assets/OpenSans-Regular.ttf");
+const BOLD_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Bold.ttf");
+const MEDIUM_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Medium.ttf");
+//const REGULAR_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Regular.ttf");
 
 #[derive(Clone, Default, Resource)]
 pub struct Fonts {
-    menu: Handle<Font>,
-    board: Handle<Font>,
+    bold: Handle<Font>,
+    medium: Handle<Font>,
+    //regular: Handle<Font>,
 }
 
 #[derive(Default, Resource)]
@@ -124,8 +126,9 @@ fn setup(
     commands.spawn(Camera2dBundle::default());
 
     let fonts = Fonts {
-        menu: fonts.add(Font::try_from_bytes(Vec::from(MENU_FONT)).unwrap()),
-        board: fonts.add(Font::try_from_bytes(Vec::from(BOARD_FONT)).unwrap()),
+        bold: fonts.add(Font::try_from_bytes(Vec::from(BOLD_FONT)).unwrap()),
+        medium: fonts.add(Font::try_from_bytes(Vec::from(MEDIUM_FONT)).unwrap()),
+        //regular: fonts.add(Font::try_from_bytes(Vec::from(REGULAR_FONT)).unwrap()),
     };
 
     let flex_container = FlexContainerBundle {

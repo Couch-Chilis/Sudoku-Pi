@@ -69,7 +69,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     let height = Val::Vmax(13.0);
 
     let text_style = TextStyle {
-        font: fonts.menu.clone(),
+        font: fonts.medium.clone(),
         font_size: 80.,
         color: COLOR_TIMER_TEXT,
     };
@@ -97,7 +97,11 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
             Timer,
             Text2dBundle {
                 text: Text::from_section("0:00", text_style),
-                transform: Transform::from_2d_scale(0.004, 0.01),
+                transform: Transform {
+                    scale: Vec3::new(0.004, 0.01, 1.),
+                    translation: Vec3::new(0., -0.1, 1.),
+                    ..default()
+                },
                 ..default()
             },
         ));
@@ -140,7 +144,7 @@ fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiBut
     let button_style = FlexItemStyle::fixed_size(Val::Vmax(25.0), Val::Vmax(9.0));
 
     let text_style = TextStyle {
-        font: fonts.menu.clone(),
+        font: fonts.medium.clone(),
         font_size: 60.,
         color: COLOR_BUTTON_TEXT,
     };
@@ -149,7 +153,11 @@ fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiBut
         .with_children(|button| {
             button.spawn(Text2dBundle {
                 text: Text::from_section(text, text_style.clone()),
-                transform: Transform::from_2d_scale(0.004, 0.01),
+                transform: Transform {
+                    scale: Vec3::new(0.004, 0.01, 1.),
+                    translation: Vec3::new(0., -0.08, 1.),
+                    ..default()
+                },
                 ..default()
             });
         });
@@ -164,7 +172,7 @@ fn build_secondary_button(
     let button_style = FlexItemStyle::fixed_size(Val::Vmax(25.0), Val::Vmax(9.0));
 
     let text_style = TextStyle {
-        font: fonts.menu.clone(),
+        font: fonts.medium.clone(),
         font_size: 60.,
         color: COLOR_SECONDARY_BUTTON_TEXT,
     };
@@ -202,7 +210,7 @@ fn build_secondary_button(
             text: Text::from_section(text, text_style),
             transform: Transform {
                 scale: Vec3::new(0.004, 0.01, 1.),
-                translation: Vec3::new(0., 0., 3.),
+                translation: Vec3::new(0., -0.08, 3.),
                 ..default()
             },
             ..default()
@@ -212,7 +220,7 @@ fn build_secondary_button(
 
 fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
     let text_style = TextStyle {
-        font: fonts.menu.clone(),
+        font: fonts.medium.clone(),
         font_size: 70.,
         color: COLOR_SCORE_TEXT,
     };
@@ -226,7 +234,11 @@ fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
             Score,
             Text2dBundle {
                 text: Text::from_section(format_score(0), text_style),
-                transform: Transform::from_2d_scale(0.004, 0.01),
+                transform: Transform {
+                    scale: Vec3::new(0.004, 0.01, 1.),
+                    translation: Vec3::new(0., -0.08, 1.),
+                    ..default()
+                },
                 ..default()
             },
         ));

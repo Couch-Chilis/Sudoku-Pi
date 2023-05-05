@@ -13,27 +13,34 @@ use board_builder::{build_board, Board};
 use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
 use std::num::NonZeroU8;
 use std::time::Duration;
-use wheel::{on_wheel_input, on_wheel_timer, render_wheel};
+use wheel::{on_wheel_input, on_wheel_timer, render_wheel, SliceHandles};
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Selection::default()).add_systems((
-            on_keyboard_input.run_if(in_state(ScreenState::Game)),
-            on_mouse_button_input.run_if(in_state(ScreenState::Game)),
-            on_score_changed.run_if(in_state(ScreenState::Game)),
-            on_time_changed,
-            on_timer.run_if(in_state(ScreenState::Game)),
-            on_wheel_input.run_if(in_state(ScreenState::Game)),
-            on_wheel_timer.run_if(in_state(ScreenState::Game)),
-            button_actions.run_if(in_state(ScreenState::Game)),
-            render_numbers.run_if(in_state(ScreenState::Game)),
-            render_notes.run_if(in_state(ScreenState::Game)),
-            render_wheel.run_if(in_state(ScreenState::Game)),
-            render_highlights,
-        ));
+        app.insert_resource(Selection::default())
+            .init_resource::<SliceHandles>()
+            .add_startup_system(setup)
+            .add_systems((
+                on_keyboard_input.run_if(in_state(ScreenState::Game)),
+                on_mouse_button_input.run_if(in_state(ScreenState::Game)),
+                on_score_changed.run_if(in_state(ScreenState::Game)),
+                on_time_changed,
+                on_timer.run_if(in_state(ScreenState::Game)),
+                on_wheel_input.run_if(in_state(ScreenState::Game)),
+                on_wheel_timer.run_if(in_state(ScreenState::Game)),
+                button_actions.run_if(in_state(ScreenState::Game)),
+                render_numbers.run_if(in_state(ScreenState::Game)),
+                render_notes.run_if(in_state(ScreenState::Game)),
+                render_wheel.run_if(in_state(ScreenState::Game)),
+                render_highlights,
+            ));
     }
+}
+
+fn setup(mut slice_handles: ResMut<SliceHandles>, asset_server: Res<AssetServer>) {
+    *slice_handles = SliceHandles::load(&asset_server);
 }
 
 #[derive(Component)]

@@ -20,20 +20,20 @@ impl ButtonBuilder {
         // Shared text transform.
         let text_transform = Transform {
             scale: Vec3::new(0.002, 0.01, 1.),
-            translation: Vec3::new(0., 0., 3.),
+            translation: Vec3::new(0., -0.08, 3.),
             ..default()
         };
 
         // Text styling for primary buttons.
         let text_style = TextStyle {
-            font: fonts.menu.clone(),
+            font: fonts.medium.clone(),
             font_size: 60.,
             color: COLOR_BUTTON_TEXT,
         };
 
         // Text styling for secondary buttons.
         let secondary_text_style = TextStyle {
-            font: fonts.menu.clone(),
+            font: fonts.medium.clone(),
             font_size: text_style.font_size,
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };
