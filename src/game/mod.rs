@@ -3,7 +3,7 @@ mod board_numbers;
 mod game_ui;
 mod wheel;
 
-use crate::constants::{CELL_SCALE, CELL_SIZE, COLOR_MAIN_POP_DARK};
+use crate::constants::{CELL_SCALE, CELL_SIZE, COLOR_HINT, COLOR_MAIN_POP_DARK};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
 use crate::ui::{Button, ComputedPosition, Interaction};
 use crate::{Fonts, GameTimer, ScreenState, Settings};
@@ -265,7 +265,7 @@ fn render_highlights(
                     HighlightKind::Selection => Color::rgba(0.9, 0.8, 0.0, 0.7),
                     HighlightKind::SameNumber => Color::rgba(0.9, 0.8, 0.0, 0.45),
                     HighlightKind::InRange => Color::rgba(0.9, 0.8, 0.0, 0.2),
-                    HighlightKind::Hint => Color::rgba(0.2, 0.9, 0.0, 0.35),
+                    HighlightKind::Hint => COLOR_HINT,
                 };
 
                 parent.spawn((

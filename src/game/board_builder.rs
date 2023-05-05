@@ -28,7 +28,7 @@ pub fn build_board(
 
         fill_numbers(&mut board, fonts, game, settings);
 
-        init_wheel(&mut board, asset_server);
+        init_wheel(&mut board, asset_server, fonts);
     });
 }
 

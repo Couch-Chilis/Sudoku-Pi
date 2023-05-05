@@ -6,6 +6,8 @@ pub const COLOR_MAIN: Color = Color::rgb(169. / 255., 154. / 255., 55. / 255.);
 pub const COLOR_MAIN_OPACITY_08: Color = Color::rgba(169. / 255., 154. / 255., 55. / 255., 0.8);
 pub const COLOR_MAIN_DARKEST: Color = Color::rgb(92. / 255., 84. / 255., 30. / 255.);
 pub const COLOR_MAIN_POP_DARK: Color = Color::rgb(213. / 255., 11. / 255., 72. / 255.);
+//pub const COLOR_ORANGE: Color = Color::rgb(236. / 255., 117. / 255., 5. / 255.);
+pub const COLOR_ORANGE_06: Color = Color::rgba(236. / 255., 117. / 255., 5. / 255., 0.6);
 
 // Button colors.
 pub const COLOR_BUTTON_TEXT: Color = Color::WHITE;
@@ -36,9 +38,15 @@ pub const COLOR_TIMER_TEXT: Color = COLOR_MAIN_DARKEST;
 // Score color.
 pub const COLOR_SCORE_TEXT: Color = COLOR_MAIN_POP_DARK;
 
+// Wheel colors.
+pub const COLOR_WHEEL_TOP_TEXT: Color = Color::WHITE;
+
 // Toggle colors.
 pub const COLOR_TOGGLE_OFF: Color = Color::WHITE;
 pub const COLOR_TOGGLE_ON: Color = COLOR_MAIN_POP_DARK;
+
+// Hint color.
+pub const COLOR_HINT: Color = COLOR_ORANGE_06;
 
 /// Board colors.
 pub const COLOR_BOARD_LINE_THICK: Color = COLOR_MAIN_DARKEST;

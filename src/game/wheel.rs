@@ -1,5 +1,8 @@
 use super::{board_builder::Board, fill_number, get_board_x_and_y};
-use crate::{utils::*, ComputedPosition, Game, GameTimer};
+use crate::{
+    constants::COLOR_WHEEL_TOP_TEXT, settings::Settings, utils::*, ComputedPosition, Fonts, Game,
+    GameTimer,
+};
 use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch, window::PrimaryWindow};
 use std::{f32::consts::PI, num::NonZeroU8};
 
@@ -19,6 +22,12 @@ pub struct Wheel {
 
 #[derive(Component)]
 pub struct Slice;
+
+#[derive(Component)]
+pub struct TopLabel;
+
+#[derive(Component)]
+pub struct TopLabelText;
 
 #[derive(Default, Resource)]
 pub struct SliceHandles {
@@ -47,7 +56,7 @@ impl SliceHandles {
     }
 }
 
-pub fn init_wheel(board: &mut EntityCommands, asset_server: &AssetServer) {
+pub fn init_wheel(board: &mut EntityCommands, asset_server: &AssetServer, fonts: &Fonts) {
     board.with_children(|board| {
         board.spawn((
             Wheel::default(),
@@ -65,6 +74,32 @@ pub fn init_wheel(board: &mut EntityCommands, asset_server: &AssetServer) {
                 ..default()
             },
         ));
+
+        let label_text_style = TextStyle {
+            font: fonts.medium.clone(),
+            font_size: 40.,
+            color: COLOR_WHEEL_TOP_TEXT,
+        };
+
+        board
+            .spawn((
+                TopLabel,
+                SpriteBundle {
+                    texture: asset_server.load("top-label.png"),
+                    transform: Transform::from_2d_scale(0., 0.),
+                    ..default()
+                },
+            ))
+            .with_children(|center_label| {
+                center_label.spawn((
+                    TopLabelText,
+                    Text2dBundle {
+                        text: Text::from_section("", label_text_style),
+                        transform: Transform::default_2d(),
+                        ..default()
+                    },
+                ));
+            });
     });
 }
 
@@ -75,6 +110,7 @@ pub fn on_wheel_input(
     board: Query<&ComputedPosition, With<Board>>,
     buttons: Res<Input<MouseButton>>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
+    settings: Res<Settings>,
 ) {
     if !buttons.is_changed() && !buttons.pressed(MouseButton::Left) {
         return;
@@ -99,12 +135,20 @@ pub fn on_wheel_input(
     wheel.current_position = translation;
 
     if buttons.just_pressed(MouseButton::Left) {
-        if let Some(cell_xy) = get_board_x_and_y(board_position, cursor_position) {
-            wheel.start_position = translation;
-            wheel.cell = cell_xy;
-            wheel.spawn_timer.reset();
-            wheel.is_pressed = true;
-            wheel.selected_number = None;
+        if let Some((x, y)) = get_board_x_and_y(board_position, cursor_position) {
+            let should_open = if settings.show_mistakes {
+                !game.current.has(x, y) || game.current.get(x, y) != game.solution.get(x, y)
+            } else {
+                !game.start.has(x, y)
+            };
+
+            if should_open {
+                wheel.start_position = translation;
+                wheel.cell = (x, y);
+                wheel.spawn_timer.reset();
+                wheel.is_pressed = true;
+                wheel.selected_number = None;
+            }
         }
     } else if buttons.just_released(MouseButton::Left) {
         wheel.is_pressed = false;
@@ -113,7 +157,7 @@ pub fn on_wheel_input(
             let (x, y) = wheel.cell;
             fill_number(&mut game, &mut timer, x, y, selected_number);
         }
-    } else {
+    } else if wheel.is_pressed {
         let radius = get_radius(&wheel);
         let selected_number = get_selected_number(&wheel, radius);
         if selected_number != wheel.selected_number {
@@ -136,8 +180,10 @@ pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
 }
 
 pub fn render_wheel(
-    mut wheel: Query<(&mut Transform, &Wheel), (Changed<Wheel>, Without<Slice>)>,
-    mut slice: Query<(&mut Transform, &mut Handle<Image>), With<Slice>>,
+    mut wheel: Query<(&mut Transform, &Wheel), (Changed<Wheel>, Without<Slice>, Without<TopLabel>)>,
+    mut slice: Query<(&mut Transform, &mut Handle<Image>), (With<Slice>, Without<TopLabel>)>,
+    mut top_label: Query<&mut Transform, (With<TopLabel>, Without<Wheel>, Without<Slice>)>,
+    mut top_label_text: Query<&mut Text, With<TopLabelText>>,
     slice_handles: Res<SliceHandles>,
 ) {
     let Ok((mut wheel_transform, wheel)) = wheel.get_single_mut() else {
@@ -148,9 +194,14 @@ pub fn render_wheel(
         return;
     };
 
+    let Ok(mut top_label_transform) = top_label.get_single_mut() else {
+        return;
+    };
+
     if !wheel.is_pressed {
         *wheel_transform = Transform::from_2d_scale(0., 0.);
         *slice_transform = Transform::from_2d_scale(0., 0.);
+        *top_label_transform = Transform::from_2d_scale(0., 0.);
         return;
     }
 
@@ -171,8 +222,16 @@ pub fn render_wheel(
         *slice_texture = slice_handles.for_number(n);
         slice_transform.translation = Vec3::new(cx, cy, 11.);
         slice_transform.scale = Vec3::new(scale, scale, 1.);
+
+        top_label_transform.translation = Vec3::new(cx, cy + 0.66 * radius, 10.);
+        top_label_transform.scale = Vec3::new(radius / WHEEL_SIZE, radius / WHEEL_SIZE, 1.);
+
+        for mut top_label_text in &mut top_label_text {
+            top_label_text.sections[0].value = n.to_string();
+        }
     } else {
         *slice_transform = Transform::from_2d_scale(0., 0.);
+        *top_label_transform = Transform::from_2d_scale(0., 0.);
     }
 }
 
