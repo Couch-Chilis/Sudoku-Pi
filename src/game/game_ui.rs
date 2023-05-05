@@ -1,4 +1,5 @@
-use crate::{constants::*, ui::*, utils::SpriteExt, Fonts, GameTimer};
+use crate::{constants::*, ui::*, utils::*};
+use crate::{Fonts, Game, GameTimer, Highscores, ScreenState};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
@@ -9,6 +10,9 @@ pub enum UiButtonAction {
     ModeNotes,
     ModeDrawing,
 }
+
+#[derive(Component)]
+pub struct Score;
 
 #[derive(Component)]
 pub struct Timer;
@@ -26,6 +30,7 @@ pub fn init_game_ui(
     // Top button row.
     build_button_row(game_screen, 1., |button_row| {
         build_button(button_row, fonts, "Menu", UiButtonAction::BackToMain);
+        build_score(button_row, fonts);
         build_secondary_button(button_row, fonts, "Hint", UiButtonAction::Hint);
     });
 
@@ -78,7 +83,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     .with_children(|top_border_leaf| {
         top_border_leaf.spawn(SpriteBundle {
             sprite: Sprite::from_color(COLOR_TIMER_BORDER),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+            transform: Transform::default_2d(),
             ..default()
         });
     });
@@ -92,11 +97,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
             Timer,
             Text2dBundle {
                 text: Text::from_section("0:00", text_style),
-                transform: Transform {
-                    scale: Vec3::new(0.004, 0.01, 1.),
-                    translation: Vec3::new(0., 0., 1.),
-                    ..default()
-                },
+                transform: Transform::from_2d_scale(0.004, 0.01),
                 ..default()
             },
         ));
@@ -109,7 +110,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     .with_children(|bottom_border_leaf| {
         bottom_border_leaf.spawn(SpriteBundle {
             sprite: Sprite::from_color(COLOR_TIMER_BORDER),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+            transform: Transform::default_2d(),
             ..default()
         });
     });
@@ -148,11 +149,7 @@ fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiBut
         .with_children(|button| {
             button.spawn(Text2dBundle {
                 text: Text::from_section(text, text_style.clone()),
-                transform: Transform {
-                    scale: Vec3::new(0.004, 0.01, 1.),
-                    translation: Vec3::new(0., 0., 1.),
-                    ..default()
-                },
+                transform: Transform::from_2d_scale(0.004, 0.01),
                 ..default()
             });
         });
@@ -181,7 +178,7 @@ fn build_secondary_button(
                     ..default()
                 },
                 background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
-                transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+                transform: Transform::default_2d(),
                 ..default()
             },
             item: FlexItemBundle::from_style(button_style),
@@ -213,11 +210,60 @@ fn build_secondary_button(
     });
 }
 
+fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
+    let text_style = TextStyle {
+        font: fonts.menu.clone(),
+        font_size: 70.,
+        color: COLOR_SCORE_TEXT,
+    };
+
+    row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
+        Val::Vmax(25.0),
+        Val::Vmax(9.0),
+    )))
+    .with_children(|text_leaf| {
+        text_leaf.spawn((
+            Score,
+            Text2dBundle {
+                text: Text::from_section(format_score(0), text_style),
+                transform: Transform::from_2d_scale(0.004, 0.01),
+                ..default()
+            },
+        ));
+    });
+}
+
+pub fn on_score_changed(
+    mut score: Query<&mut Text, With<Score>>,
+    mut highscores: ResMut<Highscores>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
+    game: Res<Game>,
+) {
+    if game.is_changed() {
+        for mut score_text in &mut score {
+            score_text.sections[0].value = format_score(game.score);
+        }
+
+        if game.is_solved() {
+            highscores.add(game.score, game.elapsed_secs);
+            screen_state.set(ScreenState::Highscores);
+        }
+    }
+}
+
 pub fn on_time_changed(mut timer: Query<&mut Text, With<Timer>>, game_timer: Res<GameTimer>) {
     if game_timer.is_changed() {
         for mut timer_text in &mut timer {
             timer_text.sections[0].value = format_time(game_timer.stopwatch.elapsed_secs());
         }
+    }
+}
+
+fn format_score(score: u32) -> String {
+    if score == 1 {
+        "1 pt.".to_owned()
+    } else {
+        format!("{score} pts.")
     }
 }
 

@@ -23,7 +23,7 @@ impl Game {
     fn save(&self) {
         let game_path = ensure_sudoku_dir().join("game.json");
 
-        if self.current == Sudoku::default() || self.current.is_solved() {
+        if self.current == Sudoku::default() || self.is_solved() {
             if game_path.exists() {
                 fs::remove_file(game_path)
                     .unwrap_or_else(|err| println!("Can't clean up Sudoku game: {err}"));
@@ -49,6 +49,8 @@ impl Game {
                     start,
                     current,
                     notes,
+                    difficulty,
+                    score,
                     elapsed_secs,
                 } = serialized_game;
                 match start.find_unique_solution() {
@@ -57,6 +59,8 @@ impl Game {
                         current,
                         solution,
                         notes,
+                        difficulty,
+                        score,
                         elapsed_secs,
                     }),
                     None => Err(anyhow!("Saved game didn't have a unique solution")),
@@ -77,6 +81,8 @@ pub struct SerializedGame {
     pub start: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+    pub difficulty: u8,
+    pub score: u32,
     pub elapsed_secs: f32,
 }
 
@@ -86,6 +92,8 @@ impl From<&Game> for SerializedGame {
             start: game.start.clone(),
             current: game.current.clone(),
             notes: game.notes.clone(),
+            difficulty: game.difficulty,
+            score: game.score,
             elapsed_secs: game.elapsed_secs,
         }
     }

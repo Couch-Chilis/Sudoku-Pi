@@ -82,6 +82,8 @@ impl super::Game {
             start: start.clone(),
             current: start,
             notes: Default::default(),
+            difficulty,
+            score: 0,
             elapsed_secs: 0.,
         })
     }

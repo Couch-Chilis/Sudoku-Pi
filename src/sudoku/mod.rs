@@ -11,6 +11,9 @@ use std::num::NonZeroU8;
 
 pub use math::*;
 
+const START_MULTIPLIERS_BY_DIFFICULTY: [i32; 5] = [20, 40, 60, 80, 100];
+const TIME_FOR_MULTIPLIER: i32 = 20;
+
 /// A Sudoku game with a starting board and a solution, a current state, and
 /// notes.
 #[derive(Default, Resource)]
@@ -19,21 +22,104 @@ pub struct Game {
     pub solution: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+    pub difficulty: u8,
+    pub score: u32,
     pub elapsed_secs: f32,
 }
 
 impl Game {
-    pub fn may_continue(&self) -> bool {
-        self.start != Sudoku::default() && !self.current.is_solved()
+    /// Returns whether the game is in its default (uninitialized) state.
+    pub fn is_default(&self) -> bool {
+        self.start == Sudoku::default()
     }
 
-    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8) {
+    /// Returns whether the game is (correctly) solved.
+    pub fn is_solved(&self) -> bool {
+        self.current == self.solution
+    }
+
+    /// Returns whether the game may be continued.
+    pub fn may_continue(&self) -> bool {
+        !self.is_default() && !self.is_solved()
+    }
+
+    /// Sets the given number `n` at the given `x` and `y` coordinates.
+    ///
+    /// The given `elapsed_secs` are used to calculate the increase in score if
+    /// the correct number is given.
+    ///
+    /// Returns the `elapsed_secs` with a possible penalty applied if the set
+    /// number was incorrect.
+    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8, elapsed_secs: f32) -> f32 {
         if self.start.has(x, y) {
-            return; // Starting numbers are fixed and may not be replaced.
+            return elapsed_secs; // Starting numbers may not be replaced.
         }
+
+        // We need an updated time spent to calculate the score increase.
+        self.elapsed_secs = elapsed_secs;
 
         self.current = self.current.set(x, y, n);
         self.notes.remove_all_notes_affected_by_set(x, y, n);
+
+        if self.solution.get(x, y) == Some(n) {
+            let multiplier = (START_MULTIPLIERS_BY_DIFFICULTY
+                .get(self.difficulty as usize)
+                .cloned()
+                .unwrap_or_default()
+                - elapsed_secs as i32 / TIME_FOR_MULTIPLIER)
+                .max(1);
+            self.score += self.calculate_score(x, y, n) * multiplier as u32;
+
+            elapsed_secs
+        } else {
+            elapsed_secs + TIME_FOR_MULTIPLIER as f32
+        }
+    }
+
+    /// Calculates the score increase for setting the given number (without
+    /// the multiplier). This assumes the number being set is correct.
+    fn calculate_score(&self, x: u8, y: u8, n: NonZeroU8) -> u32 {
+        let mut block_completed = true;
+        let mut column_completed = true;
+        let mut number_completed = true;
+        let mut row_completed = true;
+
+        let block_offset_x = get_block_offset(x);
+        let block_offset_y = get_block_offset(y);
+        for i in 0..9 {
+            // Check the block.
+            let block_x = block_offset_x + i % 3;
+            let block_y = block_offset_y + i / 3;
+            if self.current.get(block_x, block_y) != self.solution.get(block_x, block_y) {
+                block_completed = false;
+            }
+
+            // Check the column.
+            if self.current.get(x, i) != self.solution.get(x, i) {
+                column_completed = false;
+            }
+
+            // Check the number.
+            let mut n_found = false;
+            for j in 0..9 {
+                if self.current.get(i, j) == Some(n) && self.solution.get(i, j) == Some(n) {
+                    n_found = true;
+                }
+            }
+            if !n_found {
+                number_completed = false;
+            }
+
+            // Check the row.
+            if self.current.get(i, y) != self.solution.get(i, y) {
+                row_completed = false;
+            }
+        }
+
+        1 + if block_completed { 9 } else { 0 }
+            + if column_completed { 9 } else { 0 }
+            + if number_completed { 9 } else { 0 }
+            + if row_completed { 9 } else { 0 }
     }
 }
 

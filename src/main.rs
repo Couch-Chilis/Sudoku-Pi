@@ -1,5 +1,6 @@
 mod constants;
 mod game;
+mod highscores;
 mod menus;
 mod settings;
 mod sudoku;
@@ -11,12 +12,13 @@ use bevy::window::WindowResized;
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::board_setup;
+use highscores::Highscores;
 use menus::main_menu_setup;
 use settings::Settings;
 use std::time::Duration;
 use sudoku::Game;
 use ui::*;
-use utils::SpriteExt;
+use utils::{SpriteExt, TransformExt};
 
 const MENU_FONT: &[u8] = include_bytes!("../assets/Yuppy-TC-Regular.ttf");
 const BOARD_FONT: &[u8] = include_bytes!("../assets/OpenSans-Regular.ttf");
@@ -68,7 +70,7 @@ pub enum ScreenState {
     MainMenu,
     SelectDifficulty,
     Game,
-    Score,
+    Highscores,
     HowToPlay,
     Settings,
 }
@@ -92,6 +94,7 @@ fn main() {
         .insert_resource(game)
         .insert_resource(timer)
         .insert_resource(Settings::load())
+        .insert_resource(Highscores::load())
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
@@ -104,7 +107,6 @@ fn main() {
         .add_plugin(UiPlugin)
         .add_state::<ScreenState>()
         .add_startup_system(setup)
-        .add_system(on_timer)
         .add_plugin(game::GamePlugin)
         .add_plugin(menus::MenuPlugin)
         .run();
@@ -128,11 +130,7 @@ fn setup(
 
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
-        transform: Transform {
-            translation: Vec3::new(0., 0., 1.),
-            scale: Vec3::new(100_000., 100_000., 1.),
-            ..default()
-        },
+        transform: Transform::from_2d_scale(100_000., 100_000.),
         ..default()
     };
 
@@ -156,9 +154,16 @@ fn setup(
         Screen::for_state(ScreenState::Game),
         Flex,
         GameScreen,
+        flex_container.clone(),
+    ));
+    board_setup(&mut game_screen, &asset_server, &fonts, &game, &settings);
+
+    let mut highscores_screen = commands.spawn((
+        Screen::for_state(ScreenState::Highscores),
+        Flex,
+        GameScreen,
         flex_container,
     ));
-    board_setup(&mut game_screen, &fonts, &game, &settings);
 
     commands.insert_resource(fonts);
 }
@@ -205,7 +210,11 @@ fn on_screen_change(
     for (entity, screen, transform) in &screens {
         let tween = Tween::new(
             EaseFunction::QuadraticInOut,
-            Duration::from_millis(200),
+            Duration::from_millis(if screen_state.0 == ScreenState::Highscores {
+                2000
+            } else {
+                200
+            }),
             TransformPositionLens {
                 start: transform.translation,
                 end: Vec3::new(
@@ -249,17 +258,12 @@ fn on_resize(
     }
 }
 
-fn on_timer(mut game_timer: ResMut<GameTimer>, screen: Res<State<ScreenState>>, time: Res<Time>) {
-    if screen.0 == ScreenState::Game {
-        game_timer.stopwatch.tick(time.delta());
-    }
-}
-
 fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
     use ScreenState::*;
     match screen {
         MainMenu | SelectDifficulty | Settings => (0., 0.),
-        Game | Score => (1., 0.),
+        Game => (1., 0.),
+        Highscores => (1., 1.),
         HowToPlay => (-1., 0.),
     }
 }

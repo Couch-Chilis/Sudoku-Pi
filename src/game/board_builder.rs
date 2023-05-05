@@ -1,11 +1,17 @@
-use super::board_numbers::fill_numbers;
+use super::{board_numbers::fill_numbers, wheel::init_wheel};
 use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
 pub struct Board;
 
-pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game, settings: &Settings) {
+pub fn build_board(
+    parent: &mut EntityCommands,
+    asset_server: &AssetServer,
+    fonts: &Fonts,
+    game: &Game,
+    settings: &Settings,
+) {
     parent.with_children(|screen| {
         let mut board = screen.spawn((
             Board,
@@ -20,7 +26,9 @@ pub fn build_board(parent: &mut EntityCommands, fonts: &Fonts, game: &Game, sett
 
         draw_lines(&mut board);
 
-        fill_numbers(&mut board, fonts, game, settings)
+        fill_numbers(&mut board, fonts, game, settings);
+
+        init_wheel(&mut board, asset_server);
     });
 }
 

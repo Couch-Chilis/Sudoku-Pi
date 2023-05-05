@@ -1,4 +1,5 @@
-use crate::{constants::*, ui::*, utils::SpriteExt, Fonts};
+use crate::Fonts;
+use crate::{constants::*, ui::*, utils::*};
 use bevy::prelude::*;
 
 pub struct ButtonBuilder {
@@ -90,7 +91,7 @@ impl ButtonBuilder {
                             ..default()
                         },
                         background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+                        transform: Transform::default_2d(),
                         ..default()
                     },
                     item: FlexItemBundle::from_style(self.button_style.clone()),
@@ -134,7 +135,7 @@ impl ButtonBuilder {
                             ..default()
                         },
                         background: Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+                        transform: Transform::default_2d(),
                         ..default()
                     },
                     item: FlexItemBundle::from_style(self.button_style.clone()),

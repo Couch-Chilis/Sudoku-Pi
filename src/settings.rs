@@ -24,7 +24,7 @@ impl Default for Settings {
 
 impl Settings {
     /// Loads settings from disk, or returns `Self::default()` if no
-    /// game could be loaded.
+    /// settings could be loaded.
     pub fn load() -> Self {
         fs::read(ensure_sudoku_dir().join("settings.json"))
             .context("Can't read file")

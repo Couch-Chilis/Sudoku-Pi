@@ -1,5 +1,6 @@
 use super::{FlexItemBundle, FlexItemStyle, Interaction};
-use crate::{constants::COLOR_BUTTON_BACKGROUND, utils::SpriteExt};
+use crate::constants::COLOR_BUTTON_BACKGROUND;
+use crate::utils::{SpriteExt, TransformExt};
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
 
 /// Marker for buttons.
@@ -40,7 +41,7 @@ impl ButtonBundle {
         Self {
             flex: FlexItemBundle::from_style(style),
             background: Sprite::from_color(COLOR_BUTTON_BACKGROUND),
-            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+            transform: Transform::default_2d(),
             ..default()
         }
     }

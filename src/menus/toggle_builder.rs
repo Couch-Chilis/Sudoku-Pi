@@ -1,5 +1,5 @@
 use super::SettingsToggle;
-use crate::{constants::*, settings::Settings, ui::*, Fonts};
+use crate::{constants::*, settings::Settings, ui::*, utils::TransformExt, Fonts};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 pub struct ToggleBuilder<'a> {
@@ -58,11 +58,7 @@ impl<'a> ToggleBuilder<'a> {
                     .with_children(|label_container| {
                         label_container.spawn(Text2dBundle {
                             text: Text::from_section(text, self.text_style.clone()),
-                            transform: Transform {
-                                scale: Vec3::new(0.0015, 0.01, 1.),
-                                translation: Vec3::new(0., 0., 1.),
-                                ..default()
-                            },
+                            transform: Transform::from_2d_scale(0.0015, 0.01),
                             ..default()
                         });
                     });
@@ -78,7 +74,7 @@ impl<'a> ToggleBuilder<'a> {
                             material: self
                                 .materials
                                 .add(ColorMaterial::from(COLOR_BUTTON_BACKGROUND)),
-                            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+                            transform: Transform::default_2d(),
                             ..default()
                         });
 

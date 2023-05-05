@@ -1,8 +1,7 @@
 use super::{ButtonBuilder, SettingsToggle, ToggleBuilder};
-use crate::settings::Settings;
-use crate::sudoku::Game;
-use crate::{constants::*, ui::*, GameTimer};
-use crate::{Fonts, ScreenState};
+use crate::{constants::*, ui::*, utils::*};
+use crate::{settings::Settings, sudoku::Game};
+use crate::{Fonts, GameTimer, ScreenState};
 use bevy::app::AppExit;
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -45,11 +44,7 @@ pub fn main_menu_setup(
                     .with_children(|square| {
                         square.spawn(SpriteBundle {
                             texture: asset_server.load("logo.png"),
-                            transform: Transform {
-                                translation: Vec3::new(0., 0., 1.),
-                                scale: Vec3::new(1. / 241., 1. / 513., 1.),
-                                ..default()
-                            },
+                            transform: Transform::from_2d_scale(1. / 241., 1. / 513.),
                             ..default()
                         });
                     });
@@ -63,11 +58,7 @@ pub fn main_menu_setup(
                         FlexItemStyle::fixed_size(Val::Vmin(10.), Val::Vmin(10.))
                             .with_alignment(Alignment::Start)
                             .with_margin(Size::all(Val::Vmin(5.)))
-                            .with_transform(Transform {
-                                translation: Vec3::new(0., 0., 1.),
-                                scale: Vec3::new(1. / 64., 1. / 64., 1.),
-                                ..default()
-                            }),
+                            .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
                     ),
                     SpriteBundle {
                         texture: asset_server.load("cog.png"),

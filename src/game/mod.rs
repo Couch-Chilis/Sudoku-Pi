@@ -1,29 +1,37 @@
 mod board_builder;
 mod board_numbers;
 mod game_ui;
+mod wheel;
 
 use crate::constants::{CELL_SCALE, CELL_SIZE, COLOR_MAIN_POP_DARK};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
 use crate::ui::{Button, ComputedPosition, Interaction};
-use crate::{Fonts, ScreenState, Settings};
+use crate::{Fonts, GameTimer, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
-use game_ui::{init_game_ui, on_time_changed, UiButtonAction};
+use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
 use std::num::NonZeroU8;
+use std::time::Duration;
+use wheel::{on_wheel_input, on_wheel_timer, render_wheel};
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Selection::default()).add_systems((
-            keyboard_input.run_if(in_state(ScreenState::Game)),
-            mouse_button_input.run_if(in_state(ScreenState::Game)),
+            on_keyboard_input.run_if(in_state(ScreenState::Game)),
+            on_mouse_button_input.run_if(in_state(ScreenState::Game)),
+            on_score_changed.run_if(in_state(ScreenState::Game)),
+            on_time_changed,
+            on_timer.run_if(in_state(ScreenState::Game)),
+            on_wheel_input.run_if(in_state(ScreenState::Game)),
+            on_wheel_timer.run_if(in_state(ScreenState::Game)),
+            button_actions.run_if(in_state(ScreenState::Game)),
             render_numbers.run_if(in_state(ScreenState::Game)),
             render_notes.run_if(in_state(ScreenState::Game)),
-            render_highlights.run_if(in_state(ScreenState::Game)),
-            button_actions.run_if(in_state(ScreenState::Game)),
-            on_time_changed,
+            render_wheel.run_if(in_state(ScreenState::Game)),
+            render_highlights,
         ));
     }
 }
@@ -53,17 +61,19 @@ enum HighlightKind {
 
 pub fn board_setup(
     game_screen: &mut EntityCommands,
+    asset_server: &AssetServer,
     fonts: &Fonts,
     game: &Game,
     settings: &Settings,
 ) {
     init_game_ui(game_screen, fonts, |parent| {
-        build_board(parent, fonts, game, settings)
+        build_board(parent, asset_server, fonts, game, settings)
     });
 }
 
-fn keyboard_input(
+fn on_keyboard_input(
     mut game: ResMut<Game>,
+    mut timer: ResMut<GameTimer>,
     mut selection: ResMut<Selection>,
     keys: Res<Input<KeyCode>>,
 ) {
@@ -75,17 +85,17 @@ fn keyboard_input(
             Down => move_selection_relative(&mut selection, 0, -1),
             Left => move_selection_relative(&mut selection, -1, 0),
 
-            Key1 => handle_number_key(&mut game, &keys, &selection, 1),
-            Key2 => handle_number_key(&mut game, &keys, &selection, 2),
-            Key3 => handle_number_key(&mut game, &keys, &selection, 3),
-            Key4 => handle_number_key(&mut game, &keys, &selection, 4),
-            Key5 => handle_number_key(&mut game, &keys, &selection, 5),
-            Key6 => handle_number_key(&mut game, &keys, &selection, 6),
-            Key7 => handle_number_key(&mut game, &keys, &selection, 7),
-            Key8 => handle_number_key(&mut game, &keys, &selection, 8),
-            Key9 => handle_number_key(&mut game, &keys, &selection, 9),
+            Key1 => handle_number_key(&mut game, &mut timer, &keys, &selection, 1),
+            Key2 => handle_number_key(&mut game, &mut timer, &keys, &selection, 2),
+            Key3 => handle_number_key(&mut game, &mut timer, &keys, &selection, 3),
+            Key4 => handle_number_key(&mut game, &mut timer, &keys, &selection, 4),
+            Key5 => handle_number_key(&mut game, &mut timer, &keys, &selection, 5),
+            Key6 => handle_number_key(&mut game, &mut timer, &keys, &selection, 6),
+            Key7 => handle_number_key(&mut game, &mut timer, &keys, &selection, 7),
+            Key8 => handle_number_key(&mut game, &mut timer, &keys, &selection, 8),
+            Key9 => handle_number_key(&mut game, &mut timer, &keys, &selection, 9),
 
-            Slash => give_hint(&mut game, &mut selection),
+            Slash => give_hint(&mut game, &mut timer, &mut selection),
 
             Back | Delete => clear_selection(&mut game, &mut selection),
             _ => {}
@@ -93,17 +103,23 @@ fn keyboard_input(
     }
 }
 
-fn handle_number_key(game: &mut Game, keys: &Input<KeyCode>, selection: &Selection, n: u8) {
+fn handle_number_key(
+    game: &mut Game,
+    timer: &mut GameTimer,
+    keys: &Input<KeyCode>,
+    selection: &Selection,
+    n: u8,
+) {
     let n = NonZeroU8::new(n).unwrap();
 
     if keys.pressed(KeyCode::LAlt) || keys.pressed(KeyCode::RAlt) {
         toggle_note(game, selection, n);
     } else {
-        fill_selected_number(game, selection, n);
+        fill_selected_number(game, timer, selection, n);
     }
 }
 
-fn mouse_button_input(
+fn on_mouse_button_input(
     mut selection: ResMut<Selection>,
     buttons: Res<Input<MouseButton>>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
@@ -175,6 +191,7 @@ fn render_notes(mut notes: Query<(&Note, &mut Text)>, game: Res<Game>) {
 
 fn render_highlights(
     mut commands: Commands,
+    screen: Res<State<ScreenState>>,
     game: Res<Game>,
     settings: Res<Settings>,
     selection: Res<Selection>,
@@ -182,6 +199,10 @@ fn render_highlights(
     highlighted_numbers: Query<Entity, With<HighlightedNumber>>,
 ) {
     if !game.is_changed() && !selection.is_changed() && !settings.is_changed() {
+        return;
+    }
+
+    if screen.0 != ScreenState::Game && screen.0 != ScreenState::Highscores {
         return;
     }
 
@@ -215,13 +236,15 @@ fn render_highlights(
 
             // Find all the cells with the same number.
             for pos in 0..81 {
-                if pos != selected_pos && game.current.get_by_pos(pos) == selected_cell {
+                if game.current.get_by_pos(pos) == selected_cell {
                     highlights[pos] = Some(HighlightKind::SameNumber);
                 }
             }
         }
 
-        highlights[selected_pos] = Some(HighlightKind::Selection);
+        if !game.is_solved() {
+            highlights[selected_pos] = Some(HighlightKind::Selection);
+        }
     }
     if let Some((x, y)) = selection.hint {
         highlights[get_pos(x, y)] = Some(HighlightKind::Hint);
@@ -269,9 +292,24 @@ fn clear_selection(game: &mut Game, selection: &Selection) {
     }
 }
 
-fn fill_selected_number(game: &mut Game, selection: &Selection, n: NonZeroU8) {
+fn fill_number(game: &mut Game, timer: &mut GameTimer, x: u8, y: u8, n: NonZeroU8) {
+    let elapsed_secs = timer.stopwatch.elapsed_secs();
+    let new_elapsed_secs = game.set(x, y, n, elapsed_secs);
+    if new_elapsed_secs != elapsed_secs {
+        timer
+            .stopwatch
+            .set_elapsed(Duration::from_secs_f32(new_elapsed_secs));
+    }
+}
+
+fn fill_selected_number(
+    game: &mut Game,
+    timer: &mut GameTimer,
+    selection: &Selection,
+    n: NonZeroU8,
+) {
     if let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) {
-        game.set(x, y, n);
+        fill_number(game, timer, x, y, n);
     }
 }
 
@@ -314,6 +352,7 @@ fn get_board_x_and_y(board_position: &ComputedPosition, cursor_position: Vec2) -
 
 fn button_actions(
     mut game: ResMut<Game>,
+    mut timer: ResMut<GameTimer>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut selection: ResMut<Selection>,
     query: Query<(&Interaction, &UiButtonAction), (Changed<Interaction>, With<Button>)>,
@@ -322,20 +361,38 @@ fn button_actions(
         if *interaction == Interaction::JustPressed {
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
-                UiButtonAction::Hint => give_hint(&mut game, &mut selection),
+                UiButtonAction::Hint => give_hint(&mut game, &mut timer, &mut selection),
                 _ => {}
             }
         }
     }
 }
 
-fn give_hint(game: &mut Game, selection: &mut Selection) {
+fn give_hint(game: &mut Game, timer: &mut GameTimer, selection: &mut Selection) {
     if let Some((x, y)) = selection.hint {
         if let Some(n) = game.solution.get(x, y) {
-            game.set(x, y, n);
+            fill_number(game, timer, x, y, n);
             selection.hint = None;
         }
     } else if let Some(sudoku::Hint { x, y }) = game.current.get_hint() {
         selection.hint = Some((x, y));
+    }
+}
+
+fn on_timer(
+    mut game_timer: ResMut<GameTimer>,
+    mut selection: ResMut<Selection>,
+    screen: Res<State<ScreenState>>,
+    game: Res<Game>,
+    time: Res<Time>,
+) {
+    if game.is_solved() {
+        if screen.0 == ScreenState::Game || screen.0 == ScreenState::Highscores {
+            // Show a little animation for the solved state.
+            let (x, y) = get_x_and_y_from_pos(((time.elapsed().as_millis() / 200) % 81) as usize);
+            selection.selected_cell = Some((x, y));
+        }
+    } else if !game.is_default() {
+        game_timer.stopwatch.tick(time.delta());
     }
 }

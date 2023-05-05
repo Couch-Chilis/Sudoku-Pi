@@ -33,6 +33,9 @@ pub const COLOR_TERNARY_BUTTON_BORDER_PRESS: Color = COLOR_MAIN_POP_DARK;
 pub const COLOR_TIMER_BORDER: Color = COLOR_MAIN;
 pub const COLOR_TIMER_TEXT: Color = COLOR_MAIN_DARKEST;
 
+// Score color.
+pub const COLOR_SCORE_TEXT: Color = COLOR_MAIN_POP_DARK;
+
 // Toggle colors.
 pub const COLOR_TOGGLE_OFF: Color = Color::WHITE;
 pub const COLOR_TOGGLE_ON: Color = COLOR_MAIN_POP_DARK;
