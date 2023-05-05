@@ -128,7 +128,7 @@ pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
         if wheel.is_pressed {
             wheel.spawn_timer.tick(time.delta());
 
-            if wheel.selected_number.is_some() && wheel.slice_timer.elapsed_secs() < 0.2 {
+            if wheel.selected_number.is_some() && wheel.slice_timer.elapsed_secs() < 0.25 {
                 wheel.slice_timer.tick(time.delta());
             }
         }
@@ -161,7 +161,11 @@ pub fn render_wheel(
     wheel_transform.scale = Vec3::new(radius / WHEEL_SIZE, radius / WHEEL_SIZE, 1.);
 
     if let Some(n) = wheel.selected_number {
-        let bounce = 1. + 0.1 * (wheel.slice_timer.elapsed_secs() * 5. * PI).sin().max(0.);
+        let bounce = 1.
+            + 0.1
+                * ((wheel.slice_timer.elapsed_secs() * 100.).powi(2) * 0.0016 * PI)
+                    .sin()
+                    .max(0.);
         let scale = bounce * radius / WHEEL_SIZE;
 
         *slice_texture = slice_handles.for_number(n);
