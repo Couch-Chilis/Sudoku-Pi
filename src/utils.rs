@@ -48,3 +48,9 @@ pub fn ensure_sudoku_dir() -> PathBuf {
         Err(_) => parent_dir,
     }
 }
+
+pub fn format_time(time_secs: f32) -> String {
+    let minutes = (time_secs / 60.).floor();
+    let seconds = (time_secs - minutes * 60.).floor();
+    format!("{minutes}:{seconds:02}")
+}

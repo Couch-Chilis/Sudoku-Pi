@@ -86,10 +86,10 @@ pub fn main_menu_setup(
             use DifficultyScreenButtonAction::*;
             let buttons = ButtonBuilder::new(fonts);
             buttons.add_ternary_with_text_and_action(parent, "Back", BackToMain);
-            buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(4));
-            buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(3));
-            buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(2));
             buttons.add_with_text_and_action(parent, "Easy", StartGameAtDifficulty(1));
+            buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(2));
+            buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(3));
+            buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(4));
         });
 
         // Settings buttons and toggles.
@@ -179,7 +179,7 @@ pub fn main_screen_button_actions(
             use MainScreenButtonAction::*;
             match action {
                 ContinueGame => screen_state.set(ScreenState::Game),
-                GoToHowToPlay => screen_state.set(ScreenState::HowToPlay),
+                GoToHowToPlay => screen_state.set(ScreenState::Highscores),
                 GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
                 Quit => app_exit_events.send(AppExit),
             }

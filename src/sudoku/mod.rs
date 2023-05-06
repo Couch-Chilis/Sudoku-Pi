@@ -35,7 +35,7 @@ impl Game {
 
     /// Returns whether the game is (correctly) solved.
     pub fn is_solved(&self) -> bool {
-        self.current == self.solution
+        !self.is_default() && self.current == self.solution
     }
 
     /// Returns whether the game may be continued.

@@ -120,7 +120,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     });
 }
 
-fn build_button_row(
+pub fn build_button_row(
     screen: &mut EntityCommands,
     flex_grow: f32,
     child_builder: impl FnOnce(&mut ChildBuilder),
@@ -277,10 +277,4 @@ fn format_score(score: u32) -> String {
     } else {
         format!("{score} pts.")
     }
-}
-
-fn format_time(time_secs: f32) -> String {
-    let minutes = (time_secs / 60.).floor();
-    let seconds = (time_secs - minutes * 60.).floor();
-    format!("{minutes}:{seconds:02}")
 }

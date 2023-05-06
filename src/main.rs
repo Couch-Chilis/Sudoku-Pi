@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use bevy::window::WindowResized;
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
-use game::board_setup;
+use game::{board_setup, highscore_screen_setup};
 use highscores::Highscores;
 use menus::main_menu_setup;
 use settings::Settings;
@@ -60,6 +60,9 @@ impl Screen {
 struct GameScreen;
 
 #[derive(Component)]
+struct HighscoreScreen;
+
+#[derive(Component)]
 struct MainScreen;
 
 #[derive(Component)]
@@ -75,6 +78,7 @@ pub enum ScreenState {
     Highscores,
     HowToPlay,
     Settings,
+    Upper,
 }
 
 fn main() {
@@ -122,6 +126,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     settings: Res<Settings>,
     game: Res<Game>,
+    highscores: Res<Highscores>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
@@ -161,12 +166,24 @@ fn setup(
     ));
     board_setup(&mut game_screen, &asset_server, &fonts, &game, &settings);
 
-    let mut highscores_screen = commands.spawn((
+    let mut highscore_screen = commands.spawn((
         Screen::for_state(ScreenState::Highscores),
         Flex,
-        GameScreen,
-        flex_container,
+        HighscoreScreen,
+        flex_container.clone(),
     ));
+    highscore_screen_setup(
+        &mut highscore_screen,
+        &mut meshes,
+        &mut materials,
+        &fonts,
+        &game,
+        &highscores,
+    );
+
+    // This screen is just there so there is no empty space in the transition
+    // from highscore back to the main menu.
+    commands.spawn((Screen::for_state(ScreenState::Upper), Flex, flex_container));
 
     commands.insert_resource(fonts);
 }
@@ -268,5 +285,6 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         Game => (1., 0.),
         Highscores => (1., 1.),
         HowToPlay => (-1., 0.),
+        Upper => (0., 1.),
     }
 }

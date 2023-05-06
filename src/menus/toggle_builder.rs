@@ -75,9 +75,7 @@ impl<'a> ToggleBuilder<'a> {
                     .with_children(|icon_container| {
                         icon_container.spawn(MaterialMesh2dBundle {
                             mesh: self.meshes.add(shape::Circle::new(0.5).into()).into(),
-                            material: self
-                                .materials
-                                .add(ColorMaterial::from(COLOR_BUTTON_BACKGROUND)),
+                            material: self.materials.add(ColorMaterial::from(COLOR_MAIN_DARKEST)),
                             transform: Transform::default_2d(),
                             ..default()
                         });

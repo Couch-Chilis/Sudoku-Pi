@@ -1,10 +1,8 @@
-use crate::utils::ensure_sudoku_dir;
+use crate::{constants::*, utils::*};
 use anyhow::Context;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
-
-const MAX_NUM_HIGHSCORES: usize = 5;
 
 #[derive(Default, Deserialize, Resource, Serialize)]
 pub struct Highscores {
@@ -31,7 +29,7 @@ impl Highscores {
     }
 
     fn add_time(&mut self, new_time: f32) {
-        if let Some(index) = self.best_times.iter().position(|time| new_time > *time) {
+        if let Some(index) = self.best_times.iter().position(|time| new_time < *time) {
             self.best_times.insert(index, new_time);
             self.best_times.truncate(MAX_NUM_HIGHSCORES);
         } else if self.best_times.len() < MAX_NUM_HIGHSCORES {
