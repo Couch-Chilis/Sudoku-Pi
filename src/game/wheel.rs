@@ -151,11 +151,13 @@ pub fn on_wheel_input(
             }
         }
     } else if buttons.just_released(MouseButton::Left) {
-        wheel.is_pressed = false;
+        if wheel.is_pressed {
+            wheel.is_pressed = false;
 
-        if let Some(selected_number) = wheel.selected_number {
-            let (x, y) = wheel.cell;
-            fill_number(&mut game, &mut timer, x, y, selected_number);
+            if let Some(selected_number) = wheel.selected_number {
+                let (x, y) = wheel.cell;
+                fill_number(&mut game, &mut timer, x, y, selected_number);
+            }
         }
     } else if wheel.is_pressed {
         let radius = get_radius(&wheel);
