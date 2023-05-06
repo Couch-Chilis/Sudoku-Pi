@@ -20,14 +20,20 @@ pub fn highscore_screen_setup(
     game: &Game,
     highscores: &Highscores,
 ) {
-    // Two button rows to take up the same space as on the game screen.
-    build_button_row(highscore_screen, 1., |_| {});
-    build_button_row(highscore_screen, 1., |_| {});
+    // Take up the space of two button rows to match the game screen.
+    highscore_screen.with_children(|screen| {
+        screen.spawn(FlexLeafBundle::from_style(FlexItemStyle {
+            flex_base: Size::new(Val::Vmin(90.), Val::Vmin(18.)),
+            flex_grow: 1.,
+            margin: Size::all(Val::Vmin(9.)),
+            ..default()
+        }));
+    });
 
     build_highscores(highscore_screen, meshes, materials, fonts, game, highscores);
 
     // Bottom button row.
-    build_button_row(highscore_screen, 2., |button_row| {
+    build_button_row(highscore_screen, 1., |button_row| {
         build_button(button_row, fonts, "Back", HighscoreButtonAction::Back);
     });
 }
@@ -73,8 +79,7 @@ fn build_highscores(
 }
 
 fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: HighscoreButtonAction) {
-    let button_style = FlexItemStyle::fixed_size(Val::Vmin(60.), Val::Vmin(14.))
-        .with_margin(Size::all(Val::Vmin(2.)));
+    let button_style = FlexItemStyle::available_size().with_margin(Size::all(Val::Vmin(2.)));
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
@@ -82,17 +87,15 @@ fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: Highs
         color: COLOR_BUTTON_TEXT,
     };
 
-    let text_transform = Transform {
-        scale: Vec3::new(0.0015, 0.01, 1.),
-        translation: Vec3::new(0., -0.08, 3.),
-        ..default()
-    };
-
     row.spawn((ButtonBundle::from_style(button_style), action))
         .with_children(|button| {
             button.spawn(Text2dBundle {
-                text: Text::from_section(text, text_style.clone()),
-                transform: text_transform,
+                text: Text::from_section(text, text_style),
+                transform: Transform {
+                    scale: Vec3::new(0.0015, 0.01, 1.),
+                    translation: Vec3::new(0., -0.08, 1.),
+                    ..default()
+                },
                 ..default()
             });
         });

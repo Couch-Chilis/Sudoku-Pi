@@ -128,7 +128,7 @@ pub fn build_button_row(
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::row().with_gap(Val::Auto),
+                FlexContainerStyle::row(),
                 FlexItemStyle {
                     flex_base: Size::new(Val::Vmin(90.), Val::Vmin(9.)),
                     flex_grow,
@@ -152,7 +152,7 @@ fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiBut
     row.spawn((ButtonBundle::from_style(button_style), action))
         .with_children(|button| {
             button.spawn(Text2dBundle {
-                text: Text::from_section(text, text_style.clone()),
+                text: Text::from_section(text, text_style),
                 transform: Transform {
                     scale: Vec3::new(0.004, 0.01, 1.),
                     translation: Vec3::new(0., -0.08, 1.),
