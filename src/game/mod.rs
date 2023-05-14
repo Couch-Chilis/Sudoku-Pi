@@ -70,6 +70,7 @@ enum HighlightKind {
     SameNumber,
     InRange,
     Hint,
+    Note,
 }
 
 pub fn board_setup(
@@ -98,15 +99,15 @@ fn on_keyboard_input(
             Down => move_selection_relative(&mut selection, 0, -1),
             Left => move_selection_relative(&mut selection, -1, 0),
 
-            Key1 => handle_number_key(&mut game, &mut timer, &keys, &selection, 1),
-            Key2 => handle_number_key(&mut game, &mut timer, &keys, &selection, 2),
-            Key3 => handle_number_key(&mut game, &mut timer, &keys, &selection, 3),
-            Key4 => handle_number_key(&mut game, &mut timer, &keys, &selection, 4),
-            Key5 => handle_number_key(&mut game, &mut timer, &keys, &selection, 5),
-            Key6 => handle_number_key(&mut game, &mut timer, &keys, &selection, 6),
-            Key7 => handle_number_key(&mut game, &mut timer, &keys, &selection, 7),
-            Key8 => handle_number_key(&mut game, &mut timer, &keys, &selection, 8),
-            Key9 => handle_number_key(&mut game, &mut timer, &keys, &selection, 9),
+            Key1 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 1),
+            Key2 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 2),
+            Key3 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 3),
+            Key4 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 4),
+            Key5 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 5),
+            Key6 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 6),
+            Key7 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 7),
+            Key8 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 8),
+            Key9 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 9),
 
             Slash => give_hint(&mut game, &mut timer, &mut selection),
 
@@ -119,8 +120,8 @@ fn on_keyboard_input(
 fn handle_number_key(
     game: &mut Game,
     timer: &mut GameTimer,
+    selection: &mut Selection,
     keys: &Input<KeyCode>,
-    selection: &Selection,
     n: u8,
 ) {
     let n = NonZeroU8::new(n).unwrap();
@@ -233,7 +234,7 @@ fn render_highlights(
         let selected_pos = get_pos(x, y);
 
         let selected_cell = game.current.get(x, y);
-        if selected_cell.is_some() {
+        if let Some(n) = selected_cell {
             if settings.highlight_selection_lines {
                 // Find all the cells within range.
                 for pos in 0..81 {
@@ -243,6 +244,14 @@ fn render_highlights(
                             highlights[get_pos(x, i)] = Some(HighlightKind::InRange);
                             highlights[get_pos(i, y)] = Some(HighlightKind::InRange);
                         }
+                    }
+                }
+            } else {
+                // Find all the cells with notes containing the same number.
+                for pos in 0..81 {
+                    let (x, y) = get_x_and_y_from_pos(pos);
+                    if game.notes.has(x, y, n) {
+                        highlights[pos] = Some(HighlightKind::Note);
                     }
                 }
             }
@@ -271,6 +280,7 @@ fn render_highlights(
                     HighlightKind::Selection => Color::rgba(0.9, 0.8, 0.0, 0.7),
                     HighlightKind::SameNumber => Color::rgba(0.9, 0.8, 0.0, 0.45),
                     HighlightKind::InRange => Color::rgba(0.9, 0.8, 0.0, 0.2),
+                    HighlightKind::Note => Color::rgba(0.9, 0.8, 0.0, 0.3),
                     HighlightKind::Hint => COLOR_HINT,
                 };
 
@@ -318,11 +328,15 @@ fn fill_number(game: &mut Game, timer: &mut GameTimer, x: u8, y: u8, n: NonZeroU
 fn fill_selected_number(
     game: &mut Game,
     timer: &mut GameTimer,
-    selection: &Selection,
+    selection: &mut Selection,
     n: NonZeroU8,
 ) {
     if let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) {
         fill_number(game, timer, x, y, n);
+
+        if selection.hint == Some((x, y)) {
+            selection.hint = None;
+        }
     }
 }
 
@@ -335,7 +349,12 @@ fn toggle_note(game: &mut Game, selection: &Selection, n: NonZeroU8) {
 }
 
 fn move_selection(selection: &mut Selection, x: u8, y: u8) {
-    selection.selected_cell = Some((x, y));
+    let selected_cell = (x, y);
+    selection.selected_cell = if selection.selected_cell == Some(selected_cell) {
+        None
+    } else {
+        Some(selected_cell)
+    };
 }
 
 fn move_selection_relative(selection: &mut Selection, dx: i8, dy: i8) {
@@ -387,7 +406,7 @@ fn give_hint(game: &mut Game, timer: &mut GameTimer, selection: &mut Selection) 
             fill_number(game, timer, x, y, n);
             selection.hint = None;
         }
-    } else if let Some(sudoku::Hint { x, y }) = game.current.get_hint() {
+    } else if let Some(sudoku::Hint { x, y }) = game.get_hint() {
         selection.hint = Some((x, y));
     }
 }

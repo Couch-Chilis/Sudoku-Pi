@@ -1,6 +1,6 @@
 use super::{ButtonBuilder, SettingsToggle, ToggleBuilder};
-use crate::{constants::*, ui::*, utils::*};
-use crate::{settings::Settings, sudoku::Game};
+use crate::settings::Settings;
+use crate::{constants::*, sudoku::*, ui::*, utils::*};
 use crate::{Fonts, GameTimer, ScreenState};
 use bevy::app::AppExit;
 use bevy::{ecs::system::EntityCommands, prelude::*};
@@ -83,13 +83,14 @@ pub fn main_menu_setup(
 
         // Difficulty buttons.
         build_button_section(screen, -0.5 * PI, |parent| {
+            use Difficulty::*;
             use DifficultyScreenButtonAction::*;
             let buttons = ButtonBuilder::new(fonts);
             buttons.add_ternary_with_text_and_action(parent, "Back", BackToMain);
-            buttons.add_with_text_and_action(parent, "Easy", StartGameAtDifficulty(1));
-            buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(2));
-            buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(3));
-            buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(4));
+            buttons.add_with_text_and_action(parent, "Easy", StartGameAtDifficulty(Easy));
+            buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(Medium));
+            buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(Advanced));
+            buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(Expert));
         });
 
         // Settings buttons and toggles.
@@ -190,7 +191,7 @@ pub fn main_screen_button_actions(
 #[derive(Component)]
 pub enum DifficultyScreenButtonAction {
     BackToMain,
-    StartGameAtDifficulty(u8),
+    StartGameAtDifficulty(Difficulty),
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.

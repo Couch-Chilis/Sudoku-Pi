@@ -1,7 +1,8 @@
 use super::math::get_x_and_y_from_pos;
-use super::solver::{rate_difficulty, solve};
+use super::solver::{rate_difficulty, solve, Difficulty};
 use super::Sudoku;
 use crate::sudoku::math::get_pos;
+use crate::sudoku::solver::SolverResult;
 use anyhow::{bail, Context};
 use rand::seq::SliceRandom;
 use rand::Rng;
@@ -9,98 +10,119 @@ use std::num::NonZeroU8;
 
 impl super::Game {
     /// Generates a new game at the given difficulty level.
-    pub fn generate(difficulty: u8) -> anyhow::Result<Self> {
-        let Some(solution) = create_solution(Sudoku::new(), 0, 0) else {
-            bail!("Oh boy, I could not even create a solution...");
-        };
+    pub fn generate(difficulty: Difficulty) -> anyhow::Result<Self> {
+        let mut num_tries = 0;
+        loop {
+            let start = generate_sudoku(difficulty)?;
 
-        let DiggingStrategy {
-            digging_order,
-            min_numbers_per_line,
-            num_cells_to_dig,
-            num_cells_for_most_difficult_number,
-        } = DiggingStrategy::generate(difficulty)?;
+            let SolverResult {
+                solution,
+                difficulty: rated_difficulty,
+            } = solve(start.clone())
+                .context("Blimey, I could not even solve my own generated Sudoku...")?;
+            bevy::log::info!(
+                "Generated Sudoku of difficulty {rated_difficulty:?} (requested: {difficulty:?})"
+            );
 
-        let mut start = solution.clone();
-        let mut num_cells_left_for_most_difficult_number = 9;
-        let most_difficult_number = NonZeroU8::new(rand::thread_rng().gen_range(1..10)).unwrap();
-        for i in 0..81 {
-            let pos = digging_order[80 - i]; // Dig in reverse order.
-            if start.get_by_pos(pos) == Some(most_difficult_number) {
-                start = start.unset_by_pos(pos);
-                num_cells_left_for_most_difficult_number -= 1;
-                if num_cells_left_for_most_difficult_number == num_cells_for_most_difficult_number {
-                    break;
-                }
+            num_tries += 1;
+            if rated_difficulty == difficulty || num_tries == 3 {
+                return Ok(Self {
+                    solution,
+                    start: start.clone(),
+                    current: start,
+                    notes: Default::default(),
+                    difficulty,
+                    score: 0,
+                    elapsed_secs: 0.,
+                });
             }
         }
+    }
+}
 
-        let mut num_cells_dug = 0;
-        'dig: for i in 0..81 {
-            let (x, y) = get_x_and_y_from_pos(digging_order[i]);
+fn generate_sudoku(difficulty: Difficulty) -> anyhow::Result<Sudoku> {
+    let Some(solution) = create_solution(Sudoku::new(), 0, 0) else {
+        bail!("Oh boy, I could not even create a solution...");
+    };
 
-            if min_numbers_per_line > 0 {
-                let mut num_others_in_column = 0;
-                let mut num_others_in_row = 0;
-                for j in 0..9 {
-                    if j != y && start.has(x, j) {
-                        num_others_in_column += 1;
-                    }
-                    if j != x && start.has(j, y) {
-                        num_others_in_row += 1;
-                    }
-                }
+    let DiggingStrategy {
+        digging_order,
+        min_numbers_per_line,
+        num_cells_to_dig,
+        num_cells_for_most_difficult_number,
+    } = DiggingStrategy::generate(difficulty)?;
 
-                if num_others_in_column < min_numbers_per_line
-                    || num_others_in_row < min_numbers_per_line
-                {
-                    // We would be left with too few numbers in a single row or
-                    // column, so continue before we let that happen.
-                    continue 'dig;
-                }
-            }
-
-            let n = start.get(x, y);
-
-            // Determine whether the Sudoku remains unique after digging the
-            // number by trying whether the Sudoku is solvable with any other
-            // number filled in at the cell.
-            for other_n in 1..=9 {
-                let other_n = NonZeroU8::new(other_n).unwrap();
-                if Some(other_n) != n
-                    && start.may_set(x, y, other_n)
-                    && solve(start.set(x, y, other_n)).is_some()
-                {
-                    continue 'dig; // It wouldn't remain unique otherwise.
-                }
-            }
-
-            let new_start = start.unset(x, y);
-            if difficulty < 4 {
-                let rated_difficulty = rate_difficulty(new_start.clone())
-                    .context("Oh uh, I could not even rate my own starting position...")?;
-                if rated_difficulty > difficulty {
-                    continue 'dig; // It would become too difficult otherwise.
-                }
-            }
-
-            start = new_start;
-            num_cells_dug += 1;
-            if num_cells_dug >= num_cells_to_dig {
+    let mut start = solution.clone();
+    let mut num_cells_left_for_most_difficult_number = 9;
+    let most_difficult_number = NonZeroU8::new(rand::thread_rng().gen_range(1..10)).unwrap();
+    for i in 0..81 {
+        let pos = digging_order[80 - i]; // Dig in reverse order.
+        if start.get_by_pos(pos) == Some(most_difficult_number) {
+            start = start.unset_by_pos(pos);
+            num_cells_left_for_most_difficult_number -= 1;
+            if num_cells_left_for_most_difficult_number == num_cells_for_most_difficult_number {
                 break;
             }
         }
-
-        Ok(Self {
-            solution,
-            start: start.clone(),
-            current: start,
-            notes: Default::default(),
-            difficulty,
-            score: 0,
-            elapsed_secs: 0.,
-        })
     }
+
+    let mut num_cells_dug = 0;
+    'dig: for i in 0..81 {
+        let (x, y) = get_x_and_y_from_pos(digging_order[i]);
+
+        if min_numbers_per_line > 0 {
+            let mut num_others_in_column = 0;
+            let mut num_others_in_row = 0;
+            for j in 0..9 {
+                if j != y && start.has(x, j) {
+                    num_others_in_column += 1;
+                }
+                if j != x && start.has(j, y) {
+                    num_others_in_row += 1;
+                }
+            }
+
+            if num_others_in_column < min_numbers_per_line
+                || num_others_in_row < min_numbers_per_line
+            {
+                // We would be left with too few numbers in a single row or
+                // column, so continue before we let that happen.
+                continue 'dig;
+            }
+        }
+
+        let n = start.get(x, y);
+
+        // Determine whether the Sudoku remains unique after digging the
+        // number by trying whether the Sudoku is solvable with any other
+        // number filled in at the cell.
+        for other_n in 1..=9 {
+            let other_n = NonZeroU8::new(other_n).unwrap();
+            if Some(other_n) != n
+                && start.may_set(x, y, other_n)
+                && solve(start.set(x, y, other_n)).is_some()
+            {
+                continue 'dig; // It wouldn't remain unique otherwise.
+            }
+        }
+
+        let new_start = start.unset(x, y);
+        if difficulty < Difficulty::Expert {
+            let rated_difficulty = rate_difficulty(new_start.clone())
+                .context("Yikes, I could not even rate my own starting position...")?;
+            if rated_difficulty > difficulty {
+                continue 'dig; // It would become too difficult otherwise.
+            }
+        }
+
+        start = new_start;
+        num_cells_dug += 1;
+        if num_cells_dug >= num_cells_to_dig {
+            break;
+        }
+    }
+
+    Ok(start)
 }
 
 /// Attempt to create a solution by recursively filling the cells, starting at a
@@ -155,39 +177,38 @@ struct DiggingStrategy {
 
 impl DiggingStrategy {
     /// Generates a digging strategy to be used for the given difficulty level.
-    pub fn generate(difficulty: u8) -> anyhow::Result<Self> {
+    pub fn generate(difficulty: Difficulty) -> anyhow::Result<Self> {
         match difficulty {
-            0 => Ok(Self {
+            Difficulty::Trivial => Ok(Self {
                 digging_order: get_random_digging_order(),
                 min_numbers_per_line: 5,
                 num_cells_to_dig: 31,
                 num_cells_for_most_difficult_number: 3,
             }),
-            1 => Ok(Self {
+            Difficulty::Easy => Ok(Self {
                 digging_order: get_random_digging_order(),
                 min_numbers_per_line: 4,
-                num_cells_to_dig: 44,
+                num_cells_to_dig: 45,
                 num_cells_for_most_difficult_number: 2,
             }),
-            2 => Ok(Self {
+            Difficulty::Medium => Ok(Self {
                 digging_order: get_checkered_digging_order(),
                 min_numbers_per_line: 3,
-                num_cells_to_dig: 49,
+                num_cells_to_dig: 50,
                 num_cells_for_most_difficult_number: 1,
             }),
-            3 => Ok(Self {
+            Difficulty::Advanced => Ok(Self {
                 digging_order: get_linear_digging_order(),
                 min_numbers_per_line: 2,
                 num_cells_to_dig: 54,
                 num_cells_for_most_difficult_number: 0,
             }),
-            4 => Ok(Self {
+            Difficulty::Expert => Ok(Self {
                 digging_order: get_spiraling_digging_order(),
                 min_numbers_per_line: 0,
                 num_cells_to_dig: 59,
                 num_cells_for_most_difficult_number: 0,
             }),
-            _ => bail!("Unsupported difficulty level: {difficulty}"),
         }
     }
 }

@@ -10,6 +10,7 @@ use std::fmt::{self, Write};
 use std::num::NonZeroU8;
 
 pub use math::*;
+pub use solver::Difficulty;
 
 const START_MULTIPLIERS_BY_DIFFICULTY: [i32; 5] = [20, 40, 60, 80, 100];
 const TIME_FOR_MULTIPLIER: i32 = 20;
@@ -22,7 +23,7 @@ pub struct Game {
     pub solution: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
-    pub difficulty: u8,
+    pub difficulty: Difficulty,
     pub score: u32,
     pub elapsed_secs: f32,
 }
@@ -121,6 +122,91 @@ impl Game {
             + if number_completed { 9 } else { 0 }
             + if row_completed { 9 } else { 0 }
     }
+
+    /// Returns a hint, if any.
+    ///
+    /// If the user has made a mistake, it will be highlighted as a hint.
+    /// Otherwise, it attempts to find the most obvious hint that will help the
+    /// user get towards the solution.
+    pub fn get_hint(&self) -> Option<Hint> {
+        // First look for mistakes.
+        for pos in 0..81 {
+            if let Some(n) = self.current.get_by_pos(pos) {
+                if self.solution.get_by_pos(pos) != Some(n) {
+                    let (x, y) = get_x_and_y_from_pos(pos);
+                    return Some(Hint { x, y });
+                }
+            }
+        }
+
+        let mut notes = Notes::from_sudoku(&self.current);
+        'outer: while notes.has_notes() {
+            // Find a place that only has a single number:
+            for pos in 0..81 {
+                if notes.get_only_number(pos).is_some() {
+                    return Some(get_x_and_y_from_pos(pos).into());
+                }
+            }
+
+            // Find a lone ranger:
+            for pos in 0..81 {
+                if notes.get_lone_ranger(pos).is_some() {
+                    return Some(get_x_and_y_from_pos(pos).into());
+                }
+            }
+
+            // Find twins:
+            for pos in 0..81 {
+                if let Some(twins) = notes.find_twins(pos) {
+                    if notes.remove_all_notes_affected_by_twins(twins) {
+                        bevy::log::info!("Found twins: {twins:?}");
+                        continue 'outer;
+                    }
+                }
+            }
+
+            // Find triplets:
+            for pos in 0..81 {
+                if let Some(triplets) = notes.find_triplets(pos) {
+                    if notes.remove_all_notes_affected_by_triplets(triplets) {
+                        bevy::log::info!("Found triplet: {triplets:?}");
+                        continue 'outer;
+                    }
+                }
+            }
+
+            // Find hidden twins:
+            for pos in 0..81 {
+                if let Some(twins) = notes.find_hidden_twins(pos) {
+                    if notes.remove_all_notes_affected_by_twins(twins) {
+                        bevy::log::info!("Found hidden twin: {twins:?}");
+                        continue 'outer;
+                    }
+                }
+            }
+
+            // Find hidden triplets:
+            for pos in 0..81 {
+                if let Some(triplets) = notes.find_hidden_triplets(pos) {
+                    if notes.remove_all_notes_affected_by_triplets(triplets) {
+                        bevy::log::info!("Found hidden triplet: {triplets:?}");
+                        continue 'outer;
+                    }
+                }
+            }
+
+            // Screw it, just give some position with a note:
+            for pos in 0..81 {
+                if notes.has_some_number(pos) {
+                    let hint = get_x_and_y_from_pos(pos).into();
+                    bevy::log::info!("Random hint: {hint:?}");
+                    return Some(hint);
+                }
+            }
+        }
+
+        None
+    }
 }
 
 /// Keeps track of all the cells within the Sudoku board.
@@ -178,76 +264,6 @@ impl Sudoku {
     #[inline]
     pub fn get_by_pos(&self, pos: usize) -> Cell {
         self.cells[pos]
-    }
-
-    /// Returns a hint, if any.
-    ///
-    /// This function attempts to find the most easy hint that will help the
-    /// user get towards the solution before
-    pub fn get_hint(&self) -> Option<Hint> {
-        let mut notes = Notes::from_sudoku(self);
-        if !notes.has_notes() {
-            return None;
-        }
-
-        // Find a place that only has a single number:
-        for pos in 0..81 {
-            if notes.get_only_number(pos).is_some() {
-                return Some(get_x_and_y_from_pos(pos).into());
-            }
-        }
-
-        // Find a lone ranger:
-        for pos in 0..81 {
-            if notes.get_lone_ranger(pos).is_some() {
-                return Some(get_x_and_y_from_pos(pos).into());
-            }
-        }
-
-        // Find twins:
-        for pos in 0..81 {
-            if let Some(twins) = notes.find_twins(pos) {
-                if notes.remove_all_notes_affected_by_twins(twins) {
-                    return Some(get_x_and_y_from_pos(pos).into());
-                }
-            }
-        }
-
-        // Find triplets:
-        for pos in 0..81 {
-            if let Some(triplets) = notes.find_triplets(pos) {
-                if notes.remove_all_notes_affected_by_triplets(triplets) {
-                    return Some(get_x_and_y_from_pos(pos).into());
-                }
-            }
-        }
-
-        // Find hidden twins:
-        for pos in 0..81 {
-            if let Some(twins) = notes.find_hidden_twins(pos) {
-                if notes.remove_all_notes_affected_by_twins(twins) {
-                    return Some(get_x_and_y_from_pos(pos).into());
-                }
-            }
-        }
-
-        // Find hidden triplets:
-        for pos in 0..81 {
-            if let Some(triplets) = notes.find_hidden_triplets(pos) {
-                if notes.remove_all_notes_affected_by_triplets(triplets) {
-                    return Some(get_x_and_y_from_pos(pos).into());
-                }
-            }
-        }
-
-        // Screw it, just give some position with a note:
-        for pos in 0..81 {
-            if notes.has_some_number(pos) {
-                return Some(get_x_and_y_from_pos(pos).into());
-            }
-        }
-
-        None
     }
 
     /// Returns whether the cell at the given coordinates has a number.
@@ -355,6 +371,7 @@ impl fmt::Display for Sudoku {
 /// A single cell within the Sudoku board, which may or may not have a number.
 pub type Cell = Option<NonZeroU8>;
 
+#[derive(Debug)]
 pub struct Hint {
     pub x: u8,
     pub y: u8,

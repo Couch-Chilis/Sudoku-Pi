@@ -1,28 +1,38 @@
+use serde::{Deserialize, Serialize};
+
 use super::math::get_x_and_y_from_pos;
 use super::{Notes, Sudoku};
 use std::num::NonZeroU8;
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Ord, PartialEq, PartialOrd, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Difficulty {
+    #[default]
+    Trivial,
+    Easy,
+    Medium,
+    Advanced,
+    Expert,
+}
+
+pub struct SolverResult {
+    pub solution: Sudoku,
+    pub difficulty: Difficulty,
+}
+
 /// Rates a Sudoku by difficulty level.
 ///
 /// Returns `None` if the Sudoku cannot be solved.
-pub fn rate_difficulty(sudoku: Sudoku) -> Option<u8> {
-    solve_intelligently(sudoku).map(|result| result.difficulty)
+pub fn rate_difficulty(sudoku: Sudoku) -> Option<Difficulty> {
+    solve(sudoku).map(|result| result.difficulty)
 }
 
-/// Solves the Sudoku, if possible, and returns one of its solutions.
-pub fn solve(sudoku: Sudoku) -> Option<Sudoku> {
-    solve_intelligently(sudoku).map(|result| result.solution)
-}
-
-struct SolverResult {
-    solution: Sudoku,
-    difficulty: u8,
-}
-
-fn solve_intelligently(mut sudoku: Sudoku) -> Option<SolverResult> {
+/// Solves the Sudoku, if possible, and returns one of its solutions, along with
+/// the rated difficulty.
+pub fn solve(mut sudoku: Sudoku) -> Option<SolverResult> {
     let mut notes = Notes::from_sudoku(&sudoku);
 
-    let mut difficulty = 0;
+    let mut difficulty = Difficulty::Trivial;
     'outer: while notes.has_notes() {
         // Fill in any places that only have a single number as the solution:
         for pos in 0..81 {
@@ -34,7 +44,7 @@ fn solve_intelligently(mut sudoku: Sudoku) -> Option<SolverResult> {
             }
         }
 
-        difficulty = std::cmp::max(difficulty, 1);
+        difficulty = std::cmp::max(difficulty, Difficulty::Easy);
 
         // Scan for lone rangers:
         for pos in 0..81 {
@@ -46,7 +56,7 @@ fn solve_intelligently(mut sudoku: Sudoku) -> Option<SolverResult> {
             }
         }
 
-        difficulty = std::cmp::max(difficulty, 2);
+        difficulty = std::cmp::max(difficulty, Difficulty::Medium);
 
         // Scan for twins:
         for pos in 0..81 {
@@ -66,7 +76,7 @@ fn solve_intelligently(mut sudoku: Sudoku) -> Option<SolverResult> {
             }
         }
 
-        difficulty = std::cmp::max(difficulty, 3);
+        difficulty = std::cmp::max(difficulty, Difficulty::Advanced);
 
         // Scan for hidden twins:
         for pos in 0..81 {
@@ -89,7 +99,7 @@ fn solve_intelligently(mut sudoku: Sudoku) -> Option<SolverResult> {
         // Brute force is our last resort:
         return solve_through_brute_force(sudoku).map(|solution| SolverResult {
             solution,
-            difficulty: 4,
+            difficulty: Difficulty::Expert,
         });
     }
 
@@ -112,7 +122,7 @@ fn solve_through_brute_force(sudoku: Sudoku) -> Option<Sudoku> {
             for n in 1..=9 {
                 let n = NonZeroU8::new(n).unwrap();
                 if sudoku.may_set(x, y, n) {
-                    if let Some(result) = solve_intelligently(sudoku.set(x, y, n)) {
+                    if let Some(result) = solve(sudoku.set(x, y, n)) {
                         return Some(result.solution);
                     }
                 }

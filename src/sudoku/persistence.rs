@@ -1,4 +1,4 @@
-use super::{Cell, Game, Notes, Sudoku};
+use super::{Cell, Difficulty, Game, Notes, Sudoku};
 use crate::utils::ensure_sudoku_dir;
 use anyhow::{anyhow, Context};
 use serde::de::{self, SeqAccess, Visitor};
@@ -81,7 +81,7 @@ pub struct SerializedGame {
     pub start: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
-    pub difficulty: u8,
+    pub difficulty: Difficulty,
     pub score: u32,
     pub elapsed_secs: f32,
 }

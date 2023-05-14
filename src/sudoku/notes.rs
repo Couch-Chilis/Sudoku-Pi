@@ -2,6 +2,7 @@ use super::math::{get_block_offset, get_pos, get_x_and_y_from_pos};
 use super::{Notes, Sudoku};
 use std::num::NonZeroU8;
 
+#[derive(Clone, Copy, Debug)]
 pub struct Twins {
     pub x1: u8,
     pub y1: u8,
@@ -10,6 +11,7 @@ pub struct Twins {
     pub twin_notes: u16,
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct Triplets {
     pub x1: u8,
     pub y1: u8,
