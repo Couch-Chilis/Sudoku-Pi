@@ -292,8 +292,15 @@ impl Sudoku {
     /// Returns a new Sudoku board with the number cleared (or "dug") from the
     /// cell at the given coordinates.
     pub fn unset(&self, x: u8, y: u8) -> Self {
+        self.unset_by_pos(get_pos(x, y))
+    }
+
+    /// Returns a new Sudoku board with the number cleared (or "dug") from the
+    /// cell at the given position.
+    #[inline]
+    pub fn unset_by_pos(&self, pos: usize) -> Self {
         let mut cells = self.cells.clone();
-        cells[get_pos(x, y)] = None;
+        cells[pos] = None;
         Self { cells }
     }
 }

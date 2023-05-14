@@ -18,9 +18,23 @@ impl super::Game {
             digging_order,
             min_numbers_per_line,
             num_cells_to_dig,
+            num_cells_for_most_difficult_number,
         } = DiggingStrategy::generate(difficulty)?;
 
         let mut start = solution.clone();
+        let mut num_cells_left_for_most_difficult_number = 9;
+        let most_difficult_number = NonZeroU8::new(rand::thread_rng().gen_range(1..10)).unwrap();
+        for i in 0..81 {
+            let pos = digging_order[80 - i]; // Dig in reverse order.
+            if start.get_by_pos(pos) == Some(most_difficult_number) {
+                start = start.unset_by_pos(pos);
+                num_cells_left_for_most_difficult_number -= 1;
+                if num_cells_left_for_most_difficult_number == num_cells_for_most_difficult_number {
+                    break;
+                }
+            }
+        }
+
         let mut num_cells_dug = 0;
         'dig: for i in 0..81 {
             let (x, y) = get_x_and_y_from_pos(digging_order[i]);
@@ -132,6 +146,11 @@ struct DiggingStrategy {
     /// The amount of cells that should be dug before we consider the board
     /// difficult enough.
     num_cells_to_dig: u8,
+
+    /// Before the general digging starts, we dig one number across the board
+    /// to make it more difficult than others. This setting defines the amount
+    /// of cells to leave undug for that number.
+    num_cells_for_most_difficult_number: u8,
 }
 
 impl DiggingStrategy {
@@ -142,26 +161,31 @@ impl DiggingStrategy {
                 digging_order: get_random_digging_order(),
                 min_numbers_per_line: 5,
                 num_cells_to_dig: 31,
+                num_cells_for_most_difficult_number: 3,
             }),
             1 => Ok(Self {
                 digging_order: get_random_digging_order(),
                 min_numbers_per_line: 4,
                 num_cells_to_dig: 44,
+                num_cells_for_most_difficult_number: 2,
             }),
             2 => Ok(Self {
                 digging_order: get_checkered_digging_order(),
                 min_numbers_per_line: 3,
                 num_cells_to_dig: 49,
+                num_cells_for_most_difficult_number: 1,
             }),
             3 => Ok(Self {
                 digging_order: get_linear_digging_order(),
                 min_numbers_per_line: 2,
                 num_cells_to_dig: 54,
+                num_cells_for_most_difficult_number: 0,
             }),
             4 => Ok(Self {
                 digging_order: get_spiraling_digging_order(),
                 min_numbers_per_line: 0,
                 num_cells_to_dig: 59,
+                num_cells_for_most_difficult_number: 0,
             }),
             _ => bail!("Unsupported difficulty level: {difficulty}"),
         }

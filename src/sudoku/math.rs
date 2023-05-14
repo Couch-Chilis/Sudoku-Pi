@@ -84,14 +84,17 @@ const POS_TABLE: [(u8, u8); 81] = [
     (8, 8),
 ];
 
+#[inline]
 pub fn get_block_offset(coordinate: u8) -> u8 {
     BLOCK_OFFSETS[coordinate as usize]
 }
 
+#[inline]
 pub fn get_pos(x: u8, y: u8) -> usize {
     y as usize * 9 + x as usize
 }
 
+#[inline]
 pub fn get_x_and_y_from_pos(pos: usize) -> (u8, u8) {
     POS_TABLE[pos]
 }

@@ -57,11 +57,29 @@ fn solve_intelligently(mut sudoku: Sudoku) -> Option<SolverResult> {
             }
         }
 
-        difficulty = std::cmp::max(difficulty, 3);
-
         // Scan for triplets:
         for pos in 0..81 {
             if let Some(triplets) = notes.find_triplets(pos) {
+                if notes.remove_all_notes_affected_by_triplets(triplets) {
+                    continue 'outer;
+                }
+            }
+        }
+
+        difficulty = std::cmp::max(difficulty, 3);
+
+        // Scan for hidden twins:
+        for pos in 0..81 {
+            if let Some(twins) = notes.find_hidden_twins(pos) {
+                if notes.remove_all_notes_affected_by_twins(twins) {
+                    continue 'outer;
+                }
+            }
+        }
+
+        // Scan for hidden triplets:
+        for pos in 0..81 {
+            if let Some(triplets) = notes.find_hidden_triplets(pos) {
                 if notes.remove_all_notes_affected_by_triplets(triplets) {
                     continue 'outer;
                 }

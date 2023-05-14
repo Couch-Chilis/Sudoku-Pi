@@ -7,6 +7,7 @@ pub struct Twins {
     pub y1: u8,
     pub x2: u8,
     pub y2: u8,
+    pub twin_notes: u16,
 }
 
 pub struct Triplets {
@@ -16,6 +17,7 @@ pub struct Triplets {
     pub y2: u8,
     pub x3: u8,
     pub y3: u8,
+    pub triplet_notes: u16,
 }
 
 impl Notes {
@@ -54,45 +56,48 @@ impl Notes {
     ///
     /// Assumes that all the notes are correctly filled in.
     pub fn find_twins(&self, pos: usize) -> Option<Twins> {
-        let cell = self.cells[pos];
-        if get_num_notes(cell) != 2 {
+        let twin_notes = self.cells[pos];
+        if get_num_notes(twin_notes) != 2 {
             return None;
         }
 
-        let (x, y) = get_x_and_y_from_pos(pos);
+        let (x1, y1) = get_x_and_y_from_pos(pos);
 
-        let block_offset_x = get_block_offset(x);
-        let block_offset_y = get_block_offset(y);
+        let block_offset_x = get_block_offset(x1);
+        let block_offset_y = get_block_offset(y1);
         for i in 0..9 {
             // Check the row.
-            if i != x && self.get(i, y) == cell {
+            if i != x1 && self.get(i, y1) == twin_notes {
                 return Some(Twins {
-                    x1: x,
-                    y1: y,
+                    x1,
+                    y1,
                     x2: i,
-                    y2: y,
+                    y2: y1,
+                    twin_notes,
                 });
             }
 
             // Check the column.
-            if i != y && self.get(x, i) == cell {
+            if i != y1 && self.get(x1, i) == twin_notes {
                 return Some(Twins {
-                    x1: x,
-                    y1: y,
-                    x2: x,
+                    x1,
+                    y1,
+                    x2: x1,
                     y2: i,
+                    twin_notes,
                 });
             }
 
             // Check the block.
             let block_x = block_offset_x + i % 3;
             let block_y = block_offset_y + i / 3;
-            if (block_x != x || block_y != y) && self.get(block_x, block_y) == cell {
+            if (block_x != x1 || block_y != y1) && self.get(block_x, block_y) == twin_notes {
                 return Some(Twins {
-                    x1: x,
-                    y1: y,
+                    x1,
+                    y1,
                     x2: block_x,
                     y2: block_y,
+                    twin_notes,
                 });
             }
         }
@@ -108,15 +113,15 @@ impl Notes {
     ///
     /// Assumes that all the notes are correctly filled in.
     pub fn find_triplets(&self, pos: usize) -> Option<Triplets> {
-        let cell = self.cells[pos];
-        if get_num_notes(cell) != 3 {
+        let triplet_notes = self.cells[pos];
+        if get_num_notes(triplet_notes) != 3 {
             return None;
         }
 
-        let (x, y) = get_x_and_y_from_pos(pos);
+        let (x1, y1) = get_x_and_y_from_pos(pos);
 
-        let block_offset_x = get_block_offset(x);
-        let block_offset_y = get_block_offset(y);
+        let block_offset_x = get_block_offset(x1);
+        let block_offset_y = get_block_offset(y1);
         for i in 0..9 {
             for j in 0..9 {
                 if j == i {
@@ -124,26 +129,36 @@ impl Notes {
                 }
 
                 // Check the row.
-                if i != x && j != x && self.get(i, y) == cell && self.get(j, y) == cell {
+                if i != x1
+                    && j != x1
+                    && self.get(i, y1) == triplet_notes
+                    && self.get(j, y1) == triplet_notes
+                {
                     return Some(Triplets {
-                        x1: x,
-                        y1: y,
+                        x1,
+                        y1,
                         x2: i,
-                        y2: y,
+                        y2: y1,
                         x3: j,
-                        y3: y,
+                        y3: y1,
+                        triplet_notes,
                     });
                 }
 
                 // Check the column.
-                if i != y && j != y && self.get(x, i) == cell && self.get(x, j) == cell {
+                if i != y1
+                    && j != y1
+                    && self.get(x1, i) == triplet_notes
+                    && self.get(x1, j) == triplet_notes
+                {
                     return Some(Triplets {
-                        x1: x,
-                        y1: y,
-                        x2: x,
+                        x1,
+                        y1,
+                        x2: x1,
                         y2: i,
-                        x3: x,
+                        x3: x1,
                         y3: j,
+                        triplet_notes,
                     });
                 }
 
@@ -152,18 +167,19 @@ impl Notes {
                 let block_y1 = block_offset_y + i / 3;
                 let block_x2 = block_offset_x + j % 3;
                 let block_y2 = block_offset_y + j / 3;
-                if (block_x1 != x || block_y1 != y)
-                    && (block_x2 != x || block_y2 != y)
-                    && self.get(block_x1, block_y1) == cell
-                    && self.get(block_x2, block_y2) == cell
+                if (block_x1 != x1 || block_y1 != y1)
+                    && (block_x2 != x1 || block_y2 != y1)
+                    && self.get(block_x1, block_y1) == triplet_notes
+                    && self.get(block_x2, block_y2) == triplet_notes
                 {
                     return Some(Triplets {
-                        x1: x,
-                        y1: y,
+                        x1,
+                        y1,
                         x2: block_x1,
                         y2: block_y1,
                         x3: block_x2,
                         y3: block_y2,
+                        triplet_notes,
                     });
                 }
             }
@@ -172,7 +188,153 @@ impl Notes {
         None
     }
 
+    /// Hidden twins are like twins in that they refer to two cells that share
+    /// two notes, but they are harder to find due to other numbers sharing
+    /// their cells. The key to finding hidden twins is realizing there are no
+    /// other cells in the same row, column, or block where the two shared
+    /// numbers are present.
+    ///
+    /// This function checks if the cell at the given position is one of a set
+    /// of hidden twins and returns the coordinates for the twins if so. This
+    /// will not find regular twins.
+    ///
+    /// Assumes that all the notes are correctly filled in.
+    pub fn find_hidden_twins(&self, pos: usize) -> Option<Twins> {
+        let cell_notes = self.cells[pos];
+        if get_num_notes(cell_notes) <= 2 {
+            return None;
+        }
+
+        let (x1, y1) = get_x_and_y_from_pos(pos);
+
+        let block_offset_x = get_block_offset(x1);
+        let block_offset_y = get_block_offset(y1);
+        for twin_notes in get_twin_permutations(cell_notes) {
+            // Check the row.
+            if let Some(x2) = find_hidden_twin(twin_notes, |i| (i != x1).then(|| self.get(i, y1))) {
+                return Some(Twins {
+                    x1,
+                    y1,
+                    x2,
+                    y2: y1,
+                    twin_notes,
+                });
+            }
+
+            // Check the column.
+            if let Some(y2) = find_hidden_twin(twin_notes, |i| (i != y1).then(|| self.get(x1, i))) {
+                return Some(Twins {
+                    x1,
+                    y1,
+                    x2: x1,
+                    y2,
+                    twin_notes,
+                });
+            }
+
+            // Check the block.
+            if let Some(i) = find_hidden_twin(twin_notes, |i| {
+                let block_x = block_offset_x + i % 3;
+                let block_y = block_offset_y + i / 3;
+                (block_x != x1 || block_y != y1).then(|| self.get(block_x, block_y))
+            }) {
+                return Some(Twins {
+                    x1,
+                    y1,
+                    x2: block_offset_x + i % 3,
+                    y2: block_offset_y + i / 3,
+                    twin_notes,
+                });
+            }
+        }
+
+        None
+    }
+
+    /// Hidden triplets are like triplets in that they refer to three cells that
+    /// collectively share three notes, but they are harder to find due to one
+    /// of two possible reaons:
+    /// * Either they share numbers that may also be in other cells.
+    /// * And/or the numbers they share are distributed unevenly amongst them.
+    ///
+    /// The key to finding hidden triplets is realizing there are no other cells
+    /// in the same row, column, or block where the three numbers shared among
+    /// the triplets may be present.
+    ///
+    /// This function checks if the cell at the given position is one of a set
+    /// of triplets and returns the coordinates for the triplets if so.
+    ///
+    /// Assumes that all the notes are correctly filled in.
+    pub fn find_hidden_triplets(&self, pos: usize) -> Option<Triplets> {
+        let (x1, y1) = get_x_and_y_from_pos(pos);
+
+        // Check the row.
+        let notes_in_row = collect_notes_in_range(|i| self.get(i, y1));
+        for triplet_notes in get_triplet_permutations(notes_in_row) {
+            if let Some((x2, x3)) =
+                find_hidden_triplets(triplet_notes, |i| (i != x1).then(|| self.get(i, y1)))
+            {
+                return Some(Triplets {
+                    x1,
+                    y1,
+                    x2,
+                    y2: y1,
+                    x3,
+                    y3: y1,
+                    triplet_notes,
+                });
+            }
+        }
+
+        // Check the column.
+        let notes_in_column = collect_notes_in_range(|i| self.get(x1, i));
+        for triplet_notes in get_triplet_permutations(notes_in_column) {
+            if let Some((y2, y3)) =
+                find_hidden_triplets(triplet_notes, |i| (i != y1).then(|| self.get(x1, i)))
+            {
+                return Some(Triplets {
+                    x1,
+                    y1,
+                    x2: x1,
+                    y2,
+                    x3: x1,
+                    y3,
+                    triplet_notes,
+                });
+            }
+        }
+
+        // Check the block.
+        let block_offset_x = get_block_offset(x1);
+        let block_offset_y = get_block_offset(y1);
+        let notes_in_block = collect_notes_in_range(|i| {
+            let block_x = block_offset_x + i % 3;
+            let block_y = block_offset_y + i / 3;
+            self.get(block_x, block_y)
+        });
+        for triplet_notes in get_triplet_permutations(notes_in_block) {
+            if let Some((i, j)) = find_hidden_triplets(triplet_notes, |i| {
+                let block_x = block_offset_x + i % 3;
+                let block_y = block_offset_y + i / 3;
+                (block_x != x1 || block_y != y1).then(|| self.get(block_x, block_y))
+            }) {
+                return Some(Triplets {
+                    x1,
+                    y1,
+                    x2: block_offset_x + i % 3,
+                    y2: block_offset_y + i / 3,
+                    x3: block_offset_x + j % 3,
+                    y3: block_offset_y + j / 3,
+                    triplet_notes,
+                });
+            }
+        }
+
+        None
+    }
+
     /// Returns the raw notes for the cell with the given coordinates.
+    #[inline]
     fn get(&self, x: u8, y: u8) -> u16 {
         self.cells[get_pos(x, y)]
     }
@@ -282,39 +444,53 @@ impl Notes {
         let block_offset_y = get_block_offset(y);
 
         for i in 0..9 {
-            self.unset(x, y, NonZeroU8::new(i + 1).unwrap()); // Unset all numbers at the cell.
+            self.unset(x, y, NonZeroU8::new(i + 1).unwrap()); // Unset all notes in the cell.
             self.unset(i, y, n); // Unset the row.
             self.unset(x, i, n); // Unset the column.
             self.unset(block_offset_x + i % 3, block_offset_y + i / 3, n); // The block.
         }
     }
 
-    /// Removes all the notes that are invalidated by the presene of a set of
-    /// twins.
+    /// Removes all the notes that are invalidated by the presence of a set of
+    /// twins. This works for both regular twins and hidden twins.
     ///
-    /// This does *not* remove notes from the cells that are part of the twins
-    /// themselves.
+    /// This does *not* remove the notes belonging to the twins themselves.
     ///
     /// Returns whether any notes were invalidated.
-    pub fn remove_all_notes_affected_by_twins(&mut self, Twins { x1, y1, x2, y2 }: Twins) -> bool {
-        let mut eliminated_numbers = false;
-
-        let cell = self.get(x1, y1);
+    pub fn remove_all_notes_affected_by_twins(&mut self, twins: Twins) -> bool {
+        let mut eliminated_notes = false;
+        let Twins {
+            x1,
+            y1,
+            x2,
+            y2,
+            twin_notes,
+        } = twins;
 
         if x1 == x2 {
             // Clear twins from column.
             for y in 0..9 {
-                if y != y1 && y != y2 && self.get(x1, y) & cell != 0 {
-                    self.cells[get_pos(x1, y)] &= !cell;
-                    eliminated_numbers = true;
+                let notes_to_eliminate = if y == y1 || y == y2 {
+                    !twin_notes
+                } else {
+                    twin_notes
+                };
+                if self.get(x1, y) & notes_to_eliminate != 0 {
+                    self.cells[get_pos(x1, y)] &= !notes_to_eliminate;
+                    eliminated_notes = true;
                 }
             }
         } else if y1 == y2 {
             // Clear twins from row.
             for x in 0..9 {
-                if x != x1 && x != x2 && self.get(x, y1) & cell != 0 {
-                    self.cells[get_pos(x, y1)] &= !cell;
-                    eliminated_numbers = true;
+                let notes_to_eliminate = if x == x1 || x == x2 {
+                    !twin_notes
+                } else {
+                    twin_notes
+                };
+                if self.get(x, y1) & notes_to_eliminate != 0 {
+                    self.cells[get_pos(x, y1)] &= !notes_to_eliminate;
+                    eliminated_notes = true;
                 }
             }
         }
@@ -326,21 +502,25 @@ impl Notes {
             for i in 0..9 {
                 let x = block_offset_x + i % 3;
                 let y = block_offset_y + i / 3;
-                if (x != x1 || y != y1) && (x != x2 || y != y2) && self.get(x, y) & cell != 0 {
-                    self.cells[get_pos(x, y)] &= !cell;
-                    eliminated_numbers = true;
+                let notes_to_eliminate = if (x == x1 && y == y1) || (x == x2 && y == y2) {
+                    !twin_notes
+                } else {
+                    twin_notes
+                };
+                if self.get(x, y) & notes_to_eliminate != 0 {
+                    self.cells[get_pos(x, y)] &= !notes_to_eliminate;
+                    eliminated_notes = true;
                 }
             }
         }
 
-        eliminated_numbers
+        eliminated_notes
     }
 
     /// Removes all the notes that are invalidated by the presene of a set of
-    /// triplets.
+    /// triplets. This works for both regular triplets and hidden triplets.
     ///
-    /// This does *not* remove notes from the cells that are part of the
-    /// triplets themselves.
+    /// This does *not* remove the notes belonging to the triplets themselves.
     ///
     /// Returns whether any notes were invalidated.
     pub fn remove_all_notes_affected_by_triplets(
@@ -352,26 +532,35 @@ impl Notes {
             y2,
             x3,
             y3,
+            triplet_notes,
         }: Triplets,
     ) -> bool {
-        let mut eliminated_numbers = false;
-
-        let cell = self.get(x1, y1);
+        let mut eliminated_notes = false;
 
         if x1 == x2 && x1 == x3 {
             // Clear triplets from column.
             for y in 0..9 {
-                if y != y1 && y != y2 && y != y3 && self.get(x1, y) & cell != 0 {
-                    self.cells[get_pos(x1, y)] &= !cell;
-                    eliminated_numbers = true;
+                let notes_to_eliminate = if y == y1 || y == y2 || y == y3 {
+                    !triplet_notes
+                } else {
+                    triplet_notes
+                };
+                if self.get(x1, y) & notes_to_eliminate != 0 {
+                    self.cells[get_pos(x1, y)] &= !notes_to_eliminate;
+                    eliminated_notes = true;
                 }
             }
         } else if y1 == y2 && y1 == y3 {
             // Clear triplets from row.
             for x in 0..9 {
-                if x != x1 && x != x2 && x != x3 && self.get(x, y1) & cell != 0 {
-                    self.cells[get_pos(x, y1)] &= !cell;
-                    eliminated_numbers = true;
+                let notes_to_eliminate = if x == x1 || x == x2 || x == x3 {
+                    !triplet_notes
+                } else {
+                    triplet_notes
+                };
+                if self.get(x, y1) & notes_to_eliminate != 0 {
+                    self.cells[get_pos(x, y1)] &= !notes_to_eliminate;
+                    eliminated_notes = true;
                 }
             }
         }
@@ -387,18 +576,20 @@ impl Notes {
             for i in 0..9 {
                 let x = block_offset_x + i % 3;
                 let y = block_offset_y + i / 3;
-                if (x != x1 || y != y1)
-                    && (x != x2 || y != y2)
-                    && (x != x3 || y != y3)
-                    && (self.cells[get_pos(x, y)] & cell) != 0
-                {
-                    self.cells[get_pos(x, y)] &= !cell;
-                    eliminated_numbers = true;
+                let notes_to_eliminate =
+                    if (x == x1 && y == y1) || (x == x2 && y == y2) || (x == x3 && y == y3) {
+                        !triplet_notes
+                    } else {
+                        triplet_notes
+                    };
+                if self.get(x, y) & notes_to_eliminate != 0 {
+                    self.cells[get_pos(x, y)] &= !notes_to_eliminate;
+                    eliminated_notes = true;
                 }
             }
         }
 
-        eliminated_numbers
+        eliminated_notes
     }
 
     /// Adds the given number to the notes for the cell at the given
@@ -423,6 +614,7 @@ impl Notes {
     /// coordinates.
     ///
     /// Does nothing if the number wasn't in the notes.
+    #[inline]
     pub fn unset(&mut self, x: u8, y: u8, n: NonZeroU8) {
         self.cells[get_pos(x, y)] &= !(1 << n.get());
     }
@@ -446,4 +638,98 @@ fn get_num_notes(cell: u16) -> u8 {
     }
 
     num_notes
+}
+
+fn get_twin_permutations(cell_notes: u16) -> Vec<u16> {
+    let mut permutations = Vec::new();
+    for i in 0..9 {
+        for j in 0..9 {
+            if i != j {
+                let n = 2 << i | 2 << j;
+                if cell_notes & n == n {
+                    permutations.push(n);
+                }
+            }
+        }
+    }
+    permutations
+}
+
+fn find_hidden_twin(twin_notes: u16, get_cell: impl Fn(u8) -> Option<u16>) -> Option<u8> {
+    let mut other = None;
+    for i in 0..9 {
+        let Some(cell) = get_cell(i) else {
+            continue;
+        };
+
+        if cell & twin_notes == twin_notes {
+            if other.is_some() {
+                return None; // The twin must only occur in one other place.
+            } else {
+                other = Some(i); // Found it, but make sure it's the only match.
+            }
+        } else if cell & twin_notes > 0 {
+            return None; // One of the twin's numbers was found elsewhere.
+        }
+    }
+
+    other
+}
+
+fn collect_notes_in_range(get_cell: impl Fn(u8) -> u16) -> u16 {
+    let mut notes_in_range = 0;
+    for i in 0..9 {
+        notes_in_range |= get_cell(i);
+    }
+
+    notes_in_range
+}
+
+fn get_triplet_permutations(notes_in_range: u16) -> Vec<u16> {
+    let mut permutations = Vec::new();
+    for i in 0..9 {
+        for j in 0..9 {
+            if i != j {
+                for k in 0..9 {
+                    if k != i && k != j {
+                        let n = 2 << i | 2 << j | 2 << k;
+                        if notes_in_range & n == n {
+                            permutations.push(n);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    permutations
+}
+
+fn find_hidden_triplets(
+    triplet_notes: u16,
+    get_cell: impl Fn(u8) -> Option<u16>,
+) -> Option<(u8, u8)> {
+    let mut other1 = None;
+    let mut other2 = None;
+    for i in 0..9 {
+        let Some(cell) = get_cell(i) else {
+            continue;
+        };
+
+        if cell & triplet_notes > 0 {
+            if other1.is_some() {
+                if other2.is_some() {
+                    return None; // The triplets must occur in exactly two other places.
+                } else {
+                    other2 = Some(i); // Found it, but make sure it's the last match.
+                }
+            } else {
+                other1 = Some(i); // Found it, but we need one more.
+            }
+        }
+    }
+
+    match (other1, other2) {
+        (Some(i), Some(j)) => Some((i, j)),
+        _ => None,
+    }
 }
