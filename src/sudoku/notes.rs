@@ -266,6 +266,11 @@ impl Notes {
     ///
     /// Assumes that all the notes are correctly filled in.
     pub fn find_hidden_triplets(&self, pos: usize) -> Option<Triplets> {
+        let cell_notes = self.cells[pos];
+        if get_num_notes(cell_notes) < 2 {
+            return None;
+        }
+
         let (x1, y1) = get_x_and_y_from_pos(pos);
 
         // Check the row.

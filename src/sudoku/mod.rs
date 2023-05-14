@@ -222,6 +222,24 @@ impl Sudoku {
             }
         }
 
+        // Find hidden twins:
+        for pos in 0..81 {
+            if let Some(twins) = notes.find_hidden_twins(pos) {
+                if notes.remove_all_notes_affected_by_twins(twins) {
+                    return Some(get_x_and_y_from_pos(pos).into());
+                }
+            }
+        }
+
+        // Find hidden triplets:
+        for pos in 0..81 {
+            if let Some(triplets) = notes.find_hidden_triplets(pos) {
+                if notes.remove_all_notes_affected_by_triplets(triplets) {
+                    return Some(get_x_and_y_from_pos(pos).into());
+                }
+            }
+        }
+
         // Screw it, just give some position with a note:
         for pos in 0..81 {
             if notes.has_some_number(pos) {
