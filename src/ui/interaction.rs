@@ -12,7 +12,7 @@ pub enum Interaction {
 }
 
 pub fn mouse_interaction(
-    mut interaction_query: Query<(&mut Interaction, &ComputedPosition)>,
+    mut interaction_query: Query<(&mut Interaction, &ComputedPosition, &ComputedVisibility)>,
     mouse_buttons: Res<Input<MouseButton>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
@@ -20,18 +20,19 @@ pub fn mouse_interaction(
         return;
     };
 
-    for (mut interaction, computed_position) in &mut interaction_query {
-        let new_interaction = if computed_position.contains(cursor_position) {
-            if mouse_buttons.just_pressed(MouseButton::Left) {
-                Interaction::JustPressed
-            } else if mouse_buttons.pressed(MouseButton::Left) {
-                Interaction::Pressed
+    for (mut interaction, computed_position, computed_visibility) in &mut interaction_query {
+        let new_interaction =
+            if computed_visibility.is_visible() && computed_position.contains(cursor_position) {
+                if mouse_buttons.just_pressed(MouseButton::Left) {
+                    Interaction::JustPressed
+                } else if mouse_buttons.pressed(MouseButton::Left) {
+                    Interaction::Pressed
+                } else {
+                    Interaction::Hovered
+                }
             } else {
-                Interaction::Hovered
-            }
-        } else {
-            Interaction::None
-        };
+                Interaction::None
+            };
 
         if *interaction != new_interaction {
             *interaction = new_interaction;

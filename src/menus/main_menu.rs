@@ -9,6 +9,15 @@ use std::f32::consts::PI;
 use std::time::Duration;
 
 #[derive(Component)]
+pub struct MainButtonContainer;
+
+#[derive(Component)]
+pub struct DifficultyButtonContainer;
+
+#[derive(Component)]
+pub struct SettingsButtonContainer;
+
+#[derive(Component)]
 pub struct SettingsIcon;
 
 pub fn main_menu_setup(
@@ -68,21 +77,12 @@ pub fn main_menu_setup(
             });
 
         // Main menu buttons.
-        build_button_section(screen, 0., |main_section| {
-            use MainScreenButtonAction::*;
-            let buttons = ButtonBuilder::new(fonts);
-            buttons.add_ternary_with_text_and_action(main_section, "Quit", Quit);
-            buttons.add_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
-            if game.may_continue() {
-                buttons.add_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
-                buttons.add_with_text_and_action(main_section, "Continue", ContinueGame);
-            } else {
-                buttons.add_with_text_and_action(main_section, "New Game", GoToNewGame);
-            }
+        build_button_section(screen, MainButtonContainer, 0., |main_section| {
+            spawn_main_menu_buttons(main_section, fonts, game);
         });
 
         // Difficulty buttons.
-        build_button_section(screen, -0.5 * PI, |parent| {
+        build_button_section(screen, DifficultyButtonContainer, -0.5 * PI, |parent| {
             use Difficulty::*;
             use DifficultyScreenButtonAction::*;
             let buttons = ButtonBuilder::new(fonts);
@@ -94,7 +94,7 @@ pub fn main_menu_setup(
         });
 
         // Settings buttons and toggles.
-        build_button_section(screen, 0.5 * PI, |parent| {
+        build_button_section(screen, SettingsButtonContainer, 0.5 * PI, |parent| {
             use SettingsButtonAction::*;
             use SettingsToggle::*;
             let buttons = ButtonBuilder::new(fonts);
@@ -115,8 +115,22 @@ pub fn main_menu_setup(
     });
 }
 
+fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, game: &Game) {
+    use MainScreenButtonAction::*;
+    let buttons = ButtonBuilder::new(fonts);
+    buttons.add_ternary_with_text_and_action(main_section, "Quit", Quit);
+    buttons.add_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
+    if game.may_continue() {
+        buttons.add_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
+        buttons.add_with_text_and_action(main_section, "Continue", ContinueGame);
+    } else {
+        buttons.add_with_text_and_action(main_section, "New Game", GoToNewGame);
+    }
+}
+
 fn build_button_section(
     screen: &mut ChildBuilder,
+    screen_marker: impl Component,
     initial_rotation: f32,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
@@ -142,13 +156,16 @@ fn build_button_section(
         ))
         .with_children(|main_section_rotation_axis| {
             main_section_rotation_axis
-                .spawn(FlexBundle::new(
-                    FlexContainerStyle::default(),
-                    FlexItemStyle::fixed_size(Val::Vmin(100.), Val::Vmin(100.)).with_transform(
-                        Transform {
-                            translation: Vec3::new(0., 2., 1.),
-                            ..default()
-                        },
+                .spawn((
+                    screen_marker,
+                    FlexBundle::new(
+                        FlexContainerStyle::default(),
+                        FlexItemStyle::fixed_size(Val::Vmin(100.), Val::Vmin(100.)).with_transform(
+                            Transform {
+                                translation: Vec3::new(0., 2., 1.),
+                                ..default()
+                            },
+                        ),
                     ),
                 ))
                 .with_children(child_builder);
@@ -278,17 +295,34 @@ pub fn on_setting_change(
 
 pub fn on_screen_change(
     mut commands: Commands,
-    screen_state: Res<State<ScreenState>>,
     mut button_sections: Query<(Entity, &mut ButtonSection)>,
+    main_button_container: Query<(Entity, &Children), With<MainButtonContainer>>,
+    fonts: Res<Fonts>,
+    game: Res<Game>,
+    screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
         return;
     }
 
+    use ScreenState::*;
+    if screen_state.0 == MainMenu {
+        // Respawn buttons when going back to main screen, because the
+        // Continue button may have (dis)appeared.
+        for (container_entity, children) in &main_button_container {
+            let mut button_container = commands.entity(container_entity);
+            button_container.despawn_descendants();
+            button_container.remove_children(&children);
+            button_container.with_children(|main_section| {
+                spawn_main_menu_buttons(main_section, &fonts, &game);
+            });
+        }
+    }
+
     let new_rotation = match screen_state.0 {
-        ScreenState::MainMenu | ScreenState::Game => 0.,
-        ScreenState::SelectDifficulty => 0.5 * PI,
-        ScreenState::Settings => -0.5 * PI,
+        MainMenu | Game => 0.,
+        SelectDifficulty => 0.5 * PI,
+        Settings => -0.5 * PI,
         _ => return,
     };
 
@@ -303,13 +337,11 @@ pub fn on_screen_change(
             // When going from the difficulty selection to the game, we just
             // reset the transform without animation so everything is back to
             // the starting when position when going out of the game.
-            ScreenState::Game => {
-                Animator::new(Delay::new(Duration::from_millis(200)).then(Tween::new(
-                    EaseMethod::Discrete(0.),
-                    Duration::from_millis(1),
-                    TransformRotationZLens { start, end },
-                )))
-            }
+            Game => Animator::new(Delay::new(Duration::from_millis(200)).then(Tween::new(
+                EaseMethod::Discrete(0.),
+                Duration::from_millis(1),
+                TransformRotationZLens { start, end },
+            ))),
             _ => Animator::new(Tween::new(
                 EaseFunction::QuadraticInOut,
                 Duration::from_millis(200),

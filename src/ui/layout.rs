@@ -9,14 +9,11 @@ type FlexEntity<'a> = (
     Option<&'a FlexItemStyle>,
     Option<&'a FlexContainerStyle>,
     Option<&'a mut ComputedPosition>,
-    Option<&'a Parent>,
+    Option<&'a Children>,
     Option<&'a Screen>,
 );
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
-/// Note we do not support dynamic changing of containers or items. This is not
-/// a problem for us, since all the UI layouts are created at startup. We *do*
-/// support changing styles at runtime however.
 pub(crate) fn layout_system(
     mut flex_query: FlexQuery,
     changed_containers: Query<Entity, Changed<FlexContainerStyle>>,
@@ -29,17 +26,16 @@ pub(crate) fn layout_system(
 }
 
 fn layout(flex_query: &mut FlexQuery) {
-    let mut containers: Vec<(Entity, FlexContainerStyle)> = Vec::new();
-    let mut children_map: BTreeMap<Entity, Vec<Entity>> = BTreeMap::new();
+    let mut containers: Vec<(Entity, &Children, &FlexContainerStyle)> = Vec::new();
     let mut item_map: BTreeMap<Entity, (&FlexItemStyle, Mut<ComputedPosition>, Mut<Transform>)> =
         BTreeMap::new();
     let mut position_map: BTreeMap<Entity, ComputedPosition> = BTreeMap::new();
 
-    for (entity, transform, item_style, container_style, computed_position, parent, screen) in
+    for (entity, transform, item_style, container_style, computed_position, children, screen) in
         flex_query.iter_mut()
     {
-        if let Some(container_style) = container_style {
-            containers.push((entity, container_style.clone()));
+        if let (Some(container_style), Some(children)) = (container_style, children) {
+            containers.push((entity, children, container_style));
         }
 
         if let Some(screen) = screen {
@@ -54,31 +50,17 @@ fn layout(flex_query: &mut FlexQuery) {
             position_map.insert(entity, position);
         }
 
-        if let Some(parent) = parent {
-            children_map
-                .entry(parent.get())
-                .and_modify(|children| children.push(entity))
-                .or_insert(vec![entity]);
-        }
-
         if let (Some(item_style), Some(computed_position)) = (item_style, computed_position) {
             item_map.insert(entity, (item_style, computed_position, transform));
         }
     }
 
-    // Assumption: We expect entity IDs to correlate to the order in which their
-    // entities appear in the tree. This way, a simple sort is enough to
+    // Assumption: We expect entity IDs to correlate with the order in which
+    // their entities appear in the tree. This way, a simple sort is enough to
     // guarantee a top-down iteration order.
-    containers.sort_by_key(|(entity, _)| *entity);
+    containers.sort_by_key(|(entity, ..)| *entity);
 
-    for (container_entity, container_style) in containers {
-        let Some(mut children) = children_map.remove(&container_entity) else {
-            bevy::log::warn!("No children for container {container_entity:?}");
-            return;
-        };
-
-        children.sort();
-
+    for (container_entity, children, container_style) in containers {
         let container_position = position_map.remove(&container_entity);
         let vminmax_scales = container_position
             .as_ref()
@@ -147,7 +129,7 @@ fn layout(flex_query: &mut FlexQuery) {
 
         for item_entity in children {
             let Some((item_style, mut computed_position, mut transform)) =
-                item_map.remove(&item_entity) else {
+                item_map.remove(item_entity) else {
                     bevy::log::warn!("No entry found for child entity {item_entity:?}");
                     continue;
                 };
@@ -303,7 +285,7 @@ fn layout(flex_query: &mut FlexQuery) {
             if let Some(container_position) = container_position.as_ref() {
                 let item_position = container_position.transformed(scale, translation);
                 *computed_position = item_position;
-                position_map.insert(item_entity, item_position);
+                position_map.insert(*item_entity, item_position);
             } else {
                 bevy::log::warn!("Cannot set computed position on {item_entity:?}");
             }

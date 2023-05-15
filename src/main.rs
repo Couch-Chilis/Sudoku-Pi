@@ -170,7 +170,7 @@ fn setup(
         Screen::for_state(ScreenState::Highscores),
         Flex,
         HighscoreScreen,
-        flex_container.clone(),
+        flex_container,
     ));
     highscore_screen_setup(
         &mut highscore_screen,
@@ -183,7 +183,13 @@ fn setup(
 
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.
-    commands.spawn((Screen::for_state(ScreenState::Upper), Flex, flex_container));
+    commands.spawn((
+        Screen::for_state(ScreenState::Upper),
+        SpriteBundle {
+            sprite: Sprite::from_color(Color::WHITE),
+            ..default()
+        },
+    ));
 
     commands.insert_resource(fonts);
 }
