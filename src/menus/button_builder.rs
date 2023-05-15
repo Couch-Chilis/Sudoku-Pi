@@ -69,7 +69,7 @@ impl ButtonBuilder {
             .with_children(|button| {
                 button.spawn(Text2dBundle {
                     text: Text::from_section(text, self.text_style.clone()),
-                    transform: self.text_transform.clone(),
+                    transform: self.text_transform,
                     ..default()
                 });
             });
@@ -113,7 +113,7 @@ impl ButtonBuilder {
 
                 button.spawn(Text2dBundle {
                     text: Text::from_section(text, self.secondary_text_style.clone()),
-                    transform: self.text_transform.clone(),
+                    transform: self.text_transform,
                     ..default()
                 });
             });
@@ -157,7 +157,7 @@ impl ButtonBuilder {
 
                 button.spawn(Text2dBundle {
                     text: Text::from_section(text, self.ternary_text_style.clone()),
-                    transform: self.text_transform.clone(),
+                    transform: self.text_transform,
                     ..default()
                 });
             });

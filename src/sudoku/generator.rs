@@ -52,7 +52,7 @@ fn generate_sudoku(difficulty: Difficulty) -> anyhow::Result<Sudoku> {
         num_cells_for_most_difficult_number,
     } = DiggingStrategy::generate(difficulty)?;
 
-    let mut start = solution.clone();
+    let mut start = solution;
     let mut num_cells_left_for_most_difficult_number = 9;
     let most_difficult_number = NonZeroU8::new(rand::thread_rng().gen_range(1..10)).unwrap();
     for i in 0..81 {
@@ -67,8 +67,8 @@ fn generate_sudoku(difficulty: Difficulty) -> anyhow::Result<Sudoku> {
     }
 
     let mut num_cells_dug = 0;
-    'dig: for i in 0..81 {
-        let (x, y) = get_x_and_y_from_pos(digging_order[i]);
+    'dig: for i in digging_order {
+        let (x, y) = get_x_and_y_from_pos(i);
 
         if min_numbers_per_line > 0 {
             let mut num_others_in_column = 0;

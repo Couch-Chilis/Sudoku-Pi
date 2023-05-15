@@ -111,7 +111,7 @@ fn on_keyboard_input(
 
             Slash => give_hint(&mut game, &mut timer, &mut selection),
 
-            Back | Delete => clear_selection(&mut game, &mut selection),
+            Back | Delete => clear_selection(&mut game, &selection),
             _ => {}
         }
     }
@@ -248,18 +248,18 @@ fn render_highlights(
                 }
             } else {
                 // Find all the cells with notes containing the same number.
-                for pos in 0..81 {
+                for (pos, highlight) in highlights.iter_mut().enumerate() {
                     let (x, y) = get_x_and_y_from_pos(pos);
                     if game.notes.has(x, y, n) {
-                        highlights[pos] = Some(HighlightKind::Note);
+                        *highlight = Some(HighlightKind::Note);
                     }
                 }
             }
 
             // Find all the cells with the same number.
-            for pos in 0..81 {
+            for (pos, highlight) in highlights.iter_mut().enumerate() {
                 if game.current.get_by_pos(pos) == selected_cell {
-                    highlights[pos] = Some(HighlightKind::SameNumber);
+                    *highlight = Some(HighlightKind::SameNumber);
                 }
             }
         }
@@ -424,9 +424,7 @@ fn on_timer(
             let (x, y) = get_x_and_y_from_pos(((time.elapsed().as_millis() / 200) % 81) as usize);
             selection.selected_cell = Some((x, y));
         }
-    } else if !game.is_default() {
-        if screen.0 == ScreenState::Game {
-            game_timer.stopwatch.tick(time.delta());
-        }
+    } else if !game.is_default() && screen.0 == ScreenState::Game {
+        game_timer.stopwatch.tick(time.delta());
     }
 }

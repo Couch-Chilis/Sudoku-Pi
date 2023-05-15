@@ -312,7 +312,7 @@ pub fn on_screen_change(
         for (container_entity, children) in &main_button_container {
             let mut button_container = commands.entity(container_entity);
             button_container.despawn_descendants();
-            button_container.remove_children(&children);
+            button_container.remove_children(children);
             button_container.with_children(|main_section| {
                 spawn_main_menu_buttons(main_section, &fonts, &game);
             });

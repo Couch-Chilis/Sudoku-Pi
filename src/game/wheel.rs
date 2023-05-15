@@ -285,12 +285,11 @@ fn get_selected_number(wheel: &Wheel, radius: f32) -> Option<NonZeroU8> {
     let diff_x = (current_x - center.x).abs();
     let diff_y = (current_y - center.y).abs();
     let touch_radius = (diff_x * diff_x + diff_y * diff_y).sqrt();
-    let selected_number = if touch_radius > 0.08 && touch_radius < 0.5 {
+
+    if touch_radius > 0.08 && touch_radius < 0.5 {
         let n = (11.25 - ((angle + 1.047) / PI * 4.5)).round() as u8 % 9 + 1;
         Some(NonZeroU8::new(n).unwrap())
     } else {
         None
-    };
-
-    selected_number
+    }
 }

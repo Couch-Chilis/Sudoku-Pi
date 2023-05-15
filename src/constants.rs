@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 // Base colors.
-pub const COLOR_CREAM: Color = Color::rgb(255. / 255., 254. / 255., 248. / 255.);
+pub const COLOR_CREAM: Color = Color::rgb(1., 254. / 255., 248. / 255.);
 pub const COLOR_MAIN: Color = Color::rgb(169. / 255., 154. / 255., 55. / 255.);
 pub const COLOR_MAIN_OPACITY_08: Color = Color::rgba(169. / 255., 154. / 255., 55. / 255., 0.8);
 pub const COLOR_MAIN_DARKEST: Color = Color::rgb(92. / 255., 84. / 255., 30. / 255.);

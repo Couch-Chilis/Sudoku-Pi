@@ -318,7 +318,7 @@ impl Sudoku {
     /// Returns a new Sudoku board with the given number filled in at the given
     /// coordinates.
     pub fn set(&self, x: u8, y: u8, n: NonZeroU8) -> Self {
-        let mut cells = self.cells.clone();
+        let mut cells = self.cells;
         cells[get_pos(x, y)] = Some(n);
         Self { cells }
     }
@@ -333,7 +333,7 @@ impl Sudoku {
     /// cell at the given position.
     #[inline]
     pub fn unset_by_pos(&self, pos: usize) -> Self {
-        let mut cells = self.cells.clone();
+        let mut cells = self.cells;
         cells[pos] = None;
         Self { cells }
     }

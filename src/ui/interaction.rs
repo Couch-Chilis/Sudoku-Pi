@@ -74,10 +74,10 @@ pub fn button_interaction(
                 {
                     text.sections[0].style.color = match *interaction {
                         Interaction::JustPressed | Interaction::Pressed => {
-                            COLOR_SECONDARY_BUTTON_TEXT_PRESS.into()
+                            COLOR_SECONDARY_BUTTON_TEXT_PRESS
                         }
-                        Interaction::Hovered => COLOR_SECONDARY_BUTTON_TEXT_HOVER.into(),
-                        Interaction::None => COLOR_SECONDARY_BUTTON_TEXT.into(),
+                        Interaction::Hovered => COLOR_SECONDARY_BUTTON_TEXT_HOVER,
+                        Interaction::None => COLOR_SECONDARY_BUTTON_TEXT,
                     };
                 }
             }
@@ -96,10 +96,10 @@ pub fn button_interaction(
                 {
                     text.sections[0].style.color = match *interaction {
                         Interaction::JustPressed | Interaction::Pressed => {
-                            COLOR_TERNARY_BUTTON_TEXT_PRESS.into()
+                            COLOR_TERNARY_BUTTON_TEXT_PRESS
                         }
-                        Interaction::Hovered => COLOR_TERNARY_BUTTON_TEXT_HOVER.into(),
-                        Interaction::None => COLOR_TERNARY_BUTTON_TEXT.into(),
+                        Interaction::Hovered => COLOR_TERNARY_BUTTON_TEXT_HOVER,
+                        Interaction::None => COLOR_TERNARY_BUTTON_TEXT,
                     };
                 }
             }

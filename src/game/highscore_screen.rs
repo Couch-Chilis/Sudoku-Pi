@@ -181,7 +181,7 @@ fn render_scores(
                     container,
                     fonts,
                     y,
-                    format_time(game.elapsed_secs).to_string(),
+                    format_time(game.elapsed_secs),
                     COLOR_ORANGE,
                 );
             }

@@ -1,4 +1,5 @@
 {
     "files.insertFinalNewline": true,
-    "rust-analyzer.showUnlinkedFileNotification": false
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "rust-analyzer.check.command": "clippy"
 }
