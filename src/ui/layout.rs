@@ -130,7 +130,7 @@ fn layout(flex_query: &mut FlexQuery) {
         for item_entity in children {
             let Some((item_style, mut computed_position, mut transform)) =
                 item_map.remove(item_entity) else {
-                    bevy::log::warn!("No entry found for child entity {item_entity:?}");
+                    bevy::log::warn!("Child {item_entity:?} does not appear to be a flex item");
                     continue;
                 };
 

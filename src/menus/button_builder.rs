@@ -20,7 +20,7 @@ impl ButtonBuilder {
         // Shared text transform.
         let text_transform = Transform {
             scale: Vec3::new(0.002, 0.01, 1.),
-            translation: Vec3::new(0., -0.08, 3.),
+            translation: Vec3::new(0., -0.08, 1.),
             ..default()
         };
 
@@ -101,21 +101,23 @@ impl ButtonBuilder {
                 Interaction::default(),
                 action,
             ))
-            .with_children(|button| {
-                button.spawn((
-                    FlexItemBundle::from_style(self.alternative_background_style.clone()),
-                    SpriteBundle {
-                        sprite: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
-                        ..default()
-                    },
-                ));
-
-                button.spawn(Text2dBundle {
-                    text: Text::from_section(text, self.secondary_text_style.clone()),
-                    transform: self.text_transform,
-                    ..default()
-                });
+            .with_children(|border| {
+                border
+                    .spawn((
+                        FlexItemBundle::from_style(self.alternative_background_style.clone()),
+                        SpriteBundle {
+                            sprite: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
+                            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+                            ..default()
+                        },
+                    ))
+                    .with_children(|background| {
+                        background.spawn(Text2dBundle {
+                            text: Text::from_section(text, self.secondary_text_style.clone()),
+                            transform: self.text_transform,
+                            ..default()
+                        });
+                    });
             });
     }
 
@@ -145,21 +147,23 @@ impl ButtonBuilder {
                 Interaction::default(),
                 action,
             ))
-            .with_children(|button| {
-                button.spawn((
-                    FlexItemBundle::from_style(self.alternative_background_style.clone()),
-                    SpriteBundle {
-                        sprite: Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
-                        ..default()
-                    },
-                ));
-
-                button.spawn(Text2dBundle {
-                    text: Text::from_section(text, self.ternary_text_style.clone()),
-                    transform: self.text_transform,
-                    ..default()
-                });
+            .with_children(|border| {
+                border
+                    .spawn((
+                        FlexItemBundle::from_style(self.alternative_background_style.clone()),
+                        SpriteBundle {
+                            sprite: Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
+                            transform: Transform::from_translation(Vec3::new(0., 0., 1.)),
+                            ..default()
+                        },
+                    ))
+                    .with_children(|background| {
+                        background.spawn(Text2dBundle {
+                            text: Text::from_section(text, self.ternary_text_style.clone()),
+                            transform: self.text_transform,
+                            ..default()
+                        });
+                    });
             });
     }
 }

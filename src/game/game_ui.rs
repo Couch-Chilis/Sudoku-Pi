@@ -196,25 +196,29 @@ fn build_secondary_button(
         Interaction::default(),
         action,
     ))
-    .with_children(|button| {
-        button.spawn((
-            FlexItemBundle::from_style(FlexItemStyle::available_size().without_occupying_space()),
-            SpriteBundle {
-                sprite: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-                transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
-                ..default()
-            },
-        ));
-
-        button.spawn(Text2dBundle {
-            text: Text::from_section(text, text_style),
-            transform: Transform {
-                scale: Vec3::new(0.004, 0.01, 1.),
-                translation: Vec3::new(0., -0.08, 3.),
-                ..default()
-            },
-            ..default()
-        });
+    .with_children(|border| {
+        border
+            .spawn((
+                FlexItemBundle::from_style(
+                    FlexItemStyle::available_size().without_occupying_space(),
+                ),
+                SpriteBundle {
+                    sprite: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
+                    transform: Transform::default_2d(),
+                    ..default()
+                },
+            ))
+            .with_children(|background| {
+                background.spawn(Text2dBundle {
+                    text: Text::from_section(text, text_style),
+                    transform: Transform {
+                        scale: Vec3::new(0.004, 0.01, 1.),
+                        translation: Vec3::new(0., -0.08, 1.),
+                        ..default()
+                    },
+                    ..default()
+                });
+            });
     });
 }
 
