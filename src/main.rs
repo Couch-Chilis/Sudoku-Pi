@@ -16,7 +16,7 @@ use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup};
 use highscores::Highscores;
-use menus::main_menu_setup;
+use menus::menu_setup;
 use settings::Settings;
 use std::time::Duration;
 use sudoku::Game;
@@ -151,7 +151,7 @@ fn setup(
         MainScreen,
         flex_container.clone(),
     ));
-    main_menu_setup(
+    menu_setup(
         &mut main_screen,
         &mut meshes,
         &mut materials,
