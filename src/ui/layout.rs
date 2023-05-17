@@ -1,6 +1,6 @@
-use super::flex_bundles::*;
+use super::flex::*;
 use crate::Screen;
-use bevy::{prelude::*, window::WindowResized};
+use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use std::collections::BTreeMap;
 
 type FlexEntity<'a> = (
@@ -11,6 +11,8 @@ type FlexEntity<'a> = (
     Option<&'a mut ComputedPosition>,
     Option<&'a Children>,
     Option<&'a Screen>,
+    Option<&'a Text>,
+    Option<&'a Anchor>,
 );
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
@@ -30,9 +32,19 @@ fn layout(flex_query: &mut FlexQuery) {
     let mut item_map: BTreeMap<Entity, (&FlexItemStyle, Mut<ComputedPosition>, Mut<Transform>)> =
         BTreeMap::new();
     let mut position_map: BTreeMap<Entity, ComputedPosition> = BTreeMap::new();
+    let mut text_map: BTreeMap<Entity, (&Anchor, Mut<Transform>)> = BTreeMap::new();
 
-    for (entity, transform, item_style, container_style, computed_position, children, screen) in
-        flex_query.iter_mut()
+    for (
+        entity,
+        transform,
+        item_style,
+        container_style,
+        computed_position,
+        children,
+        screen,
+        text,
+        anchor,
+    ) in flex_query.iter_mut()
     {
         if let (Some(container_style), Some(children)) = (container_style, children) {
             containers.push((entity, children, container_style));
@@ -50,10 +62,18 @@ fn layout(flex_query: &mut FlexQuery) {
             position_map.insert(entity, position);
         }
 
-        if let (Some(item_style), Some(computed_position)) = (item_style, computed_position) {
+        if let (Some(_text), Some(anchor)) = (text, anchor) {
+            text_map.insert(entity, (anchor, transform));
+        } else if let (Some(item_style), Some(computed_position)) = (item_style, computed_position)
+        {
             item_map.insert(entity, (item_style, computed_position, transform));
         }
     }
+
+    let screen_size = position_map
+        .first_key_value()
+        .map(|(_, position)| (position.width, position.height))
+        .expect("At least one Screen must exist");
 
     // Assumption: We expect entity IDs to correlate with the order in which
     // their entities appear in the tree. This way, a simple sort is enough to
@@ -64,7 +84,7 @@ fn layout(flex_query: &mut FlexQuery) {
         let container_position = position_map.remove(&container_entity);
         let vminmax_scales = container_position
             .as_ref()
-            .map(|value| value.vminmax_scales())
+            .map(|value| value.vminmax_scales(screen_size.0, screen_size.1))
             .unwrap_or_default();
 
         let direction = container_style.direction;
@@ -88,17 +108,22 @@ fn layout(flex_query: &mut FlexQuery) {
                 (children
                     .iter()
                     .filter_map(|entity| item_map.get(entity))
-                    .filter(|(item_style, _, _)| item_style.occupies_space)
+                    .filter(|(item_style, ..)| item_style.occupies_space)
                     .count()
                     .max(1)
                     - 1) as f32
             }
         };
+        let initial_size = 2. * padding + num_gaps * container_style.gap.evaluate(&scaling);
+        let base_grow = match container_style.gap {
+            Val::Auto => num_gaps,
+            _ => 0.,
+        };
         let (total_size, total_grow, total_shrink) = children
             .iter()
             .filter_map(|entity| item_map.get(entity))
-            .filter(|(item_style, _, _)| item_style.occupies_space)
-            .map(|(item_style, _, _)| {
+            .filter(|(item_style, ..)| item_style.occupies_space)
+            .map(|(item_style, ..)| {
                 (
                     item_style.flex_base.for_direction(direction),
                     item_style.margin.for_direction(direction),
@@ -107,14 +132,7 @@ fn layout(flex_query: &mut FlexQuery) {
                 )
             })
             .fold(
-                (
-                    2. * padding + num_gaps * container_style.gap.evaluate(&scaling),
-                    match container_style.gap {
-                        Val::Auto => num_gaps,
-                        _ => 0.,
-                    },
-                    0.,
-                ),
+                (initial_size, base_grow, 0.),
                 |(size, grow, shrink), (item_size, item_margin, item_grow, item_shrink)| {
                     (
                         size + item_size.evaluate(&scaling) + 2. * item_margin.evaluate(&scaling),
@@ -128,6 +146,23 @@ fn layout(flex_query: &mut FlexQuery) {
         let mut offset = padding;
 
         for item_entity in children {
+            // Special handling for text items:
+            if let Some((anchor, mut transform)) = text_map.remove(item_entity) {
+                if let Some(ComputedPosition { width, height, .. }) = container_position {
+                    transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
+                    transform.translation = Vec3::new(
+                        match anchor {
+                            Anchor::CenterLeft | Anchor::BottomLeft | Anchor::TopLeft => -0.5,
+                            Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
+                            _ => 0.,
+                        },
+                        -4. / height,
+                        1.,
+                    );
+                }
+                continue;
+            }
+
             let Some((item_style, mut computed_position, mut transform)) =
                 item_map.remove(item_entity) else {
                     bevy::log::warn!("Child {item_entity:?} does not appear to be a flex item");
@@ -275,7 +310,7 @@ fn layout(flex_query: &mut FlexQuery) {
                 layout_transform.rotation = item_style.transform.rotation;
             }
 
-            // Set the child's transform, but preserve the z-index.
+            // Set the child's transform.
             if *transform != layout_transform {
                 *transform = layout_transform;
             }

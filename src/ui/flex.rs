@@ -1,6 +1,7 @@
+use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor};
 use std::ops::Mul;
 
-use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE};
+use crate::utils::TransformExt;
 
 /// Marker for any flex entity, be it an item or a container.
 #[derive(Clone, Component, Default)]
@@ -15,6 +16,10 @@ pub struct FlexBundle {
 }
 
 impl FlexBundle {
+    pub fn from_item_style(item_style: FlexItemStyle) -> Self {
+        Self::new(FlexContainerStyle::default(), item_style)
+    }
+
     pub fn new(container_style: FlexContainerStyle, item_style: FlexItemStyle) -> Self {
         Self {
             container: FlexContainerBundle {
@@ -53,7 +58,7 @@ impl Default for FlexContainerBundle {
         Self {
             style: FlexContainerStyle::default(),
             background: Default::default(),
-            transform: Default::default(),
+            transform: Transform::default_2d(),
             global_transform: Default::default(),
             texture: DEFAULT_IMAGE_HANDLE.typed(),
             visibility: Default::default(),
@@ -318,6 +323,40 @@ impl FlexLeafBundle {
     }
 }
 
+/// A text item to be placed inside a flex container.
+///
+/// It will use all the available space in the container, and currently, only
+/// a single text entity is supported within a container.
+#[derive(Bundle, Clone, Default)]
+pub struct FlexTextBundle {
+    pub flex: Flex,
+    pub text: Text2dBundle,
+}
+
+impl FlexTextBundle {
+    pub fn from_text(text: Text) -> Self {
+        Self {
+            flex: Flex,
+            text: Text2dBundle {
+                text,
+                transform: Transform {
+                    // FIXME: These should not be necessary, but without them,
+                    // the transition back to the main menu is screwed up.
+                    scale: Vec3::new(0.004, 0.01, 1.),
+                    translation: Vec3::new(0., -0.08, 1.),
+                    ..default()
+                },
+                ..default()
+            },
+        }
+    }
+
+    pub fn with_anchor(mut self, anchor: Anchor) -> Self {
+        self.text.text_anchor = anchor;
+        self
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default)]
 pub enum Alignment {
     #[default]
@@ -360,15 +399,19 @@ pub enum Val {
     /// Percentage along the relevant axis. This is a percentage of the width or
     /// height of the parent entity, not the entire window.
     Percent(f32),
-    /// Percentage along the longest axis. This is a percentage of the width or
-    /// height of the parent entity, not the entire window.
+    /// Percentage along the cross axis. If the cross axis is defined using
+    /// `Val::Percent`, `Val::CrossPercent` can be used to define a related
+    /// percentage that maintains aspect ratio.
+    CrossPercent(f32),
+    /// Percentage along the longest axis of the viewport. This is a percentage
+    /// of the width or height of the entire window.
     ///
     /// Note that currently `Vmax` is only supported as long as there is a
     /// direct chain from the `Screen` to the flex item through (nested) flex
     /// containers.
     Vmax(f32),
-    /// Percentage along the shortest axis. This is a percentage of the width or
-    /// height of the parent entity, not the entire window.
+    /// Percentage along the shortest axis of the viewport. This is a percentage
+    /// of the width or height of the entire window.
     ///
     /// Note that currently `Vmin` is only supported as long as there is a
     /// direct chain from the `Screen` to the flex item through (nested) flex
@@ -380,7 +423,8 @@ impl Val {
     pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
         match self {
             Self::Auto | Self::None => 0.,
-            Self::Percent(value) => 0.01 * value,
+            Self::Percent(value) => value * 0.01,
+            Self::CrossPercent(value) => axis_scaling.ratio * value * 0.01,
             Self::Vmax(value) => axis_scaling.vmax_scale * value,
             Self::Vmin(value) => axis_scaling.vmin_scale * value,
         }
@@ -395,6 +439,7 @@ impl Mul<Val> for f32 {
             Val::None => Val::None,
             Val::Auto => Val::Auto,
             Val::Percent(percentage) => Val::Percent(self * percentage),
+            Val::CrossPercent(percentage) => Val::CrossPercent(self * percentage),
             Val::Vmax(percentage) => Val::Vmax(self * percentage),
             Val::Vmin(percentage) => Val::Vmin(self * percentage),
         }
@@ -430,26 +475,32 @@ impl ComputedPosition {
         }
     }
 
-    pub fn vminmax_scales(&self) -> VminmaxScales {
-        match self.width > self.height {
+    pub fn vminmax_scales(&self, screen_width: f32, screen_height: f32) -> VminmaxScales {
+        let horizontal_scaling = screen_width / self.width * 0.01;
+        let vertical_scaling = screen_height / self.height * 0.01;
+        match screen_width > screen_height {
             true => VminmaxScales {
                 horizontal: AxisScaling {
-                    vmin_scale: 0.01 * self.height / self.width,
-                    vmax_scale: 0.01,
+                    ratio: self.height / self.width,
+                    vmin_scale: horizontal_scaling * screen_height / screen_width,
+                    vmax_scale: horizontal_scaling,
                 },
                 vertical: AxisScaling {
-                    vmin_scale: 0.01,
-                    vmax_scale: 0.01 * self.width / self.height,
+                    ratio: self.width / self.height,
+                    vmin_scale: vertical_scaling,
+                    vmax_scale: vertical_scaling * screen_width / screen_height,
                 },
             },
             false => VminmaxScales {
                 horizontal: AxisScaling {
-                    vmin_scale: 0.01,
-                    vmax_scale: 0.01 * self.height / self.width,
+                    ratio: self.height / self.width,
+                    vmin_scale: horizontal_scaling,
+                    vmax_scale: horizontal_scaling * screen_height / screen_width,
                 },
                 vertical: AxisScaling {
-                    vmin_scale: 0.01 * self.width / self.height,
-                    vmax_scale: 0.01,
+                    ratio: self.width / self.height,
+                    vmin_scale: vertical_scaling * screen_width / screen_height,
+                    vmax_scale: vertical_scaling,
                 },
             },
         }
@@ -474,9 +525,11 @@ impl VminmaxScales {
     }
 }
 
-/// Scales for evaluating the `Vmin` and `Vmax` values for a single axis.
+/// Scales for evaluating the `CrossPercent`, `Vmin`, and `Vmax` values for a
+/// single axis.
 #[derive(Clone, Copy, Debug)]
 pub struct AxisScaling {
+    pub ratio: f32,
     pub vmin_scale: f32,
     pub vmax_scale: f32,
 }
@@ -484,6 +537,7 @@ pub struct AxisScaling {
 impl Default for AxisScaling {
     fn default() -> Self {
         Self {
+            ratio: 1.,
             vmin_scale: 0.01,
             vmax_scale: 0.01,
         }

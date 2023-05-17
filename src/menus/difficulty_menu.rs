@@ -13,12 +13,14 @@ pub enum DifficultyScreenButtonAction {
 pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, fonts: &Fonts) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
-    let buttons = ButtonBuilder::new(fonts);
-    buttons.add_ternary_with_text_and_action(parent, "Back", BackToMain);
-    buttons.add_with_text_and_action(parent, "Easy", StartGameAtDifficulty(Easy));
-    buttons.add_with_text_and_action(parent, "Medium", StartGameAtDifficulty(Medium));
-    buttons.add_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(Advanced));
-    buttons.add_with_text_and_action(parent, "Expert", StartGameAtDifficulty(Expert));
+
+    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(11.));
+    let buttons = ButtonBuilder::new(fonts, button_size);
+    buttons.build_ternary_with_text_and_action(parent, "Back", BackToMain);
+    buttons.build_with_text_and_action(parent, "Easy", StartGameAtDifficulty(Easy));
+    buttons.build_with_text_and_action(parent, "Medium", StartGameAtDifficulty(Medium));
+    buttons.build_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(Advanced));
+    buttons.build_with_text_and_action(parent, "Expert", StartGameAtDifficulty(Expert));
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.

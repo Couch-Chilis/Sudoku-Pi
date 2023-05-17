@@ -14,14 +14,16 @@ pub enum MainScreenButtonAction {
 
 pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, game: &Game) {
     use MainScreenButtonAction::*;
-    let buttons = ButtonBuilder::new(fonts);
-    buttons.add_ternary_with_text_and_action(main_section, "Quit", Quit);
-    buttons.add_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
+
+    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(11.));
+    let buttons = ButtonBuilder::new(fonts, button_size);
+    buttons.build_ternary_with_text_and_action(main_section, "Quit", Quit);
+    buttons.build_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
     if game.may_continue() {
-        buttons.add_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
-        buttons.add_with_text_and_action(main_section, "Continue", ContinueGame);
+        buttons.build_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
+        buttons.build_with_text_and_action(main_section, "Continue", ContinueGame);
     } else {
-        buttons.add_with_text_and_action(main_section, "New Game", GoToNewGame);
+        buttons.build_with_text_and_action(main_section, "New Game", GoToNewGame);
     }
 }
 

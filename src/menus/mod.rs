@@ -1,28 +1,19 @@
-mod button_builder;
 mod difficulty_menu;
 mod how_to_play;
 mod main_menu;
-mod score;
 mod settings_menu;
 mod settings_toggle;
-mod toggle_builder;
 
-use crate::menus::main_menu::spawn_main_menu_buttons;
-use crate::{sudoku::*, ui::*, utils::*};
-use crate::{Fonts, ScreenState, Settings};
+use crate::{sudoku::*, ui::*, utils::*, Fonts, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
-use button_builder::ButtonBuilder;
-use difficulty_menu::{difficulty_screen_button_actions, spawn_difficulty_menu_buttons};
-use main_menu::main_menu_button_actions;
-use settings_menu::{on_setting_change, settings_screen_button_actions, settings_toggle_actions};
-use settings_toggle::SettingsToggle;
+use difficulty_menu::*;
+use main_menu::*;
+use settings_menu::*;
+use settings_toggle::*;
 use std::f32::consts::PI;
 use std::time::Duration;
-use toggle_builder::ToggleBuilder;
-
-use self::settings_menu::spawn_settings;
 
 #[derive(Component)]
 enum MenuButtonAction {
@@ -97,8 +88,8 @@ pub fn menu_setup(
                 // Logo.
                 logo_section
                     .spawn(FlexLeafBundle::from_style(
-                        FlexItemStyle::preferred_size(Val::Vmin(38.), Val::Vmin(80.))
-                            .with_margin(Size::all(Val::Vmin(10.)))
+                        FlexItemStyle::preferred_size(Val::CrossPercent(42.), Val::Percent(90.))
+                            .with_margin(Size::all(Val::Vmin(5.)))
                             .with_fixed_aspect_ratio(),
                     ))
                     .with_children(|square| {
@@ -157,10 +148,7 @@ fn build_button_section(
                 current_rotation: initial_rotation,
             },
             FlexBundle::new(
-                FlexContainerStyle {
-                    padding: Size::all(Val::Vmin(5.)),
-                    ..default()
-                },
+                FlexContainerStyle::default().with_padding(Size::all(Val::Vmin(5.))),
                 FlexItemStyle::available_size()
                     .without_occupying_space()
                     .with_transform(Transform {
@@ -174,8 +162,7 @@ fn build_button_section(
             main_section_rotation_axis
                 .spawn((
                     screen_marker,
-                    FlexBundle::new(
-                        FlexContainerStyle::default(),
+                    FlexBundle::from_item_style(
                         FlexItemStyle::fixed_size(Val::Vmin(100.), Val::Vmin(100.)).with_transform(
                             Transform {
                                 translation: Vec3::new(0., 2., 1.),

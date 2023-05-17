@@ -1,12 +1,12 @@
-mod button_bundle;
-mod flex_bundles;
+mod buttons;
+mod flex;
 mod interaction;
 mod layout;
 mod toggles;
 
 use bevy::prelude::{App, Plugin};
-pub use button_bundle::*;
-pub use flex_bundles::*;
+pub use buttons::*;
+pub use flex::*;
 pub use interaction::*;
 pub use toggles::*;
 

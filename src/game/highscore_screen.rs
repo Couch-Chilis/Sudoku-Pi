@@ -20,21 +20,22 @@ pub fn highscore_screen_setup(
     game: &Game,
     highscores: &Highscores,
 ) {
-    // Take up the space of two button rows to match the game screen.
+    // Take up the space of the two top rows to match the game screen.
     highscore_screen.with_children(|screen| {
-        screen.spawn(FlexLeafBundle::from_style(FlexItemStyle {
-            flex_base: Size::new(Val::Vmin(90.), Val::Vmin(18.)),
-            flex_grow: 1.,
-            margin: Size::all(Val::Vmin(9.)),
-            ..default()
-        }));
+        screen.spawn(FlexLeafBundle::from_style(
+            FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(18.))
+                .with_margin(Size::all(Val::Vmin(9.))),
+        ));
     });
 
     build_highscores(highscore_screen, meshes, materials, fonts, game, highscores);
 
-    // Bottom button row.
-    build_button_row(highscore_screen, 1., |button_row| {
-        build_button(button_row, fonts, "Back", HighscoreButtonAction::Back);
+    build_button_row(highscore_screen, |button_row| {
+        let buttons = ButtonBuilder::new(
+            fonts,
+            FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(9.)),
+        );
+        buttons.build_with_text_and_action(button_row, "Back", HighscoreButtonAction::Back);
     });
 }
 
@@ -76,29 +77,6 @@ fn build_highscores(
                 render_scores(&mut score_container, fonts, game, highscores);
             });
     });
-}
-
-fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: HighscoreButtonAction) {
-    let button_style = FlexItemStyle::available_size().with_margin(Size::all(Val::Vmin(2.)));
-
-    let text_style = TextStyle {
-        font: fonts.medium.clone(),
-        font_size: 60.,
-        color: COLOR_BUTTON_TEXT,
-    };
-
-    row.spawn((ButtonBundle::from_style(button_style), action))
-        .with_children(|button| {
-            button.spawn(Text2dBundle {
-                text: Text::from_section(text, text_style),
-                transform: Transform {
-                    scale: Vec3::new(0.0015, 0.01, 1.),
-                    translation: Vec3::new(0., -0.08, 1.),
-                    ..default()
-                },
-                ..default()
-            });
-        });
 }
 
 pub fn highscore_button_actions(

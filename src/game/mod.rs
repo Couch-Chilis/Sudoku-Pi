@@ -2,6 +2,7 @@ mod board_builder;
 mod board_numbers;
 mod game_ui;
 mod highscore_screen;
+mod mode_slider;
 mod wheel;
 
 use crate::constants::{CELL_SCALE, CELL_SIZE, COLOR_HINT, COLOR_MAIN_POP_DARK};
@@ -75,12 +76,14 @@ enum HighlightKind {
 
 pub fn board_setup(
     game_screen: &mut EntityCommands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
     asset_server: &AssetServer,
     fonts: &Fonts,
     game: &Game,
     settings: &Settings,
 ) {
-    init_game_ui(game_screen, fonts, |parent| {
+    init_game_ui(game_screen, meshes, materials, fonts, |parent| {
         build_board(parent, asset_server, fonts, game, settings)
     });
 }
@@ -394,7 +397,6 @@ fn button_actions(
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
                 UiButtonAction::Hint => give_hint(&mut game, &mut timer, &mut selection),
-                _ => {}
             }
         }
     }

@@ -2,13 +2,12 @@ use crate::{constants::*, ui::*, utils::*};
 use crate::{Fonts, Game, GameTimer, Highscores, ScreenState};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
+use super::mode_slider::build_mode_slider;
+
 #[derive(Component)]
 pub enum UiButtonAction {
     BackToMain,
     Hint,
-    ModeNormal,
-    ModeNotes,
-    ModeDrawing,
 }
 
 #[derive(Component)]
@@ -19,54 +18,44 @@ pub struct Timer;
 
 pub fn init_game_ui(
     game_screen: &mut EntityCommands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
-    // Timer row.
-    build_timer_row(game_screen, 1., |timer_row| {
+    build_timer_row(game_screen, |timer_row| {
         build_timer(timer_row, fonts);
     });
 
-    // Top button row.
-    build_button_row(game_screen, 1., |button_row| {
-        build_button(button_row, fonts, "Menu", UiButtonAction::BackToMain);
+    build_button_row(game_screen, |button_row| {
+        let button_size = FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(11.));
+        let buttons = ButtonBuilder::new(fonts, button_size);
+        buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
+
         build_score(button_row, fonts);
-        build_secondary_button(button_row, fonts, "Hint", UiButtonAction::Hint);
+
+        buttons.build_secondary_with_text_and_action(button_row, "Hint", UiButtonAction::Hint);
     });
 
     board_builder(game_screen);
 
-    // Bottom button row.
-    build_button_row(game_screen, 2., |button_row| {
-        build_button(button_row, fonts, "Normal", UiButtonAction::ModeNormal);
-        build_button(button_row, fonts, "Notes", UiButtonAction::ModeNotes);
-        build_button(button_row, fonts, "Draw", UiButtonAction::ModeDrawing);
-    });
+    build_mode_slider(game_screen, meshes, materials, fonts);
 }
 
-fn build_timer_row(
-    screen: &mut EntityCommands,
-    flex_grow: f32,
-    child_builder: impl FnOnce(&mut ChildBuilder),
-) {
+fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut ChildBuilder)) {
     screen.with_children(|screen| {
         screen
-            .spawn(FlexBundle::new(
-                FlexContainerStyle::default(),
-                FlexItemStyle {
-                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(13.)),
-                    flex_grow,
-                    margin: Size::all(Val::Vmin(2.5)),
-                    ..default()
-                },
+            .spawn(FlexBundle::from_item_style(
+                FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(13.))
+                    .with_margin(Size::all(Val::Vmin(2.5))),
             ))
             .with_children(child_builder);
     });
 }
 
 fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
-    let width = Val::Vmax(32.0);
-    let height = Val::Vmax(13.0);
+    let width = Val::Vmin(30.0);
+    let height = Val::Vmin(12.0);
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
@@ -88,22 +77,14 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
         });
     });
 
-    row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
+    row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
         width,
         0.92 * height,
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((
             Timer,
-            Text2dBundle {
-                text: Text::from_section("0:00", text_style),
-                transform: Transform {
-                    scale: Vec3::new(0.004, 0.01, 1.),
-                    translation: Vec3::new(0., -0.1, 1.),
-                    ..default()
-                },
-                ..default()
-            },
+            FlexTextBundle::from_text(Text::from_section("0:00", text_style)),
         ));
     });
 
@@ -122,103 +103,16 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
 pub fn build_button_row(
     screen: &mut EntityCommands,
-    flex_grow: f32,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
                 FlexContainerStyle::row().with_gap(Val::Auto),
-                FlexItemStyle {
-                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(9.)),
-                    flex_grow,
-                    margin: Size::all(Val::Vmin(4.5)),
-                    ..default()
-                },
+                FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(9.))
+                    .with_margin(Size::all(Val::Vmin(4.5))),
             ))
             .with_children(child_builder);
-    });
-}
-
-fn build_button(row: &mut ChildBuilder, fonts: &Fonts, text: &str, action: UiButtonAction) {
-    let button_style = FlexItemStyle::fixed_size(Val::Vmax(25.0), Val::Vmax(9.0));
-
-    let text_style = TextStyle {
-        font: fonts.medium.clone(),
-        font_size: 60.,
-        color: COLOR_BUTTON_TEXT,
-    };
-
-    row.spawn((ButtonBundle::from_style(button_style), action))
-        .with_children(|button| {
-            button.spawn(Text2dBundle {
-                text: Text::from_section(text, text_style),
-                transform: Transform {
-                    scale: Vec3::new(0.004, 0.01, 1.),
-                    translation: Vec3::new(0., -0.08, 1.),
-                    ..default()
-                },
-                ..default()
-            });
-        });
-}
-
-fn build_secondary_button(
-    row: &mut ChildBuilder,
-    fonts: &Fonts,
-    text: &str,
-    action: UiButtonAction,
-) {
-    let button_style = FlexItemStyle::fixed_size(Val::Vmax(25.0), Val::Vmax(9.0));
-
-    let text_style = TextStyle {
-        font: fonts.medium.clone(),
-        font_size: 60.,
-        color: COLOR_SECONDARY_BUTTON_TEXT,
-    };
-
-    row.spawn((
-        FlexBundle {
-            container: FlexContainerBundle {
-                style: FlexContainerStyle {
-                    direction: FlexDirection::Row,
-                    padding: Size::all(Val::Vmin(4.)),
-                    ..default()
-                },
-                background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
-                transform: Transform::default_2d(),
-                ..default()
-            },
-            item: FlexItemBundle::from_style(button_style),
-        },
-        Button,
-        ButtonType::Secondary,
-        Interaction::default(),
-        action,
-    ))
-    .with_children(|border| {
-        border
-            .spawn((
-                FlexItemBundle::from_style(
-                    FlexItemStyle::available_size().without_occupying_space(),
-                ),
-                SpriteBundle {
-                    sprite: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-                    transform: Transform::default_2d(),
-                    ..default()
-                },
-            ))
-            .with_children(|background| {
-                background.spawn(Text2dBundle {
-                    text: Text::from_section(text, text_style),
-                    transform: Transform {
-                        scale: Vec3::new(0.004, 0.01, 1.),
-                        translation: Vec3::new(0., -0.08, 1.),
-                        ..default()
-                    },
-                    ..default()
-                });
-            });
     });
 }
 
@@ -229,22 +123,14 @@ fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
         color: COLOR_SCORE_TEXT,
     };
 
-    row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
-        Val::Vmax(25.0),
-        Val::Vmax(9.0),
+    row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
+        Val::Vmin(25.0),
+        Val::Vmin(9.0),
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((
             Score,
-            Text2dBundle {
-                text: Text::from_section(format_score(0), text_style),
-                transform: Transform {
-                    scale: Vec3::new(0.004, 0.01, 1.),
-                    translation: Vec3::new(0., -0.08, 1.),
-                    ..default()
-                },
-                ..default()
-            },
+            FlexTextBundle::from_text(Text::from_section(format_score(0), text_style)),
         ));
     });
 }

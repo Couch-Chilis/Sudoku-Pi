@@ -167,7 +167,15 @@ fn setup(
         GameScreen,
         flex_container.clone(),
     ));
-    board_setup(&mut game_screen, &asset_server, &fonts, &game, &settings);
+    board_setup(
+        &mut game_screen,
+        &mut meshes,
+        &mut materials,
+        &asset_server,
+        &fonts,
+        &game,
+        &settings,
+    );
 
     let mut highscore_screen = commands.spawn((
         Screen::for_state(ScreenState::Highscores),

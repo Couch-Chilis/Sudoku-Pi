@@ -1,6 +1,5 @@
-use super::{ButtonBuilder, SettingsToggle, ToggleBuilder};
-use crate::{constants::*, ui::*};
-use crate::{Fonts, ScreenState, Settings};
+use super::{ButtonBuilder, SettingsToggle, SettingsToggleBuilder};
+use crate::{constants::*, ui::*, Fonts, ScreenState, Settings};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -17,20 +16,25 @@ pub fn spawn_settings(
 ) {
     use SettingsButtonAction::*;
     use SettingsToggle::*;
-    let buttons = ButtonBuilder::new(fonts);
-    let mut toggles = ToggleBuilder::new(fonts, meshes, materials);
-    buttons.add_ternary_with_text_and_action(parent, "Back", Back);
+
+    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(11.));
+    let buttons = ButtonBuilder::new(fonts, button_size);
+    buttons.build_ternary_with_text_and_action(parent, "Back", Back);
+
     parent.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         Val::Auto,
         Val::Vmin(8.),
     )));
-    toggles.add_with_text_and_action(
+
+    let mut toggles = SettingsToggleBuilder::new(fonts, meshes, materials);
+    toggles.build_settings_toggle(
         parent,
         settings,
         "Highlight selection lines",
         HighlightSelectionLines,
     );
-    toggles.add_with_text_and_action(parent, settings, "Show mistakes", ShowMistakes);
+
+    toggles.build_settings_toggle(parent, settings, "Show mistakes", ShowMistakes);
 }
 
 pub fn settings_screen_button_actions(
