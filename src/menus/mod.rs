@@ -259,7 +259,7 @@ fn menu_interaction(
 ) {
     for (interaction, mut image) in &mut interaction_query {
         *image = match *interaction {
-            Interaction::JustPressed | Interaction::Pressed => asset_server.load("cog_pressed.png"),
+            Interaction::Pressed => asset_server.load("cog_pressed.png"),
             Interaction::None | Interaction::Hovered => asset_server.load("cog.png"),
         };
     }
@@ -272,7 +272,7 @@ fn menu_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
     for (interaction, action) in &query {
-        if *interaction == Interaction::JustPressed {
+        if *interaction == Interaction::Pressed {
             use MenuButtonAction::*;
             match action {
                 Settings => screen_state.set(if current_state.0 == ScreenState::Settings {

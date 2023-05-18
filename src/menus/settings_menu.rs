@@ -42,7 +42,7 @@ pub fn settings_screen_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
     for (interaction, action) in &query {
-        if *interaction == Interaction::JustPressed {
+        if *interaction == Interaction::Pressed {
             match action {
                 SettingsButtonAction::Back => screen_state.set(ScreenState::MainMenu),
             }
@@ -55,7 +55,7 @@ pub fn settings_toggle_actions(
     mut settings: ResMut<Settings>,
 ) {
     for (interaction, toggle) in &query {
-        if *interaction == Interaction::JustPressed {
+        if *interaction == Interaction::Pressed {
             match toggle {
                 SettingsToggle::HighlightSelectionLines => {
                     settings.highlight_selection_lines = !settings.highlight_selection_lines;

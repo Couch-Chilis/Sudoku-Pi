@@ -6,6 +6,10 @@ use bevy::prelude::*;
 #[derive(Clone, Component, Default)]
 pub struct Button;
 
+/// Marker for button backgrounds (only used for buttons that have a border).
+#[derive(Clone, Component, Default)]
+pub struct ButtonBackground;
+
 /// Marks a button as secondary.
 #[derive(Clone, Component, Default)]
 pub enum ButtonType {
@@ -130,14 +134,19 @@ impl ButtonBuilder {
             ))
             .with_children(|border| {
                 border
-                    .spawn(FlexBundle {
-                        container: FlexContainerBundle {
-                            style: FlexContainerStyle::row(),
-                            background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-                            ..default()
+                    .spawn((
+                        ButtonBackground,
+                        FlexBundle {
+                            container: FlexContainerBundle {
+                                style: FlexContainerStyle::row(),
+                                background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
+                                ..default()
+                            },
+                            item: FlexItemBundle::from_style(
+                                self.alternative_background_style.clone(),
+                            ),
                         },
-                        item: FlexItemBundle::from_style(self.alternative_background_style.clone()),
-                    })
+                    ))
                     .with_children(|background| {
                         background.spawn(FlexTextBundle::from_text(Text::from_section(
                             text,
@@ -172,14 +181,19 @@ impl ButtonBuilder {
             ))
             .with_children(|border| {
                 border
-                    .spawn(FlexBundle {
-                        container: FlexContainerBundle {
-                            style: FlexContainerStyle::row(),
-                            background: Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
-                            ..default()
+                    .spawn((
+                        ButtonBackground,
+                        FlexBundle {
+                            container: FlexContainerBundle {
+                                style: FlexContainerStyle::row(),
+                                background: Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
+                                ..default()
+                            },
+                            item: FlexItemBundle::from_style(
+                                self.alternative_background_style.clone(),
+                            ),
                         },
-                        item: FlexItemBundle::from_style(self.alternative_background_style.clone()),
-                    })
+                    ))
                     .with_children(|background| {
                         background.spawn(FlexTextBundle::from_text(Text::from_section(
                             text,

@@ -34,7 +34,7 @@ pub fn difficulty_screen_button_actions(
     >,
 ) {
     for (interaction, action) in &interaction_query {
-        if *interaction == Interaction::JustPressed {
+        if *interaction == Interaction::Pressed {
             use DifficultyScreenButtonAction::*;
             match action {
                 BackToMain => screen_state.set(ScreenState::MainMenu),

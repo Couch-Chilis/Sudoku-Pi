@@ -84,7 +84,7 @@ pub fn highscore_button_actions(
     query: Query<(&Interaction, &HighscoreButtonAction), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, action) in &query {
-        if *interaction == Interaction::JustPressed {
+        if *interaction == Interaction::Pressed {
             match action {
                 HighscoreButtonAction::Back => screen_state.set(ScreenState::MainMenu),
             }

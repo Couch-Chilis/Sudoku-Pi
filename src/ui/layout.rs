@@ -1,7 +1,7 @@
 use super::flex::*;
 use crate::Screen;
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
-use std::collections::BTreeMap;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 type FlexEntity<'a> = (
     Entity,
@@ -75,17 +75,27 @@ fn layout(flex_query: &mut FlexQuery) {
         .map(|(_, position)| (position.width, position.height))
         .expect("At least one Screen must exist");
 
-    // Assumption: We expect entity IDs to correlate with the order in which
-    // their entities appear in the tree. This way, a simple sort is enough to
-    // guarantee a top-down iteration order.
-    containers.sort_by_key(|(entity, ..)| *entity);
+    // Sort containers to guarantee a top-down iteration, by ensuring
+    // descendents appear after their ancestors.
+    let children_map = containers
+        .iter()
+        .map(|(entity, children, _)| (*entity, *children))
+        .collect();
+    containers.sort_unstable_by(|a, b| {
+        if is_descendent_of(&children_map, &a.0, &b.0) {
+            Ordering::Greater
+        } else if is_descendent_of(&children_map, &b.0, &a.0) {
+            Ordering::Less
+        } else {
+            a.0.cmp(&b.0)
+        }
+    });
 
     for (container_entity, children, container_style) in containers {
-        let container_position = position_map.remove(&container_entity);
-        let vminmax_scales = container_position
-            .as_ref()
-            .map(|value| value.vminmax_scales(screen_size.0, screen_size.1))
-            .unwrap_or_default();
+        let container_position = position_map
+            .remove(&container_entity)
+            .expect("Container position must be known");
+        let vminmax_scales = container_position.vminmax_scales(screen_size.0, screen_size.1);
 
         let direction = container_style.direction;
         let scaling = vminmax_scales.scaling_for_direction(direction);
@@ -148,18 +158,17 @@ fn layout(flex_query: &mut FlexQuery) {
         for item_entity in children {
             // Special handling for text items:
             if let Some((anchor, mut transform)) = text_map.remove(item_entity) {
-                if let Some(ComputedPosition { width, height, .. }) = container_position {
-                    transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
-                    transform.translation = Vec3::new(
-                        match anchor {
-                            Anchor::CenterLeft | Anchor::BottomLeft | Anchor::TopLeft => -0.5,
-                            Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
-                            _ => 0.,
-                        },
-                        -4. / height,
-                        1.,
-                    );
-                }
+                let ComputedPosition { width, height, .. } = container_position;
+                transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
+                transform.translation = Vec3::new(
+                    match anchor {
+                        Anchor::CenterLeft | Anchor::BottomLeft | Anchor::TopLeft => -0.5,
+                        Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
+                        _ => 0.,
+                    },
+                    -4. / height,
+                    1.,
+                );
                 continue;
             }
 
@@ -317,13 +326,9 @@ fn layout(flex_query: &mut FlexQuery) {
 
             // Set the position for use by other containers, and store it in the
             // `ComputedPosition` for use by the interaction system.
-            if let Some(container_position) = container_position.as_ref() {
-                let item_position = container_position.transformed(scale, translation);
-                *computed_position = item_position;
-                position_map.insert(*item_entity, item_position);
-            } else {
-                bevy::log::warn!("Cannot set computed position on {item_entity:?}");
-            }
+            let item_position = container_position.transformed(scale, translation);
+            *computed_position = item_position;
+            position_map.insert(*item_entity, item_position);
 
             // Update offset for the next child.
             if item_style.occupies_space {
@@ -338,5 +343,20 @@ fn layout(flex_query: &mut FlexQuery) {
                     };
             }
         }
+    }
+}
+
+fn is_descendent_of(
+    children_map: &BTreeMap<Entity, &Children>,
+    subject: &Entity,
+    other: &Entity,
+) -> bool {
+    if let Some(children) = children_map.get(other) {
+        children.contains(subject)
+            || children
+                .iter()
+                .any(|child| is_descendent_of(children_map, subject, child))
+    } else {
+        false
     }
 }

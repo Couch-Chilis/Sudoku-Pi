@@ -339,13 +339,7 @@ impl FlexTextBundle {
             flex: Flex,
             text: Text2dBundle {
                 text,
-                transform: Transform {
-                    // FIXME: These should not be necessary, but without them,
-                    // the transition back to the main menu is screwed up.
-                    scale: Vec3::new(0.004, 0.01, 1.),
-                    translation: Vec3::new(0., -0.08, 1.),
-                    ..default()
-                },
+                transform: Transform::default_2d(),
                 ..default()
             },
         }

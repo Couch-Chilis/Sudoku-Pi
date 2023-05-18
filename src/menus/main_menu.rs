@@ -33,7 +33,7 @@ pub fn main_menu_button_actions(
     interaction_query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
 ) {
     for (interaction, action) in &interaction_query {
-        if *interaction == Interaction::JustPressed {
+        if *interaction == Interaction::Pressed {
             use MainScreenButtonAction::*;
             match action {
                 ContinueGame => screen_state.set(ScreenState::Game),

@@ -1,4 +1,4 @@
-use super::{Button, ButtonType, ComputedPosition};
+use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
 use crate::{constants::*, utils::SpriteExt};
 use bevy::{prelude::*, window::PrimaryWindow};
 
@@ -7,7 +7,6 @@ pub enum Interaction {
     #[default]
     None,
     Hovered,
-    JustPressed,
     Pressed,
 }
 
@@ -24,8 +23,6 @@ pub fn mouse_interaction(
         let new_interaction =
             if computed_visibility.is_visible() && computed_position.contains(cursor_position) {
                 if mouse_buttons.just_pressed(MouseButton::Left) {
-                    Interaction::JustPressed
-                } else if mouse_buttons.pressed(MouseButton::Left) {
                     Interaction::Pressed
                 } else {
                     Interaction::Hovered
@@ -44,63 +41,96 @@ pub fn mouse_interaction(
 pub fn button_interaction(
     mut interaction_query: Query<
         (&Interaction, &Children, &mut Sprite, Option<&ButtonType>),
-        (Changed<Interaction>, With<Button>),
+        (
+            Changed<Interaction>,
+            With<Button>,
+            Without<ButtonBackground>,
+        ),
     >,
+    mut background_query: Query<(&mut Sprite, &Children), With<ButtonBackground>>,
     mut text_query: Query<&mut Text>,
 ) {
     for (interaction, children, mut sprite, button_type) in &mut interaction_query {
         match button_type.cloned().unwrap_or_default() {
             ButtonType::Primary => {
                 *sprite = match *interaction {
-                    Interaction::JustPressed | Interaction::Pressed => {
-                        Sprite::from_color(COLOR_BUTTON_BACKGROUND_PRESS)
-                    }
-                    Interaction::Hovered => Sprite::from_color(COLOR_BUTTON_BACKGROUND_HOVER),
+                    Interaction::Pressed => Sprite::from_color(COLOR_BUTTON_BACKGROUND_PRESS),
+                    Interaction::Hovered => Sprite::from_color(COLOR_BUTTON_BACKGROUND_SELECTED),
                     Interaction::None => Sprite::from_color(COLOR_BUTTON_BACKGROUND),
-                };
-            }
-            ButtonType::Secondary => {
-                *sprite = match *interaction {
-                    Interaction::JustPressed | Interaction::Pressed => {
-                        Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_PRESS)
-                    }
-                    Interaction::Hovered => Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_HOVER),
-                    Interaction::None => Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
                 };
 
                 if let Some(mut text) = children
-                    .get(1)
+                    .get(0)
                     .and_then(|child| text_query.get_mut(*child).ok())
                 {
                     text.sections[0].style.color = match *interaction {
-                        Interaction::JustPressed | Interaction::Pressed => {
-                            COLOR_SECONDARY_BUTTON_TEXT_PRESS
-                        }
-                        Interaction::Hovered => COLOR_SECONDARY_BUTTON_TEXT_HOVER,
-                        Interaction::None => COLOR_SECONDARY_BUTTON_TEXT,
+                        Interaction::Pressed => COLOR_BUTTON_TEXT_PRESS,
+                        _ => COLOR_BUTTON_TEXT,
                     };
+                }
+            }
+            ButtonType::Secondary => {
+                *sprite = match *interaction {
+                    Interaction::Pressed => Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_PRESS),
+                    Interaction::Hovered => {
+                        Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_SELECTED)
+                    }
+                    Interaction::None => Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
+                };
+
+                if let Some((mut background, children)) = children
+                    .get(0)
+                    .and_then(|child| background_query.get_mut(*child).ok())
+                {
+                    *background = match *interaction {
+                        Interaction::Pressed => {
+                            Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND_PRESS)
+                        }
+                        _ => Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
+                    };
+
+                    if let Some(mut text) = children
+                        .get(0)
+                        .and_then(|child| text_query.get_mut(*child).ok())
+                    {
+                        text.sections[0].style.color = match *interaction {
+                            Interaction::Pressed => COLOR_SECONDARY_BUTTON_TEXT_PRESS,
+                            Interaction::Hovered => COLOR_SECONDARY_BUTTON_TEXT_SELECTED,
+                            Interaction::None => COLOR_SECONDARY_BUTTON_TEXT,
+                        };
+                    }
                 }
             }
             ButtonType::Ternary => {
                 *sprite = match *interaction {
-                    Interaction::JustPressed | Interaction::Pressed => {
-                        Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_PRESS)
+                    Interaction::Pressed => Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_PRESS),
+                    Interaction::Hovered => {
+                        Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_SELECTED)
                     }
-                    Interaction::Hovered => Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_HOVER),
                     Interaction::None => Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER),
                 };
 
-                if let Some(mut text) = children
-                    .get(1)
-                    .and_then(|child| text_query.get_mut(*child).ok())
+                if let Some((mut background, children)) = children
+                    .get(0)
+                    .and_then(|child| background_query.get_mut(*child).ok())
                 {
-                    text.sections[0].style.color = match *interaction {
-                        Interaction::JustPressed | Interaction::Pressed => {
-                            COLOR_TERNARY_BUTTON_TEXT_PRESS
+                    *background = match *interaction {
+                        Interaction::Pressed => {
+                            Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND_PRESS)
                         }
-                        Interaction::Hovered => COLOR_TERNARY_BUTTON_TEXT_HOVER,
-                        Interaction::None => COLOR_TERNARY_BUTTON_TEXT,
+                        _ => Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
                     };
+
+                    if let Some(mut text) = children
+                        .get(0)
+                        .and_then(|child| text_query.get_mut(*child).ok())
+                    {
+                        text.sections[0].style.color = match *interaction {
+                            Interaction::Pressed => COLOR_TERNARY_BUTTON_TEXT_PRESS,
+                            Interaction::Hovered => COLOR_TERNARY_BUTTON_TEXT_SELECTED,
+                            Interaction::None => COLOR_TERNARY_BUTTON_TEXT,
+                        };
+                    }
                 }
             }
         }
