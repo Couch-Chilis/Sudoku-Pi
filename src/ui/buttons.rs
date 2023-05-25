@@ -58,7 +58,7 @@ pub struct ButtonBuilder {
 impl ButtonBuilder {
     pub fn new(fonts: &Fonts, button_size: FlexItemStyle) -> Self {
         // Shared button styling.
-        let button_style = button_size.with_margin(Size::all(Val::Vmin(2.)));
+        let button_style = button_size.with_margin(Size::all(Val::Vmin(1.5)));
 
         // Text styling for primary buttons.
         let text_style = TextStyle {

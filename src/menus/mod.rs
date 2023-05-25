@@ -106,7 +106,7 @@ pub fn menu_setup(
                     Interaction::None,
                     MenuButtonAction::Settings,
                     FlexItemBundle::from_style(
-                        FlexItemStyle::fixed_size(Val::Vmin(10.), Val::Vmin(10.))
+                        FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
                             .with_alignment(Alignment::Start)
                             .with_margin(Size::all(Val::Vmin(5.)))
                             .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),

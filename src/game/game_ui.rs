@@ -28,7 +28,7 @@ pub fn init_game_ui(
     });
 
     build_button_row(game_screen, |button_row| {
-        let button_size = FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(11.));
+        let button_size = FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(10.));
         let buttons = ButtonBuilder::new(fonts, button_size);
         buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
 

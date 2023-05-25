@@ -33,7 +33,7 @@ pub fn highscore_screen_setup(
     build_button_row(highscore_screen, |button_row| {
         let buttons = ButtonBuilder::new(
             fonts,
-            FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(9.)),
+            FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(10.)),
         );
         buttons.build_with_text_and_action(button_row, "Back", HighscoreButtonAction::Back);
     });

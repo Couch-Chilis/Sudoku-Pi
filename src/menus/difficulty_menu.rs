@@ -14,7 +14,7 @@ pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, fonts: &Fonts) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
 
-    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(11.));
+    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
     let buttons = ButtonBuilder::new(fonts, button_size);
     buttons.build_ternary_with_text_and_action(parent, "Back", BackToMain);
     buttons.build_with_text_and_action(parent, "Easy", StartGameAtDifficulty(Easy));

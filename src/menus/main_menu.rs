@@ -15,7 +15,7 @@ pub enum MainScreenButtonAction {
 pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, game: &Game) {
     use MainScreenButtonAction::*;
 
-    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(11.));
+    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
     let buttons = ButtonBuilder::new(fonts, button_size);
     buttons.build_ternary_with_text_and_action(main_section, "Quit", Quit);
     buttons.build_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
