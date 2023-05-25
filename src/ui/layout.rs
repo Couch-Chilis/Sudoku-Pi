@@ -28,11 +28,11 @@ pub(crate) fn layout_system(
 }
 
 fn layout(flex_query: &mut FlexQuery) {
-    let mut layout = Layout::from_query(flex_query);
-    layout.apply();
+    let mut layout_info = LayoutInfo::from_query(flex_query);
+    layout_info.apply();
 }
 
-struct Layout<'a> {
+struct LayoutInfo<'a> {
     screens: Vec<(Entity, f32, f32)>,
     container_map: BTreeMap<Entity, (&'a Children, &'a FlexContainerStyle)>,
     item_map: BTreeMap<
@@ -46,7 +46,7 @@ struct Layout<'a> {
     text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>)>,
 }
 
-impl<'a> Layout<'a> {
+impl<'a> LayoutInfo<'a> {
     fn from_query(flex_query: &'a mut FlexQuery) -> Self {
         let mut screens = Vec::new();
         let mut container_map = BTreeMap::new();
@@ -306,7 +306,6 @@ impl<'a> Layout<'a> {
             }
 
             // Determine translation.
-            let z = transform.translation.z; // Preserve the z-index.
             let translation = if direction == FlexDirection::Column {
                 let x = match item_style.align_self {
                     Alignment::Centered => 0.,
@@ -314,7 +313,7 @@ impl<'a> Layout<'a> {
                     Alignment::Start => -0.5 + cross_padding + cross_margin + 0.5 * scale.x,
                 };
                 let y = 0.5 - offset - margin - 0.5 * scale.y;
-                Vec3::new(x, y, z)
+                Vec3::new(x, y, 1.)
             } else {
                 let x = -0.5 + offset + margin + 0.5 * scale.x;
                 let y = match item_style.align_self {
@@ -322,7 +321,7 @@ impl<'a> Layout<'a> {
                     Alignment::End => -0.5 + cross_padding + cross_margin + 0.5 * scale.y,
                     Alignment::Start => 0.5 - cross_padding - cross_margin - 0.5 * scale.y,
                 };
-                Vec3::new(x, y, z)
+                Vec3::new(x, y, 1.)
             };
 
             let mut layout_transform = Transform {

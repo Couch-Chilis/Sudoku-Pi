@@ -10,7 +10,9 @@ mod sudoku;
 mod ui;
 mod utils;
 
+use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::window::{WindowMode, WindowResized};
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
@@ -27,11 +29,20 @@ const BOLD_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Bold.ttf");
 const MEDIUM_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Medium.ttf");
 //const REGULAR_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Regular.ttf");
 
+const COG: &[u8] = include_bytes!("../assets/cog.png");
+const COG_PRESSED: &[u8] = include_bytes!("../assets/cog_pressed.png");
+
 #[derive(Clone, Default, Resource)]
 pub struct Fonts {
     bold: Handle<Font>,
     medium: Handle<Font>,
     //regular: Handle<Font>,
+}
+
+#[derive(Clone, Default, Resource)]
+pub struct Images {
+    cog: Handle<Image>,
+    cog_pressed: Handle<Image>,
 }
 
 #[derive(Default, Resource)]
@@ -59,18 +70,6 @@ impl Screen {
     }
 }
 
-#[derive(Component)]
-struct GameScreen;
-
-#[derive(Component)]
-struct HighscoreScreen;
-
-#[derive(Component)]
-struct MainScreen;
-
-#[derive(Component)]
-struct SettingsScreen;
-
 /// State to track which screen we are in.
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
 pub enum ScreenState {
@@ -95,15 +94,17 @@ fn main() {
     }
 
     App::new()
-        .add_system(on_escape)
-        .add_system(on_resize)
-        .add_system(on_screen_change)
-        .add_system(on_before_exit)
         .init_resource::<Fonts>()
+        .init_resource::<Images>()
         .insert_resource(game)
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
+        .add_startup_system(setup)
+        .add_system(on_escape)
+        .add_system(on_resize)
+        .add_system(on_screen_change)
+        .add_system(on_before_exit)
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
@@ -116,7 +117,6 @@ fn main() {
         .add_plugin(TweeningPlugin)
         .add_plugin(UiPlugin)
         .add_state::<ScreenState>()
-        .add_startup_system(setup)
         .add_plugin(game::GamePlugin)
         .add_plugin(menus::MenuPlugin)
         .run();
@@ -125,6 +125,7 @@ fn main() {
 fn setup(
     mut commands: Commands,
     mut fonts: ResMut<Assets<Font>>,
+    mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
@@ -140,18 +141,12 @@ fn setup(
         //regular: fonts.add(Font::try_from_bytes(Vec::from(REGULAR_FONT)).unwrap()),
     };
 
-    let flex_container = FlexContainerBundle {
-        background: Sprite::from_color(Color::WHITE),
-        transform: Transform::from_2d_scale(100_000., 100_000.),
-        ..default()
+    let images = Images {
+        cog: images.add(load_png(COG)),
+        cog_pressed: images.add(load_png(COG_PRESSED)),
     };
 
-    let mut main_screen = commands.spawn((
-        Screen::for_state(ScreenState::MainMenu),
-        Flex,
-        MainScreen,
-        flex_container.clone(),
-    ));
+    let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu);
     menu_setup(
         &mut main_screen,
         &mut meshes,
@@ -162,12 +157,7 @@ fn setup(
         &game,
     );
 
-    let mut game_screen = commands.spawn((
-        Screen::for_state(ScreenState::Game),
-        Flex,
-        GameScreen,
-        flex_container.clone(),
-    ));
+    let mut game_screen = spawn_screen(&mut commands, ScreenState::Game);
     board_setup(
         &mut game_screen,
         &mut meshes,
@@ -178,12 +168,7 @@ fn setup(
         &settings,
     );
 
-    let mut highscore_screen = commands.spawn((
-        Screen::for_state(ScreenState::Highscores),
-        Flex,
-        HighscoreScreen,
-        flex_container,
-    ));
+    let mut highscore_screen = spawn_screen(&mut commands, ScreenState::Highscores);
     highscore_screen_setup(
         &mut highscore_screen,
         &mut meshes,
@@ -204,6 +189,7 @@ fn setup(
     ));
 
     commands.insert_resource(fonts);
+    commands.insert_resource(images);
 }
 
 // Synchronize the timer to the game state right before the game exits.
@@ -313,4 +299,27 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         HowToPlay => (-1., 0.),
         Upper => (0., 1.),
     }
+}
+
+fn load_png(bytes: &[u8]) -> Image {
+    Image::from_buffer(
+        bytes,
+        ImageType::Extension("png"),
+        CompressedImageFormats::all(),
+        true,
+    )
+    .unwrap()
+}
+
+fn spawn_screen<'w, 's, 'a>(
+    commands: &'a mut Commands<'w, 's>,
+    screen: ScreenState,
+) -> EntityCommands<'w, 's, 'a> {
+    let flex_container = FlexContainerBundle {
+        background: Sprite::from_color(Color::WHITE),
+        transform: Transform::from_2d_scale(100_000., 100_000.),
+        ..default()
+    };
+
+    commands.spawn((Screen::for_state(screen), Flex, flex_container))
 }

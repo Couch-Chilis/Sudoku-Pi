@@ -4,7 +4,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{sudoku::*, ui::*, utils::*, Fonts, ScreenState, Settings};
+use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -48,10 +48,10 @@ impl Plugin for MenuPlugin {
         .add_system(main_menu_button_actions.run_if(in_state(ScreenState::MainMenu)))
         .add_system(settings_screen_button_actions.run_if(in_state(ScreenState::Settings)))
         .add_system(settings_toggle_actions.run_if(in_state(ScreenState::Settings)))
-        .add_system(menu_interaction.run_if(in_main_menu))
+        .add_system(settings_icon_interaction.run_if(in_main_menu))
         .add_system(menu_button_actions.run_if(in_main_menu))
         .add_system(on_setting_change)
-        .add_system(on_screen_change);
+        .add_system(on_screen_change.before(LayoutSystem::ApplyLayout));
     }
 }
 
@@ -218,7 +218,7 @@ fn on_screen_change(
         let animator = match screen_state.0 {
             // When going from the difficulty selection to the game, we just
             // reset the transform without animation so everything is back to
-            // the starting when position when going out of the game.
+            // the starting position when going out of the game.
             Game => Animator::new(Delay::new(Duration::from_millis(200)).then(Tween::new(
                 EaseMethod::Discrete(0.),
                 Duration::from_millis(1),
@@ -243,15 +243,15 @@ struct TransformRotationZLens {
     pub end: f32,
 }
 
-impl Lens<Transform> for TransformRotationZLens {
-    fn lerp(&mut self, target: &mut Transform, ratio: f32) {
+impl Lens<FlexItemStyle> for TransformRotationZLens {
+    fn lerp(&mut self, target: &mut FlexItemStyle, ratio: f32) {
         let value = self.start + (self.end - self.start) * ratio;
-        target.rotation = Quat::from_rotation_z(value);
+        target.transform.rotation = Quat::from_rotation_z(value);
     }
 }
 
-fn menu_interaction(
-    asset_server: Res<AssetServer>,
+fn settings_icon_interaction(
+    images: Res<Images>,
     mut interaction_query: Query<
         (&Interaction, &mut Handle<Image>),
         (Changed<Interaction>, With<SettingsIcon>),
@@ -259,8 +259,8 @@ fn menu_interaction(
 ) {
     for (interaction, mut image) in &mut interaction_query {
         *image = match *interaction {
-            Interaction::Pressed => asset_server.load("cog_pressed.png"),
-            Interaction::None | Interaction::Hovered => asset_server.load("cog.png"),
+            Interaction::Hovered => images.cog_pressed.clone(),
+            Interaction::Pressed | Interaction::None => images.cog.clone(),
         };
     }
 }
