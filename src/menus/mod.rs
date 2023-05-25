@@ -66,7 +66,7 @@ pub fn menu_setup(
     main_screen: &mut EntityCommands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
-    asset_server: &AssetServer,
+    images: &Images,
     settings: &Settings,
     fonts: &Fonts,
     game: &Game,
@@ -94,7 +94,7 @@ pub fn menu_setup(
                     ))
                     .with_children(|square| {
                         square.spawn(SpriteBundle {
-                            texture: asset_server.load("logo.png"),
+                            texture: images.logo.clone(),
                             transform: Transform::from_2d_scale(1. / 241., 1. / 513.),
                             ..default()
                         });
@@ -112,7 +112,7 @@ pub fn menu_setup(
                             .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
                     ),
                     SpriteBundle {
-                        texture: asset_server.load("cog.png"),
+                        texture: images.cog.clone(),
                         ..default()
                     },
                 ));

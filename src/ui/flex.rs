@@ -339,7 +339,7 @@ impl FlexTextBundle {
             flex: Flex,
             text: Text2dBundle {
                 text,
-                transform: Transform::default_2d(),
+                transform: Transform::from_scale(Vec3::new(0., 0., 0.)),
                 ..default()
             },
         }

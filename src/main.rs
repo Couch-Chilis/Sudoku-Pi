@@ -31,6 +31,7 @@ const MEDIUM_FONT: &[u8] = include_bytes!("../assets/Tajawal/Tajawal-Medium.ttf"
 
 const COG: &[u8] = include_bytes!("../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../assets/cog_pressed.png");
+const LOGO: &[u8] = include_bytes!("../assets/logo.png");
 
 #[derive(Clone, Default, Resource)]
 pub struct Fonts {
@@ -43,6 +44,7 @@ pub struct Fonts {
 pub struct Images {
     cog: Handle<Image>,
     cog_pressed: Handle<Image>,
+    logo: Handle<Image>,
 }
 
 #[derive(Default, Resource)]
@@ -144,6 +146,7 @@ fn setup(
     let images = Images {
         cog: images.add(load_png(COG)),
         cog_pressed: images.add(load_png(COG_PRESSED)),
+        logo: images.add(load_png(LOGO)),
     };
 
     let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu);
@@ -151,7 +154,7 @@ fn setup(
         &mut main_screen,
         &mut meshes,
         &mut materials,
-        &asset_server,
+        &images,
         &settings,
         &fonts,
         &game,
