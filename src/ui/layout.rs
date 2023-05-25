@@ -1,7 +1,7 @@
 use super::flex::*;
 use crate::Screen;
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
-use std::{cmp::Ordering, collections::BTreeMap};
+use std::collections::BTreeMap;
 
 type FlexEntity<'a> = (
     Entity,
@@ -28,74 +28,93 @@ pub(crate) fn layout_system(
 }
 
 fn layout(flex_query: &mut FlexQuery) {
-    let mut containers: Vec<(Entity, &Children, &FlexContainerStyle)> = Vec::new();
-    let mut item_map: BTreeMap<Entity, (&FlexItemStyle, Mut<ComputedPosition>, Mut<Transform>)> =
-        BTreeMap::new();
-    let mut position_map: BTreeMap<Entity, ComputedPosition> = BTreeMap::new();
-    let mut text_map: BTreeMap<Entity, (&Anchor, Mut<Transform>)> = BTreeMap::new();
+    let mut layout = Layout::from_query(flex_query);
+    layout.apply();
+}
 
-    for (
-        entity,
-        transform,
-        item_style,
-        container_style,
-        computed_position,
-        children,
-        screen,
-        text,
-        anchor,
-    ) in flex_query.iter_mut()
-    {
-        if let (Some(container_style), Some(children)) = (container_style, children) {
-            containers.push((entity, children, container_style));
-        }
+struct Layout<'a> {
+    screens: Vec<(Entity, f32, f32)>,
+    container_map: BTreeMap<Entity, (&'a Children, &'a FlexContainerStyle)>,
+    item_map: BTreeMap<
+        Entity,
+        (
+            &'a FlexItemStyle,
+            Mut<'a, ComputedPosition>,
+            Mut<'a, Transform>,
+        ),
+    >,
+    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>)>,
+}
 
-        if let Some(screen) = screen {
-            // Assumption: Screens always get aligned with the real
-            // screen/window viewport, so they act as our frame of reference.
-            let position = ComputedPosition {
-                width: screen.width,
-                height: screen.height,
-                x: 0.,
-                y: 0.,
-            };
-            position_map.insert(entity, position);
-        }
+impl<'a> Layout<'a> {
+    fn from_query(flex_query: &'a mut FlexQuery) -> Self {
+        let mut screens = Vec::new();
+        let mut container_map = BTreeMap::new();
+        let mut item_map = BTreeMap::new();
+        let mut text_map = BTreeMap::new();
 
-        if let (Some(_text), Some(anchor)) = (text, anchor) {
-            text_map.insert(entity, (anchor, transform));
-        } else if let (Some(item_style), Some(computed_position)) = (item_style, computed_position)
+        for (
+            entity,
+            transform,
+            item_style,
+            container_style,
+            computed_position,
+            children,
+            screen,
+            text,
+            anchor,
+        ) in flex_query.iter_mut()
         {
-            item_map.insert(entity, (item_style, computed_position, transform));
+            if let (Some(container_style), Some(children)) = (container_style, children) {
+                container_map.insert(entity, (children, container_style));
+
+                if let Some(screen) = screen {
+                    // Assumption: Screens act as our root containers and always get
+                    //             aligned with the real screen/window viewport.
+                    screens.push((entity, screen.width, screen.height));
+                }
+            }
+
+            if let (Some(_text), Some(anchor)) = (text, anchor) {
+                text_map.insert(entity, (anchor, transform));
+            } else if let (Some(item_style), Some(computed_position)) =
+                (item_style, computed_position)
+            {
+                item_map.insert(entity, (item_style, computed_position, transform));
+            }
+        }
+
+        Self {
+            screens,
+            container_map,
+            item_map,
+            text_map,
         }
     }
 
-    let screen_size = position_map
-        .first_key_value()
-        .map(|(_, position)| (position.width, position.height))
-        .expect("At least one Screen must exist");
-
-    // Sort containers to guarantee a top-down iteration, by ensuring
-    // descendents appear after their ancestors.
-    let children_map = containers
-        .iter()
-        .map(|(entity, children, _)| (*entity, *children))
-        .collect();
-    containers.sort_unstable_by(|a, b| {
-        if is_descendent_of(&children_map, &a.0, &b.0) {
-            Ordering::Greater
-        } else if is_descendent_of(&children_map, &b.0, &a.0) {
-            Ordering::Less
-        } else {
-            a.0.cmp(&b.0)
+    fn apply(&mut self) {
+        for (entity, width, height) in self.screens.clone() {
+            let position = ComputedPosition {
+                width,
+                height,
+                x: 0.,
+                y: 0.,
+            };
+            self.apply_container(entity, position, (width, height));
         }
-    });
+    }
 
-    for (container_entity, children, container_style) in containers {
-        let container_position = position_map
-            .remove(&container_entity)
-            .expect("Container position must be known");
-        let vminmax_scales = container_position.vminmax_scales(screen_size.0, screen_size.1);
+    fn apply_container(
+        &mut self,
+        entity: Entity,
+        position: ComputedPosition,
+        screen_size: (f32, f32),
+    ) {
+        let Some((children, container_style)) = self.container_map.remove(&entity) else {
+            return;
+        };
+
+        let vminmax_scales = position.vminmax_scales(screen_size.0, screen_size.1);
 
         let direction = container_style.direction;
         let scaling = vminmax_scales.scaling_for_direction(direction);
@@ -117,7 +136,7 @@ fn layout(flex_query: &mut FlexQuery) {
             _ => {
                 (children
                     .iter()
-                    .filter_map(|entity| item_map.get(entity))
+                    .filter_map(|entity| self.item_map.get(entity))
                     .filter(|(item_style, ..)| item_style.occupies_space)
                     .count()
                     .max(1)
@@ -131,7 +150,7 @@ fn layout(flex_query: &mut FlexQuery) {
         };
         let (total_size, total_grow, total_shrink) = children
             .iter()
-            .filter_map(|entity| item_map.get(entity))
+            .filter_map(|entity| self.item_map.get(entity))
             .filter(|(item_style, ..)| item_style.occupies_space)
             .map(|(item_style, ..)| {
                 (
@@ -157,8 +176,8 @@ fn layout(flex_query: &mut FlexQuery) {
 
         for item_entity in children {
             // Special handling for text items:
-            if let Some((anchor, mut transform)) = text_map.remove(item_entity) {
-                let ComputedPosition { width, height, .. } = container_position;
+            if let Some((anchor, mut transform)) = self.text_map.remove(item_entity) {
+                let ComputedPosition { width, height, .. } = position;
                 transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
                 transform.translation = Vec3::new(
                     match anchor {
@@ -173,7 +192,7 @@ fn layout(flex_query: &mut FlexQuery) {
             }
 
             let Some((item_style, mut computed_position, mut transform)) =
-                item_map.remove(item_entity) else {
+                self.item_map.remove(item_entity) else {
                     bevy::log::warn!("Child {item_entity:?} does not appear to be a flex item");
                     continue;
                 };
@@ -326,9 +345,8 @@ fn layout(flex_query: &mut FlexQuery) {
 
             // Set the position for use by other containers, and store it in the
             // `ComputedPosition` for use by the interaction system.
-            let item_position = container_position.transformed(scale, translation);
+            let item_position = position.transformed(scale, translation);
             *computed_position = item_position;
-            position_map.insert(*item_entity, item_position);
 
             // Update offset for the next child.
             if item_style.occupies_space {
@@ -342,21 +360,9 @@ fn layout(flex_query: &mut FlexQuery) {
                         FlexDirection::Row => scale.x,
                     };
             }
-        }
-    }
-}
 
-fn is_descendent_of(
-    children_map: &BTreeMap<Entity, &Children>,
-    subject: &Entity,
-    other: &Entity,
-) -> bool {
-    if let Some(children) = children_map.get(other) {
-        children.contains(subject)
-            || children
-                .iter()
-                .any(|child| is_descendent_of(children_map, subject, child))
-    } else {
-        false
+            // Apply recursively in case the child item is also a container.
+            self.apply_container(*item_entity, item_position, screen_size);
+        }
     }
 }
