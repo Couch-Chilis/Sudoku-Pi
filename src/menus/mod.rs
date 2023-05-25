@@ -162,14 +162,12 @@ fn build_button_section(
             main_section_rotation_axis
                 .spawn((
                     screen_marker,
-                    FlexBundle::from_item_style(
-                        FlexItemStyle::fixed_size(Val::Vmin(100.), Val::Vmin(100.)).with_transform(
-                            Transform {
-                                translation: Vec3::new(0., 2., 1.),
-                                ..default()
-                            },
-                        ),
-                    ),
+                    FlexBundle::from_item_style(FlexItemStyle::available_size().with_transform(
+                        Transform {
+                            translation: Vec3::new(0., 2., 1.),
+                            ..default()
+                        },
+                    )),
                 ))
                 .with_children(child_builder);
         });

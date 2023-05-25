@@ -1,8 +1,6 @@
 use super::ButtonBuilder;
-use crate::{sudoku::*, ui::*};
-use crate::{Fonts, ScreenState};
-use bevy::app::AppExit;
-use bevy::prelude::*;
+use crate::{constants::*, sudoku::*, ui::*, Fonts, ScreenState};
+use bevy::{app::AppExit, prelude::*, sprite::Anchor};
 
 #[derive(Component)]
 pub enum MainScreenButtonAction {
@@ -25,6 +23,28 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
     } else {
         buttons.build_with_text_and_action(main_section, "New Game", GoToNewGame);
     }
+
+    main_section.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
+
+    main_section
+        .spawn(FlexBundle::new(
+            FlexContainerStyle::row(),
+            FlexItemStyle::fixed_size(Val::Percent(50.), Val::Vmin(6.))
+                .with_alignment(Alignment::End),
+        ))
+        .with_children(|parent| {
+            parent.spawn(
+                FlexTextBundle::from_text(Text::from_section(
+                    "© 2023 Couch Chilis",
+                    TextStyle {
+                        font: fonts.medium.clone(),
+                        font_size: 30.,
+                        color: COLOR_BOARD_LINE_MEDIUM,
+                    },
+                ))
+                .with_anchor(Anchor::CenterRight),
+            );
+        });
 }
 
 pub fn main_menu_button_actions(
