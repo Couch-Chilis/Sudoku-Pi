@@ -7,13 +7,13 @@ mod wheel;
 
 use crate::constants::{CELL_SCALE, CELL_SIZE, COLOR_HINT, COLOR_MAIN_POP_DARK};
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game};
-use crate::ui::{Button, ComputedPosition, Interaction};
-use crate::{Fonts, GameTimer, ScreenState, Settings};
+use crate::{ui::*, Fonts, GameTimer, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
 use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
 use highscore_screen::{highscore_button_actions, on_highscores_changed};
+use mode_slider::{slider_interaction, ModeState};
 use std::num::NonZeroU8;
 use std::time::Duration;
 use wheel::{on_wheel_input, on_wheel_timer, render_wheel, SliceHandles};
@@ -26,6 +26,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Selection::default())
             .init_resource::<SliceHandles>()
+            .add_state::<ModeState>()
             .add_startup_system(setup)
             .add_systems((
                 on_keyboard_input.run_if(in_state(ScreenState::Game)),
@@ -38,6 +39,7 @@ impl Plugin for GamePlugin {
                 on_wheel_timer.run_if(in_state(ScreenState::Game)),
                 button_actions.run_if(in_state(ScreenState::Game)),
                 highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
+                slider_interaction.run_if(in_state(ScreenState::Game)),
                 render_numbers.run_if(in_state(ScreenState::Game)),
                 render_notes.run_if(in_state(ScreenState::Game)),
                 render_wheel.run_if(in_state(ScreenState::Game)),

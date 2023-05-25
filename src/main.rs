@@ -102,6 +102,7 @@ fn main() {
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
+        .add_state::<ScreenState>()
         .add_startup_system(setup)
         .add_system(on_escape)
         .add_system(on_resize)
@@ -118,7 +119,6 @@ fn main() {
         }))
         .add_plugin(TweeningPlugin)
         .add_plugin(UiPlugin)
-        .add_state::<ScreenState>()
         .add_plugin(game::GamePlugin)
         .add_plugin(menus::MenuPlugin)
         .run();
