@@ -11,7 +11,7 @@ mod ui;
 mod utils;
 
 use bevy::prelude::*;
-use bevy::window::WindowResized;
+use bevy::window::{WindowMode, WindowResized};
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup};
@@ -108,6 +108,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
                 resolution: (480., 720.).into(),
+                mode: get_initial_window_mode(),
                 ..default()
             }),
             ..default()
@@ -292,6 +293,14 @@ fn on_resize(
             1.,
         );
         transform.scale = Vec3::new(*width, *height, 1.);
+    }
+}
+
+fn get_initial_window_mode() -> WindowMode {
+    if std::env::var_os("SteamTenfoot").is_some() {
+        WindowMode::BorderlessFullscreen
+    } else {
+        WindowMode::Windowed
     }
 }
 
