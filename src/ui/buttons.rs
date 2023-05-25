@@ -1,5 +1,5 @@
 use super::{flex::*, Interaction};
-use crate::{constants::*, utils::*, Fonts};
+use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
 /// Marker for buttons.
@@ -34,14 +34,8 @@ pub struct ButtonBundle {
 impl ButtonBundle {
     pub fn from_style(style: FlexItemStyle) -> Self {
         Self {
-            flex: FlexBundle {
-                container: FlexContainerBundle {
-                    style: FlexContainerStyle::row(),
-                    background: Sprite::from_color(COLOR_BUTTON_BACKGROUND),
-                    ..default()
-                },
-                item: FlexItemBundle::from_style(style),
-            },
+            flex: FlexBundle::new(FlexContainerStyle::row(), style)
+                .with_background_color(COLOR_BUTTON_BACKGROUND),
             ..default()
         }
     }
@@ -118,15 +112,11 @@ impl ButtonBuilder {
         parent
             .spawn((
                 ButtonBundle {
-                    flex: FlexBundle {
-                        container: FlexContainerBundle {
-                            style: FlexContainerStyle::row()
-                                .with_padding(Size::all(Val::Vmin(0.5))),
-                            background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
-                            ..default()
-                        },
-                        item: FlexItemBundle::from_style(self.button_style.clone()),
-                    },
+                    flex: FlexBundle::new(
+                        FlexContainerStyle::row().with_padding(Size::all(Val::Vmin(0.5))),
+                        self.button_style.clone(),
+                    )
+                    .with_background_color(COLOR_SECONDARY_BUTTON_BORDER),
                     ..default()
                 },
                 ButtonType::Secondary,
@@ -136,16 +126,11 @@ impl ButtonBuilder {
                 border
                     .spawn((
                         ButtonBackground,
-                        FlexBundle {
-                            container: FlexContainerBundle {
-                                style: FlexContainerStyle::row(),
-                                background: Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-                                ..default()
-                            },
-                            item: FlexItemBundle::from_style(
-                                self.alternative_background_style.clone(),
-                            ),
-                        },
+                        FlexBundle::new(
+                            FlexContainerStyle::row(),
+                            self.alternative_background_style.clone(),
+                        )
+                        .with_background_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
                     ))
                     .with_children(|background| {
                         background.spawn(FlexTextBundle::from_text(Text::from_section(
@@ -165,15 +150,11 @@ impl ButtonBuilder {
         parent
             .spawn((
                 ButtonBundle {
-                    flex: FlexBundle {
-                        container: FlexContainerBundle {
-                            style: FlexContainerStyle::row()
-                                .with_padding(Size::all(Val::Vmin(0.5))),
-                            background: Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER),
-                            ..default()
-                        },
-                        item: FlexItemBundle::from_style(self.button_style.clone()),
-                    },
+                    flex: FlexBundle::new(
+                        FlexContainerStyle::row().with_padding(Size::all(Val::Vmin(0.5))),
+                        self.button_style.clone(),
+                    )
+                    .with_background_color(COLOR_TERNARY_BUTTON_BORDER),
                     ..default()
                 },
                 ButtonType::Ternary,
@@ -183,16 +164,11 @@ impl ButtonBuilder {
                 border
                     .spawn((
                         ButtonBackground,
-                        FlexBundle {
-                            container: FlexContainerBundle {
-                                style: FlexContainerStyle::row(),
-                                background: Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND),
-                                ..default()
-                            },
-                            item: FlexItemBundle::from_style(
-                                self.alternative_background_style.clone(),
-                            ),
-                        },
+                        FlexBundle::new(
+                            FlexContainerStyle::row(),
+                            self.alternative_background_style.clone(),
+                        )
+                        .with_background_color(COLOR_TERNARY_BUTTON_BACKGROUND),
                     ))
                     .with_children(|background| {
                         background.spawn(FlexTextBundle::from_text(Text::from_section(

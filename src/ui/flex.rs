@@ -1,7 +1,6 @@
+use crate::utils::*;
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor};
 use std::ops::Mul;
-
-use crate::utils::TransformExt;
 
 /// Marker for any flex entity, be it an item or a container.
 #[derive(Clone, Component, Default)]
@@ -32,6 +31,13 @@ impl FlexBundle {
             },
         }
     }
+
+    pub fn with_background_color(self, color: Color) -> Self {
+        Self {
+            container: self.container.with_background_color(color),
+            item: self.item,
+        }
+    }
 }
 
 /// A layout bundle based on the flex system, though we're only bothering with
@@ -57,12 +63,21 @@ impl Default for FlexContainerBundle {
     fn default() -> Self {
         Self {
             style: FlexContainerStyle::default(),
-            background: Default::default(),
+            background: Sprite::from_color(Color::NONE),
             transform: Transform::default_2d(),
             global_transform: Default::default(),
             texture: DEFAULT_IMAGE_HANDLE.typed(),
             visibility: Default::default(),
             computed_visibility: Default::default(),
+        }
+    }
+}
+
+impl FlexContainerBundle {
+    pub fn with_background_color(self, color: Color) -> Self {
+        Self {
+            background: Sprite::from_color(color),
+            ..self
         }
     }
 }
