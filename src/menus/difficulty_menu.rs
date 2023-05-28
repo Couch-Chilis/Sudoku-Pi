@@ -1,6 +1,5 @@
 use super::ButtonBuilder;
-use crate::sudoku::Difficulty;
-use crate::ui::*;
+use crate::{game::Selection, sudoku::Difficulty, ui::*};
 use crate::{Fonts, Game, GameTimer, ScreenState};
 use bevy::prelude::*;
 
@@ -28,6 +27,7 @@ pub fn difficulty_screen_button_actions(
     mut game: ResMut<Game>,
     mut game_timer: ResMut<GameTimer>,
     mut screen_state: ResMut<NextState<ScreenState>>,
+    mut selection: ResMut<Selection>,
     interaction_query: Query<
         (&Interaction, &DifficultyScreenButtonAction),
         (Changed<Interaction>, With<Button>),
@@ -40,10 +40,30 @@ pub fn difficulty_screen_button_actions(
                 BackToMain => screen_state.set(ScreenState::MainMenu),
                 StartGameAtDifficulty(difficulty) => {
                     *game = Game::generate(*difficulty).unwrap();
+                    *selection = get_initial_selection(&game);
                     game_timer.stopwatch.reset();
                     screen_state.set(ScreenState::Game);
                 }
             }
         }
+    }
+}
+
+fn get_initial_selection(game: &Game) -> Selection {
+    let get_selected_cell = || {
+        for y in 0..9 {
+            for x in 0..9 {
+                let y = 8 - y; // Find the first in the top-left corner, instead of bottom-left.
+                if game.start.has(x, y) {
+                    return Some((x, y));
+                }
+            }
+        }
+        None
+    };
+
+    Selection {
+        selected_cell: get_selected_cell(),
+        ..default()
     }
 }
