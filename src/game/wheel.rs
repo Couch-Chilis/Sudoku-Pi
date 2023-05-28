@@ -1,4 +1,4 @@
-use super::{board_builder::Board, fill_number, get_board_x_and_y};
+use super::{fill_number, get_board_x_and_y, Board, ModeState};
 use crate::{
     constants::COLOR_WHEEL_TOP_TEXT, settings::Settings, utils::*, ComputedPosition, Fonts, Game,
     GameTimer,
@@ -109,10 +109,15 @@ pub fn on_wheel_input(
     mut timer: ResMut<GameTimer>,
     board: Query<&ComputedPosition, With<Board>>,
     buttons: Res<Input<MouseButton>>,
+    mode_state: Res<State<ModeState>>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<Settings>,
 ) {
     if !buttons.is_changed() && !buttons.pressed(MouseButton::Left) {
+        return;
+    }
+
+    if mode_state.0 != ModeState::Normal {
         return;
     }
 

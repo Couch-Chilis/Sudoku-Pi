@@ -30,7 +30,7 @@ impl Plugin for GamePlugin {
             .add_startup_system(setup)
             .add_systems((
                 on_keyboard_input.run_if(in_state(ScreenState::Game)),
-                on_mouse_button_input.run_if(in_state(ScreenState::Game)),
+                on_mouse_input.run_if(in_state(ScreenState::Game)),
                 on_score_changed.run_if(in_state(ScreenState::Game)),
                 on_highscores_changed,
                 on_time_changed,
@@ -62,6 +62,14 @@ struct Number(u8, u8);
 struct Selection {
     selected_cell: Option<(u8, u8)>,
     hint: Option<(u8, u8)>,
+    note_toggle: NoteToggleMode,
+}
+
+#[derive(Default)]
+enum NoteToggleMode {
+    #[default]
+    Set,
+    Unset,
 }
 
 #[derive(Component)]
@@ -138,24 +146,56 @@ fn handle_number_key(
     }
 }
 
-fn on_mouse_button_input(
+fn on_mouse_input(
+    mut game: ResMut<Game>,
     mut selection: ResMut<Selection>,
     buttons: Res<Input<MouseButton>>,
     primary_window: Query<&Window, With<PrimaryWindow>>,
     board: Query<&ComputedPosition, With<Board>>,
+    mode: Res<State<ModeState>>,
 ) {
-    if buttons.just_pressed(MouseButton::Left) {
-        let Some(cursor_position) = primary_window.get_single().ok().and_then(|window| window.cursor_position()) else {
-            return;
-        };
+    let Some(cursor_position) = primary_window.get_single().ok().and_then(|window| window.cursor_position()) else {
+        return;
+    };
 
-        let Ok(board_position) = board.get_single() else {
-            return;
-        };
+    let Ok(board_position) = board.get_single() else {
+        return;
+    };
 
-        if let Some((x, y)) = get_board_x_and_y(board_position, cursor_position) {
-            move_selection(&mut selection, x, y);
+    let Some((x, y)) = get_board_x_and_y(board_position, cursor_position) else {
+        return;
+    };
+
+    if mode.0 == ModeState::Notes {
+        if game.current.has(x, y) {
+            if buttons.just_pressed(MouseButton::Left) {
+                move_selection(&mut selection, x, y);
+            }
+        } else if buttons.just_pressed(MouseButton::Left) {
+            if let Some(n) = selection
+                .selected_cell
+                .and_then(|(x, y)| game.current.get(x, y))
+            {
+                game.notes.toggle(x, y, n);
+                selection.note_toggle = if game.notes.has(x, y, n) {
+                    NoteToggleMode::Set
+                } else {
+                    NoteToggleMode::Unset
+                };
+            }
+        } else if buttons.pressed(MouseButton::Left) {
+            if let Some(n) = selection
+                .selected_cell
+                .and_then(|(x, y)| game.current.get(x, y))
+            {
+                match selection.note_toggle {
+                    NoteToggleMode::Set => game.notes.set(x, y, n),
+                    NoteToggleMode::Unset => game.notes.unset(x, y, n),
+                }
+            }
         }
+    } else if buttons.just_pressed(MouseButton::Left) {
+        move_selection(&mut selection, x, y);
     }
 }
 
