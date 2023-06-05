@@ -1,4 +1,4 @@
-use crate::utils::*;
+use crate::{utils::*, ScreenState};
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor};
 use std::ops::Mul;
 
@@ -455,10 +455,11 @@ impl Mul<Val> for f32 {
     }
 }
 
-#[derive(Clone, Component, Copy, Debug, Default)]
+#[derive(Clone, Component, Debug, Default)]
 pub struct ComputedPosition {
     pub x: f32,
     pub y: f32,
+    pub screens: Vec<ScreenState>,
     pub width: f32,
     pub height: f32,
 }
@@ -479,6 +480,7 @@ impl ComputedPosition {
         Self {
             x: self.x + (0.5 + translation.x) * self.width - 0.5 * width,
             y: self.y + (0.5 + translation.y) * self.height - 0.5 * height,
+            screens: self.screens.clone(),
             width,
             height,
         }

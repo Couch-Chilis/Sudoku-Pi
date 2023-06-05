@@ -1,35 +1,56 @@
 use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
-use crate::{constants::*, utils::SpriteExt};
+use crate::{constants::*, utils::SpriteExt, ScreenState};
 use bevy::{prelude::*, window::PrimaryWindow};
 
 #[derive(Clone, Component, Debug, Default, Eq, PartialEq)]
 pub enum Interaction {
     #[default]
     None,
-    Hovered,
+    Selected,
     Pressed,
 }
 
 pub fn mouse_interaction(
-    mut interaction_query: Query<(&mut Interaction, &ComputedPosition, &ComputedVisibility)>,
+    mut interaction_query: Query<(
+        Entity,
+        &mut Interaction,
+        &ComputedPosition,
+        &ComputedVisibility,
+    )>,
     mouse_buttons: Res<Input<MouseButton>>,
+    screen: Res<State<ScreenState>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
         return;
     };
 
-    for (mut interaction, computed_position, computed_visibility) in &mut interaction_query {
-        let new_interaction =
-            if computed_visibility.is_visible() && computed_position.contains(cursor_position) {
-                if mouse_buttons.just_pressed(MouseButton::Left) {
-                    Interaction::Pressed
+    let selected_entity = interaction_query
+        .iter()
+        .find(|(_, _, computed_position, computed_visibility)| {
+            computed_position.screens.contains(&screen.0)
+                && computed_visibility.is_visible()
+                && computed_position.contains(cursor_position)
+        })
+        .map(|(entity, ..)| entity);
+
+    for (entity, mut interaction, computed_position, _) in &mut interaction_query {
+        let new_interaction = match selected_entity {
+            Some(selected_entity) => {
+                if selected_entity == entity {
+                    if mouse_buttons.just_pressed(MouseButton::Left) {
+                        Interaction::Pressed
+                    } else {
+                        Interaction::Selected
+                    }
+                } else if computed_position.screens.contains(&screen.0) {
+                    Interaction::None
                 } else {
-                    Interaction::Hovered
+                    interaction.clone()
                 }
-            } else {
-                Interaction::None
-            };
+            }
+            None => interaction.clone(),
+        };
 
         if *interaction != new_interaction {
             *interaction = new_interaction;
@@ -55,7 +76,7 @@ pub fn button_interaction(
             ButtonType::Primary => {
                 *sprite = match *interaction {
                     Interaction::Pressed => Sprite::from_color(COLOR_BUTTON_BACKGROUND_PRESS),
-                    Interaction::Hovered => Sprite::from_color(COLOR_BUTTON_BACKGROUND_SELECTED),
+                    Interaction::Selected => Sprite::from_color(COLOR_BUTTON_BACKGROUND_SELECTED),
                     Interaction::None => Sprite::from_color(COLOR_BUTTON_BACKGROUND),
                 };
 
@@ -72,7 +93,7 @@ pub fn button_interaction(
             ButtonType::Secondary => {
                 *sprite = match *interaction {
                     Interaction::Pressed => Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_PRESS),
-                    Interaction::Hovered => {
+                    Interaction::Selected => {
                         Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_SELECTED)
                     }
                     Interaction::None => Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER),
@@ -95,7 +116,7 @@ pub fn button_interaction(
                     {
                         text.sections[0].style.color = match *interaction {
                             Interaction::Pressed => COLOR_SECONDARY_BUTTON_TEXT_PRESS,
-                            Interaction::Hovered => COLOR_SECONDARY_BUTTON_TEXT_SELECTED,
+                            Interaction::Selected => COLOR_SECONDARY_BUTTON_TEXT_SELECTED,
                             Interaction::None => COLOR_SECONDARY_BUTTON_TEXT,
                         };
                     }
@@ -104,7 +125,7 @@ pub fn button_interaction(
             ButtonType::Ternary => {
                 *sprite = match *interaction {
                     Interaction::Pressed => Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_PRESS),
-                    Interaction::Hovered => {
+                    Interaction::Selected => {
                         Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_SELECTED)
                     }
                     Interaction::None => Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER),
@@ -127,7 +148,7 @@ pub fn button_interaction(
                     {
                         text.sections[0].style.color = match *interaction {
                             Interaction::Pressed => COLOR_TERNARY_BUTTON_TEXT_PRESS,
-                            Interaction::Hovered => COLOR_TERNARY_BUTTON_TEXT_SELECTED,
+                            Interaction::Selected => COLOR_TERNARY_BUTTON_TEXT_SELECTED,
                             Interaction::None => COLOR_TERNARY_BUTTON_TEXT,
                         };
                     }

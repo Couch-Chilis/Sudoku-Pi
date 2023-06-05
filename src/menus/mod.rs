@@ -4,7 +4,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenState, Settings};
+use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -25,15 +25,6 @@ struct ButtonSection {
     initial_rotation: f32,
     current_rotation: f32,
 }
-
-#[derive(Component)]
-struct MainButtonContainer;
-
-#[derive(Component)]
-struct DifficultyButtonContainer;
-
-#[derive(Component)]
-struct SettingsButtonContainer;
 
 #[derive(Component)]
 struct SettingsIcon;
@@ -104,6 +95,13 @@ pub fn menu_setup(
                 logo_section.spawn((
                     SettingsIcon,
                     Interaction::None,
+                    ScreenInteraction {
+                        screens: vec![
+                            ScreenState::MainMenu,
+                            ScreenState::SelectDifficulty,
+                            ScreenState::Settings,
+                        ],
+                    },
                     MenuButtonAction::Settings,
                     FlexItemBundle::from_style(
                         FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
@@ -119,17 +117,17 @@ pub fn menu_setup(
             });
 
         // Main menu buttons.
-        build_button_section(screen, MainButtonContainer, 0., |main_section| {
+        build_button_section(screen, ScreenState::MainMenu, 0., |main_section| {
             spawn_main_menu_buttons(main_section, fonts, game);
         });
 
         // Difficulty buttons.
-        build_button_section(screen, DifficultyButtonContainer, -0.5 * PI, |parent| {
+        build_button_section(screen, ScreenState::SelectDifficulty, -0.5 * PI, |parent| {
             spawn_difficulty_menu_buttons(parent, fonts);
         });
 
         // Settings buttons and toggles.
-        build_button_section(screen, SettingsButtonContainer, 0.5 * PI, |parent| {
+        build_button_section(screen, ScreenState::Settings, 0.5 * PI, |parent| {
             spawn_settings(parent, meshes, materials, fonts, settings);
         });
     });
@@ -137,7 +135,7 @@ pub fn menu_setup(
 
 fn build_button_section(
     screen: &mut ChildBuilder,
-    screen_marker: impl Component,
+    screen_state: ScreenState,
     initial_rotation: f32,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
@@ -161,7 +159,9 @@ fn build_button_section(
         .with_children(|main_section_rotation_axis| {
             main_section_rotation_axis
                 .spawn((
-                    screen_marker,
+                    ScreenInteraction {
+                        screens: vec![screen_state],
+                    },
                     FlexBundle::from_item_style(FlexItemStyle::available_size().with_transform(
                         Transform {
                             translation: Vec3::new(0., 2., 1.),
@@ -176,7 +176,7 @@ fn build_button_section(
 fn on_screen_change(
     mut commands: Commands,
     mut button_sections: Query<(Entity, &mut ButtonSection)>,
-    main_button_container: Query<(Entity, &Children), With<MainButtonContainer>>,
+    button_containers: Query<(Entity, &Children, &ScreenInteraction)>,
     fonts: Res<Fonts>,
     game: Res<Game>,
     screen_state: Res<State<ScreenState>>,
@@ -189,13 +189,15 @@ fn on_screen_change(
     if screen_state.0 == MainMenu {
         // Respawn buttons when going back to main screen, because the
         // Continue button may have (dis)appeared.
-        for (container_entity, children) in &main_button_container {
-            let mut button_container = commands.entity(container_entity);
-            button_container.despawn_descendants();
-            button_container.remove_children(children);
-            button_container.with_children(|main_section| {
-                spawn_main_menu_buttons(main_section, &fonts, &game);
-            });
+        for (container_entity, children, screen_interaction) in &button_containers {
+            if screen_interaction.screens.contains(&ScreenState::MainMenu) {
+                let mut button_container = commands.entity(container_entity);
+                button_container.despawn_descendants();
+                button_container.remove_children(children);
+                button_container.with_children(|main_section| {
+                    spawn_main_menu_buttons(main_section, &fonts, &game);
+                });
+            }
         }
     }
 
@@ -257,7 +259,7 @@ fn settings_icon_interaction(
 ) {
     for (interaction, mut image) in &mut interaction_query {
         *image = match *interaction {
-            Interaction::Hovered => images.cog_pressed.clone(),
+            Interaction::Selected => images.cog_pressed.clone(),
             Interaction::Pressed | Interaction::None => images.cog.clone(),
         };
     }

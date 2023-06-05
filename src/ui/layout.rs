@@ -1,5 +1,5 @@
 use super::flex::*;
-use crate::Screen;
+use crate::{Screen, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use std::collections::BTreeMap;
 
@@ -13,6 +13,7 @@ type FlexEntity<'a> = (
     Option<&'a Screen>,
     Option<&'a Text>,
     Option<&'a Anchor>,
+    Option<&'a ScreenInteraction>,
 );
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
@@ -33,7 +34,7 @@ fn layout(flex_query: &mut FlexQuery) {
 }
 
 struct LayoutInfo<'a> {
-    screens: Vec<(Entity, f32, f32)>,
+    screens: Vec<(Entity, ScreenState, f32, f32)>,
     container_map: BTreeMap<Entity, (&'a Children, &'a FlexContainerStyle)>,
     item_map: BTreeMap<
         Entity,
@@ -41,6 +42,7 @@ struct LayoutInfo<'a> {
             &'a FlexItemStyle,
             Mut<'a, ComputedPosition>,
             Mut<'a, Transform>,
+            Option<&'a ScreenInteraction>,
         ),
     >,
     text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>)>,
@@ -63,6 +65,7 @@ impl<'a> LayoutInfo<'a> {
             screen,
             text,
             anchor,
+            screen_interaction,
         ) in flex_query.iter_mut()
         {
             if let (Some(container_style), Some(children)) = (container_style, children) {
@@ -71,7 +74,7 @@ impl<'a> LayoutInfo<'a> {
                 if let Some(screen) = screen {
                     // Assumption: Screens act as our root containers and always get
                     //             aligned with the real screen/window viewport.
-                    screens.push((entity, screen.width, screen.height));
+                    screens.push((entity, screen.state, screen.width, screen.height));
                 }
             }
 
@@ -80,7 +83,10 @@ impl<'a> LayoutInfo<'a> {
             } else if let (Some(item_style), Some(computed_position)) =
                 (item_style, computed_position)
             {
-                item_map.insert(entity, (item_style, computed_position, transform));
+                item_map.insert(
+                    entity,
+                    (item_style, computed_position, transform, screen_interaction),
+                );
             }
         }
 
@@ -93,10 +99,11 @@ impl<'a> LayoutInfo<'a> {
     }
 
     fn apply(&mut self) {
-        for (entity, width, height) in self.screens.clone() {
+        for (entity, screen_state, width, height) in self.screens.clone() {
             let position = ComputedPosition {
                 width,
                 height,
+                screens: vec![screen_state],
                 x: 0.,
                 y: 0.,
             };
@@ -191,7 +198,7 @@ impl<'a> LayoutInfo<'a> {
                 continue;
             }
 
-            let Some((item_style, mut computed_position, mut transform)) =
+            let Some((item_style, mut computed_position, mut transform, screen_interaction)) =
                 self.item_map.remove(item_entity) else {
                     bevy::log::warn!("Child {item_entity:?} does not appear to be a flex item");
                     continue;
@@ -344,8 +351,11 @@ impl<'a> LayoutInfo<'a> {
 
             // Set the position for use by other containers, and store it in the
             // `ComputedPosition` for use by the interaction system.
-            let item_position = position.transformed(scale, translation);
-            *computed_position = item_position;
+            let mut item_position = position.transformed(scale, translation);
+            if let Some(screen_interaction) = screen_interaction {
+                item_position.screens = screen_interaction.screens.clone();
+            }
+            *computed_position = item_position.clone();
 
             // Update offset for the next child.
             if item_style.occupies_space {

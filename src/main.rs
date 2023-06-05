@@ -55,6 +55,7 @@ pub struct GameTimer {
 /// Screens are laid out in tiles next to one another.
 #[derive(Clone, Component, Default)]
 struct Screen {
+    state: ScreenState,
     width: f32,
     height: f32,
     tile_x: f32,
@@ -65,6 +66,7 @@ impl Screen {
     fn for_state(state: ScreenState) -> Self {
         let (tile_x, tile_y) = get_tile_offset_for_screen(state);
         Self {
+            state,
             tile_x,
             tile_y,
             ..default()
@@ -83,6 +85,12 @@ pub enum ScreenState {
     HowToPlay,
     Settings,
     Upper,
+}
+
+/// Overrides the screen(s) for which the given entity provides interactivity.
+#[derive(Component)]
+struct ScreenInteraction {
+    screens: Vec<ScreenState>,
 }
 
 fn main() {
