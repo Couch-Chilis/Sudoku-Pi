@@ -103,6 +103,29 @@ impl ButtonBuilder {
             });
     }
 
+    pub fn build_selected_with_text_and_action(
+        &self,
+        parent: &mut ChildBuilder,
+        text: &str,
+        action: impl Component,
+    ) {
+        parent
+            .spawn((
+                ButtonBundle {
+                    flex: FlexBundle::from_item_style(self.button_style.clone()),
+                    interaction: Interaction::Selected,
+                    ..default()
+                },
+                action,
+            ))
+            .with_children(|button| {
+                button.spawn(FlexTextBundle::from_text(Text::from_section(
+                    text,
+                    self.text_style.clone(),
+                )));
+            });
+    }
+
     pub fn build_secondary_with_text_and_action(
         &self,
         parent: &mut ChildBuilder,

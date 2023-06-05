@@ -19,9 +19,9 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
     buttons.build_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
     if game.may_continue() {
         buttons.build_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
-        buttons.build_with_text_and_action(main_section, "Continue", ContinueGame);
+        buttons.build_selected_with_text_and_action(main_section, "Continue", ContinueGame);
     } else {
-        buttons.build_with_text_and_action(main_section, "New Game", GoToNewGame);
+        buttons.build_selected_with_text_and_action(main_section, "New Game", GoToNewGame);
     }
 
     main_section.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));

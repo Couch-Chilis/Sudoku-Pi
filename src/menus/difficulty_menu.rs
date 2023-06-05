@@ -17,7 +17,7 @@ pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, fonts: &Fonts) {
     let buttons = ButtonBuilder::new(fonts, button_size);
     buttons.build_ternary_with_text_and_action(parent, "Back", BackToMain);
     buttons.build_with_text_and_action(parent, "Easy", StartGameAtDifficulty(Easy));
-    buttons.build_with_text_and_action(parent, "Medium", StartGameAtDifficulty(Medium));
+    buttons.build_selected_with_text_and_action(parent, "Medium", StartGameAtDifficulty(Medium));
     buttons.build_with_text_and_action(parent, "Advanced", StartGameAtDifficulty(Advanced));
     buttons.build_with_text_and_action(parent, "Expert", StartGameAtDifficulty(Expert));
 }

@@ -466,6 +466,10 @@ pub struct ComputedPosition {
 }
 
 impl ComputedPosition {
+    pub fn center(&self) -> Vec2 {
+        Vec2::new(self.x + 0.5 * self.width, self.y + 0.5 * self.height)
+    }
+
     pub fn contains(&self, coords: Vec2) -> bool {
         self.x <= coords.x
             && self.y <= coords.y

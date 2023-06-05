@@ -26,6 +26,7 @@ impl Plugin for UiPlugin {
                 component_animator_system::<FlexItemStyle>.before(LayoutSystem::ApplyLayout),
             )
             .add_systems((
+                interaction::keyboard_interaction,
                 interaction::mouse_interaction,
                 interaction::button_interaction,
             ));

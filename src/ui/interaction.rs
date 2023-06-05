@@ -2,6 +2,14 @@ use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
 use crate::{constants::*, utils::SpriteExt, ScreenState};
 use bevy::{prelude::*, window::PrimaryWindow};
 
+pub type InteractionEntity<'a> = (
+    Entity,
+    &'a mut Interaction,
+    &'a ComputedPosition,
+    &'a ComputedVisibility,
+);
+pub type InteractionQuery<'w, 's, 'a> = Query<'w, 's, InteractionEntity<'a>>;
+
 #[derive(Clone, Component, Debug, Default, Eq, PartialEq)]
 pub enum Interaction {
     #[default]
@@ -10,17 +18,116 @@ pub enum Interaction {
     Pressed,
 }
 
+pub fn keyboard_interaction(
+    mut interaction_query: InteractionQuery,
+    screen: Res<State<ScreenState>>,
+    keys: Res<Input<KeyCode>>,
+) {
+    for key in keys.get_just_pressed() {
+        use KeyCode::*;
+        match key {
+            Up | Right | Down | Left => move_selection(&mut interaction_query, &screen.0, *key),
+            Return => confirm_selection(&mut interaction_query, &screen.0),
+            _ => {}
+        }
+    }
+}
+
+fn move_selection(interaction_query: &mut InteractionQuery, screen: &ScreenState, key: KeyCode) {
+    let mut screen_entities: Vec<_> = interaction_query
+        .iter_mut()
+        .filter(|(_, _, computed_position, computed_visibility)| {
+            computed_position.screens.contains(screen) && computed_visibility.is_visible()
+        })
+        .collect();
+
+    let Some(selected_entity) = screen_entities
+            .iter()
+            .find(|(_, interaction, ..)| **interaction == Interaction::Selected) else {
+                // Select the first interactive entity if there was no selection.
+                if let Some((_, ref mut interaction, ..)) = screen_entities.first_mut() {
+                    **interaction = Interaction::Selected;
+                }
+                return;
+            };
+
+    let mut candidates: Vec<_> = screen_entities
+        .iter()
+        .filter(|(_, _, computed_position, _)| {
+            is_in_direction(computed_position, selected_entity.2, key)
+        })
+        .collect();
+    candidates.sort_by_key(|(_, _, computed_position, _)| {
+        get_distance(computed_position, selected_entity.2)
+    });
+    if let Some((nearest_entity, ..)) = candidates.first() {
+        let nearest_entity = *nearest_entity;
+        for (entity, ref mut interaction, ..) in screen_entities.iter_mut() {
+            **interaction = if *entity == nearest_entity {
+                Interaction::Selected
+            } else {
+                Interaction::None
+            };
+        }
+    }
+}
+
+fn get_distance(position: &ComputedPosition, origin: &ComputedPosition) -> i32 {
+    let position = position.center();
+    let origin = origin.center();
+
+    ((position.x - origin.x).powi(2) + (position.y - origin.y).powi(2)) as i32
+}
+
+fn is_in_direction(position: &ComputedPosition, origin: &ComputedPosition, key: KeyCode) -> bool {
+    let position = position.center();
+    let origin = origin.center();
+
+    use KeyCode::*;
+    match key {
+        Up => {
+            let dy = position.y - origin.y;
+            dy > 0. && dy >= (position.x - origin.x).abs()
+        }
+        Right => {
+            let dx = position.x - origin.x;
+            dx > 0. && dx >= (position.y - origin.y).abs()
+        }
+        Down => {
+            let dy = origin.y - position.y;
+            dy > 0. && dy >= (position.x - origin.x).abs()
+        }
+        Left => {
+            let dx = origin.x - position.x;
+            dx > 0. && dx >= (position.y - origin.y).abs()
+        }
+        _ => false,
+    }
+}
+
+fn confirm_selection(interaction_query: &mut InteractionQuery, screen: &ScreenState) {
+    if let Some(mut selected_entity) = interaction_query.iter_mut().find(
+        |(_, interaction, computed_position, computed_visibility)| {
+            computed_position.screens.contains(screen)
+                && computed_visibility.is_visible()
+                && **interaction == Interaction::Selected
+        },
+    ) {
+        *selected_entity.1 = Interaction::Pressed;
+    }
+}
+
 pub fn mouse_interaction(
-    mut interaction_query: Query<(
-        Entity,
-        &mut Interaction,
-        &ComputedPosition,
-        &ComputedVisibility,
-    )>,
+    mut interaction_query: InteractionQuery,
     mouse_buttons: Res<Input<MouseButton>>,
     screen: Res<State<ScreenState>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
+    window_changes: Query<(With<PrimaryWindow>, Changed<Window>)>,
 ) {
+    if !mouse_buttons.is_changed() && window_changes.is_empty() {
+        return;
+    }
+
     let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
         return;
     };

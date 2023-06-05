@@ -35,7 +35,11 @@ pub fn highscore_screen_setup(
             fonts,
             FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(10.)),
         );
-        buttons.build_with_text_and_action(button_row, "Back", HighscoreButtonAction::Back);
+        buttons.build_selected_with_text_and_action(
+            button_row,
+            "Back",
+            HighscoreButtonAction::Back,
+        );
     });
 }
 
