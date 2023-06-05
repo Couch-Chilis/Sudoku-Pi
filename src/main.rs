@@ -20,6 +20,7 @@ use game::{board_setup, highscore_screen_setup};
 use highscores::Highscores;
 use menus::menu_setup;
 use settings::Settings;
+use smallvec::SmallVec;
 use std::time::Duration;
 use sudoku::Game;
 use ui::*;
@@ -89,8 +90,8 @@ pub enum ScreenState {
 
 /// Overrides the screen(s) for which the given entity provides interactivity.
 #[derive(Component)]
-struct ScreenInteraction {
-    screens: Vec<ScreenState>,
+pub struct ScreenInteraction {
+    screens: SmallVec<[ScreenState; 4]>,
 }
 
 fn main() {

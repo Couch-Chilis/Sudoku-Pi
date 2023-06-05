@@ -1,6 +1,7 @@
 use super::flex::*;
 use crate::{Screen, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
+use smallvec::smallvec;
 use std::collections::BTreeMap;
 
 type FlexEntity<'a> = (
@@ -103,7 +104,7 @@ impl<'a> LayoutInfo<'a> {
             let position = ComputedPosition {
                 width,
                 height,
-                screens: vec![screen_state],
+                screens: smallvec![screen_state],
                 x: 0.,
                 y: 0.,
             };
@@ -351,10 +352,11 @@ impl<'a> LayoutInfo<'a> {
 
             // Set the position for use by other containers, and store it in the
             // `ComputedPosition` for use by the interaction system.
-            let mut item_position = position.transformed(scale, translation);
-            if let Some(screen_interaction) = screen_interaction {
-                item_position.screens = screen_interaction.screens.clone();
-            }
+            let item_position = position.transformed_with_screen_interaction(
+                scale,
+                translation,
+                screen_interaction,
+            );
             *computed_position = item_position.clone();
 
             // Update offset for the next child.

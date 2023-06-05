@@ -12,6 +12,7 @@ use difficulty_menu::*;
 use main_menu::*;
 use settings_menu::*;
 use settings_toggle::*;
+use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
@@ -96,7 +97,7 @@ pub fn menu_setup(
                     SettingsIcon,
                     Interaction::None,
                     ScreenInteraction {
-                        screens: vec![
+                        screens: smallvec![
                             ScreenState::MainMenu,
                             ScreenState::SelectDifficulty,
                             ScreenState::Settings,
@@ -160,7 +161,7 @@ fn build_button_section(
             main_section_rotation_axis
                 .spawn((
                     ScreenInteraction {
-                        screens: vec![screen_state],
+                        screens: smallvec![screen_state],
                     },
                     FlexBundle::from_item_style(FlexItemStyle::available_size().with_transform(
                         Transform {

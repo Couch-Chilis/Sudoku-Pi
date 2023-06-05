@@ -1,5 +1,6 @@
-use crate::{utils::*, ScreenState};
+use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor};
+use smallvec::SmallVec;
 use std::ops::Mul;
 
 /// Marker for any flex entity, be it an item or a container.
@@ -459,7 +460,7 @@ impl Mul<Val> for f32 {
 pub struct ComputedPosition {
     pub x: f32,
     pub y: f32,
-    pub screens: Vec<ScreenState>,
+    pub screens: SmallVec<[ScreenState; 4]>,
     pub width: f32,
     pub height: f32,
 }
@@ -474,13 +475,20 @@ impl ComputedPosition {
 
     /// Returns the computed position with the given scale and translation
     /// applied for positioning a child item.
-    pub fn transformed(&self, scale: Vec3, translation: Vec3) -> Self {
+    pub fn transformed_with_screen_interaction(
+        &self,
+        scale: Vec3,
+        translation: Vec3,
+        screen_interaction: Option<&ScreenInteraction>,
+    ) -> Self {
         let width = self.width * scale.x;
         let height = self.height * scale.y;
         Self {
             x: self.x + (0.5 + translation.x) * self.width - 0.5 * width,
             y: self.y + (0.5 + translation.y) * self.height - 0.5 * height,
-            screens: self.screens.clone(),
+            screens: screen_interaction
+                .map_or(&self.screens, |interaction| &interaction.screens)
+                .clone(),
             width,
             height,
         }
