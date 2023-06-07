@@ -347,17 +347,18 @@ impl FlexLeafBundle {
 pub struct FlexTextBundle {
     pub flex: Flex,
     pub text: Text2dBundle,
+    pub computed_position: ComputedPosition,
 }
 
 impl FlexTextBundle {
     pub fn from_text(text: Text) -> Self {
         Self {
-            flex: Flex,
             text: Text2dBundle {
                 text,
                 transform: Transform::from_scale(Vec3::new(0., 0., 0.)),
                 ..default()
             },
+            ..default()
         }
     }
 
@@ -479,20 +480,38 @@ impl ComputedPosition {
 
     /// Returns the computed position with the given scale and translation
     /// applied for positioning a child item.
+    pub fn transformed(&self, scale: Vec3, translation: Vec3) -> Self {
+        self.transformed_with_screens(scale, translation, self.screens.clone())
+    }
+
+    /// Same as `transformed()`, but also sets the `screens` field.
     pub fn transformed_with_screen_interaction(
         &self,
         scale: Vec3,
         translation: Vec3,
         screen_interaction: Option<&ScreenInteraction>,
     ) -> Self {
+        self.transformed_with_screens(
+            scale,
+            translation,
+            screen_interaction
+                .map_or(&self.screens, |interaction| &interaction.screens)
+                .clone(),
+        )
+    }
+
+    fn transformed_with_screens(
+        &self,
+        scale: Vec3,
+        translation: Vec3,
+        screens: SmallVec<[ScreenState; 4]>,
+    ) -> Self {
         let width = self.width * scale.x;
         let height = self.height * scale.y;
         Self {
             x: self.x + (0.5 + translation.x) * self.width - 0.5 * width,
             y: self.y + (0.5 + translation.y) * self.height - 0.5 * height,
-            screens: screen_interaction
-                .map_or(&self.screens, |interaction| &interaction.screens)
-                .clone(),
+            screens,
             width,
             height,
         }

@@ -1,12 +1,7 @@
-use super::{Board, Note, Number, ScreenState, Selection};
-use crate::{constants::*, sudoku::*, Fonts, Settings};
+use super::{Note, Number, ScreenState, Selection};
+use crate::{constants::*, sudoku::*, ui::*, utils::SpriteExt, Fonts, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
-
-// Font sizes are given with high values, to make sure we render the font at a
-// high-enough resolution, then we scale back down to fit the squares.
-const CELL_FONT_SIZE: f32 = 0.01667 * CELL_SIZE;
-const FONT_SCALE: Vec3 = Vec3::new(CELL_FONT_SIZE, CELL_FONT_SIZE, 1.);
 
 #[derive(Component)]
 pub(super) struct HighlightedNumber(usize, HighlightKind);
@@ -21,90 +16,94 @@ pub(super) enum HighlightKind {
 }
 
 pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, settings: &Settings) {
+    board.with_children(|board| {
+        for x in 0..9 {
+            board
+                .spawn(FlexBundle::new(
+                    FlexContainerStyle::default(),
+                    FlexItemStyle::available_size(),
+                ))
+                .with_children(|column| {
+                    for y in 0..9 {
+                        spawn_cell(column, fonts, game, settings, x, y);
+                    }
+                });
+        }
+    });
+}
+
+fn spawn_cell(
+    parent: &mut ChildBuilder,
+    fonts: &Fonts,
+    game: &Game,
+    settings: &Settings,
+    x: u8,
+    y: u8,
+) {
+    let n = game.current.get(x, y);
+
     let number_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 60.,
-        color: Color::NONE,
+        font_size: 70.,
+        color: if n.is_some() {
+            get_number_color(game, settings, x, y)
+        } else {
+            Color::NONE
+        },
     };
 
     let note_style = TextStyle {
         font: fonts.bold.clone(),
-        font_size: 20.,
+        font_size: 30.,
         color: Color::NONE,
     };
 
-    board.with_children(|parent| {
-        for x in 0..9 {
-            for y in 0..9 {
-                let cell = game.current.get(x, y);
+    parent
+        .spawn((
+            Number(x, y),
+            Interaction::None,
+            FlexBundle::new(FlexContainerStyle::row(), FlexItemStyle::available_size()),
+        ))
+        .with_children(|cell| {
+            cell.spawn(build_number(x, y, n, number_style));
 
-                let mut style = number_style.clone();
-                if cell.is_some() {
-                    style.color = get_number_color(game, settings, x, y);
-                }
-
-                parent.spawn(build_number(x, y, cell, style));
-
-                for n in 1..=9 {
-                    let n = NonZeroU8::new(n).unwrap();
-                    parent.spawn(build_note(x, y, n, note_style.clone()));
-                }
+            for note_x in 1..=3 {
+                cell.spawn(FlexBundle::new(
+                    FlexContainerStyle::default(),
+                    FlexItemStyle::available_size(),
+                ))
+                .with_children(|note_column| {
+                    for note_y in 0..3 {
+                        note_column
+                            .spawn(FlexBundle::new(
+                                FlexContainerStyle::default(),
+                                FlexItemStyle::available_size(),
+                            ))
+                            .with_children(|note_cell| {
+                                let n = NonZeroU8::new(note_x + 3 * note_y).unwrap();
+                                note_cell.spawn(build_note(x, y, n, note_style.clone()));
+                            });
+                    }
+                });
             }
-        }
-    });
+        });
 }
 
 fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundle {
     (
         Number(x, y),
-        Text2dBundle {
-            text: Text::from_section(
-                cell.map(|n| n.to_string()).unwrap_or_default(),
-                number_style,
-            ),
-            transform: Transform::from_translation(Vec3::new(
-                (x as f32 - 4.) * CELL_SIZE,
-                (y as f32 - 4.2) * CELL_SIZE,
-                2.,
-            ))
-            .with_scale(FONT_SCALE),
-            ..default()
-        },
+        FlexTextBundle::from_text(Text::from_section(
+            cell.map(|n| n.to_string()).unwrap_or_default(),
+            number_style,
+        )),
     )
 }
 
 fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
-    let (note_x, note_y) = get_note_coordinates(n);
-
     (
         Note(x, y, n),
-        Text2dBundle {
-            text: Text::from_section(n.to_string(), note_style),
-            transform: Transform::from_translation(Vec3::new(
-                ((x as f32 - 4.) + note_x) * CELL_SIZE,
-                ((y as f32 - 4.06) + note_y) * CELL_SIZE,
-                1.,
-            ))
-            .with_scale(FONT_SCALE),
-            ..default()
-        },
+        FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style)),
     )
-}
-
-fn get_note_coordinates(n: NonZeroU8) -> (f32, f32) {
-    let x = match n.get() {
-        1 | 4 | 7 => -0.3,
-        2 | 5 | 8 => 0.,
-        _ => 0.3,
-    };
-
-    let y = match n.get() {
-        1 | 2 | 3 => 0.3,
-        4 | 5 | 6 => 0.,
-        _ => -0.3,
-    };
-
-    (x, y)
 }
 
 pub(super) fn render_numbers(
@@ -157,13 +156,11 @@ pub(super) fn render_notes(mut notes: Query<(&Note, &mut Text)>, game: Res<Game>
 }
 
 pub(super) fn render_highlights(
-    mut commands: Commands,
+    mut cells: Query<(&Interaction, &Number, &mut Sprite)>,
     screen: Res<State<ScreenState>>,
     game: Res<Game>,
     settings: Res<Settings>,
     selection: Res<Selection>,
-    board: Query<Entity, With<Board>>,
-    highlighted_numbers: Query<Entity, With<HighlightedNumber>>,
 ) {
     if !game.is_changed() && !selection.is_changed() && !settings.is_changed() {
         return;
@@ -172,14 +169,6 @@ pub(super) fn render_highlights(
     if screen.0 != ScreenState::Game && screen.0 != ScreenState::Highscores {
         return;
     }
-
-    for entity in &highlighted_numbers {
-        commands.entity(entity).despawn();
-    }
-
-    let Ok(mut board) = board.get_single().map(|board| commands.entity(board)) else {
-        return;
-    };
 
     // First determine the type of highlight each cell should receive:
     let mut highlights = [None; 81];
@@ -225,35 +214,17 @@ pub(super) fn render_highlights(
         highlights[get_pos(x, y)] = Some(HighlightKind::Hint);
     }
 
-    board.with_children(|parent| {
-        for (pos, highlight) in highlights.into_iter().enumerate() {
-            if let Some(highlight_kind) = highlight {
-                let (x, y) = get_x_and_y_from_pos(pos);
-                let color = match highlight_kind {
-                    HighlightKind::Selection => Color::rgba(0.9, 0.8, 0.0, 0.7),
-                    HighlightKind::SameNumber => Color::rgba(0.9, 0.8, 0.0, 0.45),
-                    HighlightKind::InRange => Color::rgba(0.9, 0.8, 0.0, 0.2),
-                    HighlightKind::Note => Color::rgba(0.9, 0.8, 0.0, 0.3),
-                    HighlightKind::Hint => COLOR_HINT,
-                };
-
-                parent.spawn((
-                    HighlightedNumber(pos, highlight_kind),
-                    SpriteBundle {
-                        sprite: Sprite { color, ..default() },
-                        transform: get_cell_transform(x, y).with_scale(CELL_SCALE),
-                        ..default()
-                    },
-                ));
-            }
-        }
-    });
-}
-
-fn get_cell_transform(x: u8, y: u8) -> Transform {
-    Transform::from_translation(Vec3::new(
-        (x as f32 - 4.) * CELL_SIZE,
-        (y as f32 - 4.) * CELL_SIZE,
-        1.,
-    ))
+    for (_interaction, number, mut sprite) in &mut cells {
+        let pos = get_pos(number.0, number.1);
+        let highlight_kind = highlights[pos];
+        let color = match highlight_kind {
+            Some(HighlightKind::Selection) => Color::rgba(0.9, 0.8, 0.0, 0.7),
+            Some(HighlightKind::SameNumber) => Color::rgba(0.9, 0.8, 0.0, 0.45),
+            Some(HighlightKind::InRange) => Color::rgba(0.9, 0.8, 0.0, 0.2),
+            Some(HighlightKind::Note) => Color::rgba(0.9, 0.8, 0.0, 0.3),
+            Some(HighlightKind::Hint) => COLOR_HINT,
+            None => Color::NONE,
+        };
+        *sprite = Sprite::from_color(color);
+    }
 }

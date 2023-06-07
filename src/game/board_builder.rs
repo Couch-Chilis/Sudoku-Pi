@@ -15,7 +15,8 @@ pub fn build_board(
     parent.with_children(|screen| {
         let mut board = screen.spawn((
             Board,
-            FlexLeafBundle::from_style(
+            FlexBundle::new(
+                FlexContainerStyle::row(),
                 FlexItemStyle::preferred_and_minimum_size(
                     Size::all(Val::Vmin(90.)),
                     Size::all(Val::Vmin(50.)),

@@ -1,5 +1,5 @@
 use super::ButtonBuilder;
-use crate::{constants::*, sudoku::*, ui::*, Fonts, ScreenState};
+use crate::{constants::*, game::Selection, sudoku::*, ui::*, Fonts, ScreenState};
 use bevy::{app::AppExit, prelude::*, sprite::Anchor};
 
 #[derive(Component)]
@@ -50,13 +50,18 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
 pub fn main_menu_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut app_exit_events: EventWriter<AppExit>,
+    mut selection: ResMut<Selection>,
     interaction_query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
+    game: Res<Game>,
 ) {
     for (interaction, action) in &interaction_query {
         if *interaction == Interaction::Pressed {
             use MainScreenButtonAction::*;
             match action {
-                ContinueGame => screen_state.set(ScreenState::Game),
+                ContinueGame => {
+                    *selection = Selection::new_for_game(&game);
+                    screen_state.set(ScreenState::Game);
+                }
                 GoToHowToPlay => screen_state.set(ScreenState::Highscores),
                 GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
                 Quit => app_exit_events.send(AppExit),

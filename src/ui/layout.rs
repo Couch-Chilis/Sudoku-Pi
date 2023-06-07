@@ -46,7 +46,7 @@ struct LayoutInfo<'a> {
             Option<&'a ScreenInteraction>,
         ),
     >,
-    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>)>,
+    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>, Mut<'a, ComputedPosition>)>,
 }
 
 impl<'a> LayoutInfo<'a> {
@@ -79,15 +79,17 @@ impl<'a> LayoutInfo<'a> {
                 }
             }
 
-            if let (Some(_text), Some(anchor)) = (text, anchor) {
-                text_map.insert(entity, (anchor, transform));
-            } else if let (Some(item_style), Some(computed_position)) =
-                (item_style, computed_position)
-            {
-                item_map.insert(
-                    entity,
-                    (item_style, computed_position, transform, screen_interaction),
-                );
+            match (text, anchor, item_style, computed_position) {
+                (Some(_text), Some(anchor), _, Some(computed_position)) => {
+                    text_map.insert(entity, (anchor, transform, computed_position));
+                }
+                (_, _, Some(item_style), Some(computed_position)) => {
+                    item_map.insert(
+                        entity,
+                        (item_style, computed_position, transform, screen_interaction),
+                    );
+                }
+                _ => {}
             }
         }
 
@@ -184,7 +186,9 @@ impl<'a> LayoutInfo<'a> {
 
         for item_entity in children {
             // Special handling for text items:
-            if let Some((anchor, mut transform)) = self.text_map.remove(item_entity) {
+            if let Some((anchor, mut transform, mut computed_position)) =
+                self.text_map.remove(item_entity)
+            {
                 let ComputedPosition { width, height, .. } = position;
                 transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
                 transform.translation = Vec3::new(
@@ -196,12 +200,12 @@ impl<'a> LayoutInfo<'a> {
                     -4. / height,
                     1.,
                 );
+                *computed_position = position.transformed(transform.scale, transform.translation);
                 continue;
             }
 
             let Some((item_style, mut computed_position, mut transform, screen_interaction)) =
                 self.item_map.remove(item_entity) else {
-                    bevy::log::warn!("Child {item_entity:?} does not appear to be a flex item");
                     continue;
                 };
 

@@ -30,11 +30,14 @@ impl Plugin for GamePlugin {
             .add_startup_system(setup)
             .add_systems((
                 on_keyboard_input.run_if(in_state(ScreenState::Game)),
+                on_interaction_change.run_if(in_state(ScreenState::Game)),
                 on_mouse_input.run_if(in_state(ScreenState::Game)),
                 on_score_changed.run_if(in_state(ScreenState::Game)),
                 on_highscores_changed,
                 on_time_changed,
                 on_timer,
+            ))
+            .add_systems((
                 on_wheel_input.run_if(in_state(ScreenState::Game)),
                 on_wheel_timer.run_if(in_state(ScreenState::Game)),
                 button_actions.run_if(in_state(ScreenState::Game)),
@@ -65,6 +68,26 @@ pub struct Selection {
     pub note_toggle: NoteToggleMode,
 }
 
+impl Selection {
+    pub fn new_for_game(game: &Game) -> Self {
+        let get_selected_cell = || {
+            for y in 0..9 {
+                for x in 0..9 {
+                    if game.start.has(x, y) {
+                        return Some((x, y));
+                    }
+                }
+            }
+            None
+        };
+
+        Self {
+            selected_cell: get_selected_cell(),
+            ..default()
+        }
+    }
+}
+
 #[derive(Default)]
 pub enum NoteToggleMode {
     #[default]
@@ -86,6 +109,17 @@ pub fn board_setup(
     });
 }
 
+fn on_interaction_change(
+    mut selection: ResMut<Selection>,
+    changed_interaction: Query<(&Interaction, &Number), Changed<Interaction>>,
+) {
+    for (interaction, number) in &changed_interaction {
+        if *interaction == Interaction::Selected {
+            selection.selected_cell = Some((number.0, number.1));
+        }
+    }
+}
+
 fn on_keyboard_input(
     mut game: ResMut<Game>,
     mut timer: ResMut<GameTimer>,
@@ -95,11 +129,6 @@ fn on_keyboard_input(
     for key in keys.get_just_pressed() {
         use KeyCode::*;
         match key {
-            Up => move_selection_relative(&mut selection, 0, 1),
-            Right => move_selection_relative(&mut selection, 1, 0),
-            Down => move_selection_relative(&mut selection, 0, -1),
-            Left => move_selection_relative(&mut selection, -1, 0),
-
             Key1 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 1),
             Key2 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 2),
             Key3 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 3),
@@ -239,19 +268,6 @@ fn move_selection(selection: &mut Selection, x: u8, y: u8) {
     };
 }
 
-fn move_selection_relative(selection: &mut Selection, dx: i8, dy: i8) {
-    let (x, y) = selection
-        .selected_cell
-        .map(|number| (number.0, number.1))
-        .unwrap_or_default();
-
-    move_selection(
-        selection,
-        ((x as i8 + 9 + dx) % 9) as u8,
-        ((y as i8 + 9 + dy) % 9) as u8,
-    );
-}
-
 fn get_board_x_and_y(board_position: &ComputedPosition, cursor_position: Vec2) -> Option<(u8, u8)> {
     let Vec2 { x, y } = cursor_position;
 
@@ -261,7 +277,7 @@ fn get_board_x_and_y(board_position: &ComputedPosition, cursor_position: Vec2) -
 
     let board_x = ((x - board_position.x) / board_position.width * 9.).floor();
     let board_y = ((y - board_position.y) / board_position.height * 9.).floor();
-    Some((board_x as u8, board_y as u8))
+    Some((board_x as u8, 8 - board_y as u8))
 }
 
 fn button_actions(

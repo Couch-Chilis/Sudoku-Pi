@@ -40,30 +40,11 @@ pub fn difficulty_screen_button_actions(
                 BackToMain => screen_state.set(ScreenState::MainMenu),
                 StartGameAtDifficulty(difficulty) => {
                     *game = Game::generate(*difficulty).unwrap();
-                    *selection = get_initial_selection(&game);
+                    *selection = Selection::new_for_game(&game);
                     game_timer.stopwatch.reset();
                     screen_state.set(ScreenState::Game);
                 }
             }
         }
-    }
-}
-
-fn get_initial_selection(game: &Game) -> Selection {
-    let get_selected_cell = || {
-        for y in 0..9 {
-            for x in 0..9 {
-                let y = 8 - y; // Find the first in the top-left corner, instead of bottom-left.
-                if game.start.has(x, y) {
-                    return Some((x, y));
-                }
-            }
-        }
-        None
-    };
-
-    Selection {
-        selected_cell: get_selected_cell(),
-        ..default()
     }
 }

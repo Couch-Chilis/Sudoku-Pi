@@ -57,7 +57,6 @@ pub const COLOR_BOARD_LINE_THIN: Color = Color::rgb(238. / 255., 235. / 255., 21
 
 // Cells.
 pub const CELL_SIZE: f32 = 0.111111;
-pub const CELL_SCALE: Vec3 = Vec3::new(CELL_SIZE, CELL_SIZE, 1.);
 
 // Highscores.
 pub const MAX_NUM_HIGHSCORES: usize = 5;
