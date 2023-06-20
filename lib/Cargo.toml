@@ -1,0 +1,42 @@
+[package]
+name = "sudoku-lib"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["staticlib", "rlib", "cdylib"]
+
+[features]
+android_shared_stdcxx = ["bevy/android_shared_stdcxx"]
+dynamic_linking = ["bevy/dynamic_linking"]
+
+[dependencies]
+anyhow = "1"
+bevy = { version = "0.10", default-features = false, features = [
+    "animation",
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_text",
+    "jpeg",
+    "png",
+    "vorbis",
+    "wayland",
+    "x11",
+] }
+bevy_tweening = { version = "0.7", default-features = false, features = [
+    "bevy_asset",
+    "bevy_sprite",
+    "bevy_text",
+] }
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+smallvec = "1.10"

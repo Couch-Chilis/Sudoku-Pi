@@ -3,6 +3,7 @@ use crate::{constants::*, game::Selection, sudoku::*, ui::*, Fonts, ScreenState}
 use bevy::{app::AppExit, prelude::*, sprite::Anchor};
 
 #[derive(Component)]
+#[allow(dead_code)]
 pub enum MainScreenButtonAction {
     ContinueGame,
     GoToHowToPlay,
@@ -15,7 +16,9 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
 
     let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
     let buttons = ButtonBuilder::new(fonts, button_size);
-    buttons.build_ternary_with_text_and_action(main_section, "Quit", Quit);
+    if cfg!(not(target_os = "ios")) {
+        buttons.build_ternary_with_text_and_action(main_section, "Quit", MainScreenButtonAction::Quit);
+    }
     buttons.build_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
     if game.may_continue() {
         buttons.build_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);

@@ -1,7 +1,12 @@
 [package]
 name = "sudoku-pi"
+description = "Finger-friendly Sudoku"
 version = "0.1.0"
 edition = "2021"
+publish = false
+
+[workspace]
+members = [".", "lib"]
 
 [profile.dev]
 opt-level = 1
@@ -9,35 +14,8 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 3
 
+[package.metadata.bundle]
+identifier = "nl.couch-chilis.sudoku-pi"
+
 [dependencies]
-anyhow = "1"
-bevy = { version = "0.10", default-features = false, features = [
-    "animation",
-    "bevy_asset",
-    "bevy_audio",
-    "bevy_gilrs",
-    "bevy_scene",
-    "bevy_winit",
-    "bevy_core_pipeline",
-    "bevy_pbr",
-    "bevy_gltf",
-    "bevy_render",
-    "bevy_sprite",
-    "bevy_text",
-    "dynamic_linking",
-    "jpeg",
-    "png",
-    "vorbis",
-    "wayland",
-    "x11",
-    "android_shared_stdcxx",
-] }
-bevy_tweening = { version = "0.7", default-features = false, features = [
-    "bevy_asset",
-    "bevy_sprite",
-    "bevy_text",
-] }
-rand = "0.8"
-serde = { version = "1", features = ["derive"] }
-serde_json = { version = "1" }
-smallvec = "1.10"
+sudoku-lib = { path = "lib" }

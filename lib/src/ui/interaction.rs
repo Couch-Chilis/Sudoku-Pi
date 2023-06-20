@@ -165,6 +165,59 @@ pub fn mouse_interaction(
     }
 }
 
+pub fn touch_interaction(
+    mut interaction_query: InteractionQuery,
+    touches: Res<Touches>,
+    screen: Res<State<ScreenState>>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    if !touches.is_changed() {
+        return;
+    }
+
+    let Some(mut touch_position) = touches.first_pressed_position() else {
+        return;
+    };
+
+    let Ok(window) = window_query.get_single() else {
+        return;
+    };
+
+    touch_position.y = window.height() - touch_position.y;
+
+    let selected_entity = interaction_query
+        .iter()
+        .find(|(_, _, computed_position, computed_visibility)| {
+            computed_position.screens.contains(&screen.0)
+                && computed_visibility.is_visible()
+                && computed_position.contains(touch_position)
+        })
+        .map(|(entity, ..)| entity);
+
+    for (entity, mut interaction, computed_position, _) in &mut interaction_query {
+        let new_interaction = match selected_entity {
+            Some(selected_entity) => {
+                if selected_entity == entity {
+                    if touches.any_just_pressed() {
+                        Interaction::Pressed
+                    } else {
+                        Interaction::Selected
+                    }
+                } else if computed_position.screens.contains(&screen.0) {
+                    Interaction::None
+                } else {
+                    interaction.clone()
+                }
+            }
+            None => interaction.clone(),
+        };
+
+        if *interaction != new_interaction {
+            *interaction = new_interaction;
+        }
+    }
+}
+
 // Handles changing button color based on mouse interaction.
 pub fn button_interaction(
     mut interaction_query: Query<
