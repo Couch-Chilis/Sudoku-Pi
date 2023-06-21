@@ -23,6 +23,10 @@ pub fn keyboard_interaction(
     screen: Res<State<ScreenState>>,
     keys: Res<Input<KeyCode>>,
 ) {
+    if screen.0 == ScreenState::Game {
+        return; // Game screen has its own controls.
+    }
+
     for key in keys.get_just_pressed() {
         use KeyCode::*;
         match key {

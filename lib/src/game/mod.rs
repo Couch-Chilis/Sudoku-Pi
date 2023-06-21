@@ -30,7 +30,6 @@ impl Plugin for GamePlugin {
             .add_startup_system(setup)
             .add_systems((
                 on_keyboard_input.run_if(in_state(ScreenState::Game)),
-                on_interaction_change.run_if(in_state(ScreenState::Game)),
                 on_mouse_input.run_if(in_state(ScreenState::Game)),
                 on_score_changed.run_if(in_state(ScreenState::Game)),
                 on_highscores_changed,
@@ -109,17 +108,6 @@ pub fn board_setup(
     });
 }
 
-fn on_interaction_change(
-    mut selection: ResMut<Selection>,
-    changed_interaction: Query<(&Interaction, &Number), Changed<Interaction>>,
-) {
-    for (interaction, number) in &changed_interaction {
-        if *interaction == Interaction::Selected {
-            selection.selected_cell = Some((number.0, number.1));
-        }
-    }
-}
-
 fn on_keyboard_input(
     mut game: ResMut<Game>,
     mut timer: ResMut<GameTimer>,
@@ -129,6 +117,11 @@ fn on_keyboard_input(
     for key in keys.get_just_pressed() {
         use KeyCode::*;
         match key {
+            Up => move_selection_relative(&mut selection, 0, -1),
+            Right => move_selection_relative(&mut selection, 1, 0),
+            Down => move_selection_relative(&mut selection, 0, 1),
+            Left => move_selection_relative(&mut selection, -1, 0),
+
             Key1 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 1),
             Key2 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 2),
             Key3 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 3),
@@ -145,6 +138,19 @@ fn on_keyboard_input(
             _ => {}
         }
     }
+}
+
+fn move_selection_relative(selection: &mut Selection, dx: i8, dy: i8) {
+    let (x, y) = selection
+        .selected_cell
+        .map(|number| (number.0, number.1))
+        .unwrap_or_default();
+
+    move_selection(
+        selection,
+        ((x as i8 + 9 + dx) % 9) as u8,
+        ((y as i8 + 9 + dy) % 9) as u8,
+    );
 }
 
 fn handle_number_key(

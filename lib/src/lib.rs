@@ -6,6 +6,8 @@ mod game;
 mod highscores;
 mod menus;
 mod settings;
+#[cfg(feature = "steam")]
+mod steam;
 mod sudoku;
 mod ui;
 mod utils;
@@ -105,8 +107,8 @@ pub fn main() {
             .set_elapsed(Duration::from_secs_f32(game.elapsed_secs));
     }
 
-    App::new()
-        .init_resource::<Fonts>()
+    let mut app = App::new();
+    app.init_resource::<Fonts>()
         .init_resource::<Images>()
         .insert_resource(game)
         .insert_resource(timer)
@@ -130,8 +132,14 @@ pub fn main() {
         .add_plugin(TweeningPlugin)
         .add_plugin(UiPlugin)
         .add_plugin(game::GamePlugin)
-        .add_plugin(menus::MenuPlugin)
-        .run();
+        .add_plugin(menus::MenuPlugin);
+
+    if cfg!(feature = "steam") {
+        use bevy_steamworks::*;
+        app.add_plugin(SteamworksPlugin::new(AppId(892884)));
+    }
+
+    app.run();
 }
 
 fn setup(

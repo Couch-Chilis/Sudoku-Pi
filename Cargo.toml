@@ -18,4 +18,7 @@ opt-level = 3
 identifier = "nl.couch-chilis.sudoku-pi"
 
 [dependencies]
-sudoku-lib = { path = "lib" }
+sudoku-lib = { path = "lib", features = ["steam"] }
+
+[patch.crates-io]
+bevy-steamworks = { path = "../bevy-steamworks" }
