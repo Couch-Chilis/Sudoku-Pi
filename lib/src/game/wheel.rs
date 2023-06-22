@@ -1,9 +1,6 @@
-use super::{fill_number, get_board_x_and_y, Board, ModeState};
-use crate::{
-    constants::COLOR_WHEEL_TOP_TEXT, settings::Settings, utils::*, ComputedPosition, Fonts, Game,
-    GameTimer,
-};
-use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch, window::PrimaryWindow};
+use super::{fill_number, get_board_x_and_y, Board, InputKind};
+use crate::{constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer};
+use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch};
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
@@ -107,29 +104,16 @@ pub fn on_wheel_input(
     mut wheel: Query<&mut Wheel>,
     mut game: ResMut<Game>,
     mut timer: ResMut<GameTimer>,
+    input_kind: InputKind,
+    position: Vec2,
     board: Query<&ComputedPosition, With<Board>>,
-    buttons: Res<Input<MouseButton>>,
-    mode_state: Res<State<ModeState>>,
-    primary_window: Query<&Window, With<PrimaryWindow>>,
     settings: Res<Settings>,
 ) {
-    if !buttons.is_changed() && !buttons.pressed(MouseButton::Left) {
-        return;
-    }
-
-    if mode_state.0 != ModeState::Normal {
-        return;
-    }
-
-    let Some(cursor_position) = primary_window.get_single().ok().and_then(|window| window.cursor_position()) else {
-        return;
-    };
-
     let Ok(board_position) = board.get_single() else {
         return;
     };
 
-    let Some(translation) = get_board_translation(board_position, cursor_position) else {
+    let Some(translation) = get_board_translation(board_position, position) else {
         return;
     };
 
@@ -139,37 +123,41 @@ pub fn on_wheel_input(
 
     wheel.current_position = translation;
 
-    if buttons.just_pressed(MouseButton::Left) {
-        if let Some((x, y)) = get_board_x_and_y(board_position, cursor_position) {
-            let should_open = if settings.show_mistakes {
-                !game.current.has(x, y) || game.current.get(x, y) != game.solution.get(x, y)
-            } else {
-                !game.start.has(x, y)
-            };
+    match input_kind {
+        InputKind::Press => {
+            if let Some((x, y)) = get_board_x_and_y(board_position, position) {
+                let should_open = if settings.show_mistakes {
+                    !game.current.has(x, y) || game.current.get(x, y) != game.solution.get(x, y)
+                } else {
+                    !game.start.has(x, y)
+                };
 
-            if should_open {
-                wheel.start_position = translation;
-                wheel.cell = (x, y);
-                wheel.spawn_timer.reset();
-                wheel.is_pressed = true;
-                wheel.selected_number = None;
+                if should_open {
+                    wheel.start_position = translation;
+                    wheel.cell = (x, y);
+                    wheel.spawn_timer.reset();
+                    wheel.is_pressed = true;
+                    wheel.selected_number = None;
+                }
             }
         }
-    } else if buttons.just_released(MouseButton::Left) {
-        if wheel.is_pressed {
-            wheel.is_pressed = false;
-
-            if let Some(selected_number) = wheel.selected_number {
-                let (x, y) = wheel.cell;
-                fill_number(&mut game, &mut timer, x, y, selected_number);
+        InputKind::PressedMovement => {
+            let radius = get_radius(&wheel);
+            let selected_number = get_selected_number(&wheel, radius);
+            if selected_number != wheel.selected_number {
+                wheel.selected_number = selected_number;
+                wheel.slice_timer.reset();
             }
         }
-    } else if wheel.is_pressed {
-        let radius = get_radius(&wheel);
-        let selected_number = get_selected_number(&wheel, radius);
-        if selected_number != wheel.selected_number {
-            wheel.selected_number = selected_number;
-            wheel.slice_timer.reset();
+        InputKind::Release => {
+            if wheel.is_pressed {
+                wheel.is_pressed = false;
+
+                if let Some(selected_number) = wheel.selected_number {
+                    let (x, y) = wheel.cell;
+                    fill_number(&mut game, &mut timer, x, y, selected_number);
+                }
+            }
         }
     }
 }
