@@ -1,5 +1,5 @@
 use super::{fill_number, get_board_x_and_y, Board, InputKind};
-use crate::{constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer};
+use crate::{constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images};
 use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch};
 use std::{f32::consts::PI, num::NonZeroU8};
 
@@ -11,7 +11,7 @@ pub struct Wheel {
     cell: (u8, u8),
     start_position: Vec2,
     current_position: Vec2,
-    is_pressed: bool,
+    is_open: bool,
     spawn_timer: Stopwatch,
     selected_number: Option<NonZeroU8>,
     slice_timer: Stopwatch,
@@ -32,18 +32,18 @@ pub struct SliceHandles {
 }
 
 impl SliceHandles {
-    pub fn load(asset_server: &AssetServer) -> Self {
+    pub fn load(images: &Images) -> Self {
         Self {
             slices: [
-                asset_server.load("slice_1.png"),
-                asset_server.load("slice_2.png"),
-                asset_server.load("slice_3.png"),
-                asset_server.load("slice_4.png"),
-                asset_server.load("slice_5.png"),
-                asset_server.load("slice_6.png"),
-                asset_server.load("slice_7.png"),
-                asset_server.load("slice_8.png"),
-                asset_server.load("slice_9.png"),
+                images.slice_1.clone(),
+                images.slice_2.clone(),
+                images.slice_3.clone(),
+                images.slice_4.clone(),
+                images.slice_5.clone(),
+                images.slice_6.clone(),
+                images.slice_7.clone(),
+                images.slice_8.clone(),
+                images.slice_9.clone(),
             ],
         }
     }
@@ -53,12 +53,12 @@ impl SliceHandles {
     }
 }
 
-pub fn init_wheel(board: &mut EntityCommands, asset_server: &AssetServer, fonts: &Fonts) {
+pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
     board.with_children(|board| {
         board.spawn((
             Wheel::default(),
             SpriteBundle {
-                texture: asset_server.load("wheel.png"),
+                texture: images.wheel.clone(),
                 transform: Transform::from_2d_scale(0., 0.),
                 ..default()
             },
@@ -82,7 +82,7 @@ pub fn init_wheel(board: &mut EntityCommands, asset_server: &AssetServer, fonts:
             .spawn((
                 TopLabel,
                 SpriteBundle {
-                    texture: asset_server.load("top-label.png"),
+                    texture: images.top_label.clone(),
                     transform: Transform::from_2d_scale(0., 0.),
                     ..default()
                 },
@@ -136,22 +136,24 @@ pub fn on_wheel_input(
                     wheel.start_position = translation;
                     wheel.cell = (x, y);
                     wheel.spawn_timer.reset();
-                    wheel.is_pressed = true;
+                    wheel.is_open = true;
                     wheel.selected_number = None;
                 }
             }
         }
         InputKind::PressedMovement => {
-            let radius = get_radius(&wheel);
-            let selected_number = get_selected_number(&wheel, radius);
-            if selected_number != wheel.selected_number {
-                wheel.selected_number = selected_number;
-                wheel.slice_timer.reset();
+            if wheel.is_open {
+                let radius = get_radius(&wheel);
+                let selected_number = get_selected_number(&wheel, radius);
+                if selected_number != wheel.selected_number {
+                    wheel.selected_number = selected_number;
+                    wheel.slice_timer.reset();
+                }
             }
         }
         InputKind::Release => {
-            if wheel.is_pressed {
-                wheel.is_pressed = false;
+            if wheel.is_open {
+                wheel.is_open = false;
 
                 if let Some(selected_number) = wheel.selected_number {
                     let (x, y) = wheel.cell;
@@ -164,7 +166,7 @@ pub fn on_wheel_input(
 
 pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
     for mut wheel in &mut wheel {
-        if wheel.is_pressed {
+        if wheel.is_open {
             wheel.spawn_timer.tick(time.delta());
 
             if wheel.selected_number.is_some() && wheel.slice_timer.elapsed_secs() < 0.25 {
@@ -193,7 +195,7 @@ pub fn render_wheel(
         return;
     };
 
-    if !wheel.is_pressed {
+    if !wheel.is_open {
         *wheel_transform = Transform::from_2d_scale(0., 0.);
         *slice_transform = Transform::from_2d_scale(0., 0.);
         *top_label_transform = Transform::from_2d_scale(0., 0.);

@@ -6,7 +6,7 @@ mod mode_slider;
 mod wheel;
 
 use crate::sudoku::{self, get_x_and_y_from_pos, Game};
-use crate::{ui::*, Fonts, GameTimer, ScreenState, Settings};
+use crate::{ui::*, Fonts, GameTimer, ScreenState, Settings, Images};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
@@ -16,9 +16,10 @@ use highscore_screen::{highscore_button_actions, on_highscores_changed};
 use mode_slider::{slider_interaction, ModeState};
 use std::num::NonZeroU8;
 use std::time::Duration;
-use wheel::{on_wheel_input, on_wheel_timer, render_wheel, SliceHandles, Wheel};
+use wheel::{on_wheel_input, on_wheel_timer, render_wheel, Wheel};
 
 pub use highscore_screen::highscore_screen_setup;
+pub use wheel::SliceHandles;
 
 pub struct GamePlugin;
 
@@ -27,7 +28,6 @@ impl Plugin for GamePlugin {
         app.insert_resource(Selection::default())
             .init_resource::<SliceHandles>()
             .add_state::<ModeState>()
-            .add_startup_system(setup)
             .add_systems((
                 on_keyboard_input.run_if(in_state(ScreenState::Game)),
                 on_mouse_input.run_if(in_state(ScreenState::Game)),
@@ -48,10 +48,6 @@ impl Plugin for GamePlugin {
                 render_highlights,
             ));
     }
-}
-
-fn setup(mut slice_handles: ResMut<SliceHandles>, asset_server: Res<AssetServer>) {
-    *slice_handles = SliceHandles::load(&asset_server);
 }
 
 #[derive(Component)]
@@ -98,13 +94,13 @@ pub fn board_setup(
     game_screen: &mut EntityCommands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
-    asset_server: &AssetServer,
     fonts: &Fonts,
     game: &Game,
+    images: &Images,
     settings: &Settings,
 ) {
     init_game_ui(game_screen, meshes, materials, fonts, |parent| {
-        build_board(parent, asset_server, fonts, game, settings)
+        build_board(parent, fonts, game, images, settings)
     });
 }
 
@@ -276,46 +272,52 @@ fn on_input(
         return;
     };
 
-    let Some((x, y)) = get_board_x_and_y(board_position, position) else {
-        return;
-    };
+    let board_x_and_y = get_board_x_and_y(board_position, position);
 
     match mode.0 {
         ModeState::Normal => {
             if input_kind == InputKind::Press {
-                move_selection(&mut selection, x, y);
+                if let Some((x, y)) = board_x_and_y {
+                    move_selection(&mut selection, x, y);
+                }
             }
 
             on_wheel_input(wheel, game, timer, input_kind, position, board, settings);
         }
-        ModeState::Notes => match input_kind {
-            InputKind::Press => {
-                if game.current.has(x, y) {
-                    move_selection(&mut selection, x, y);
-                } else if let Some(n) = selection
-                    .selected_cell
-                    .and_then(|(x, y)| game.current.get(x, y))
-                {
-                    game.notes.toggle(x, y, n);
-                    selection.note_toggle = if game.notes.has(x, y, n) {
-                        NoteToggleMode::Set
-                    } else {
-                        NoteToggleMode::Unset
-                    };
-                }
-            }
-            InputKind::PressedMovement => {
-                if let Some(n) = selection
-                    .selected_cell
-                    .and_then(|(x, y)| game.current.get(x, y))
-                {
-                    match selection.note_toggle {
-                        NoteToggleMode::Set => game.notes.set(x, y, n),
-                        NoteToggleMode::Unset => game.notes.unset(x, y, n),
+        ModeState::Notes => {
+            let Some((x, y)) = board_x_and_y else {
+                return;
+            };
+
+            match input_kind {
+                InputKind::Press => {
+                    if game.current.has(x, y) {
+                        move_selection(&mut selection, x, y);
+                    } else if let Some(n) = selection
+                        .selected_cell
+                        .and_then(|(x, y)| game.current.get(x, y))
+                    {
+                        game.notes.toggle(x, y, n);
+                        selection.note_toggle = if game.notes.has(x, y, n) {
+                            NoteToggleMode::Set
+                        } else {
+                            NoteToggleMode::Unset
+                        };
                     }
                 }
+                InputKind::PressedMovement => {
+                    if let Some(n) = selection
+                        .selected_cell
+                        .and_then(|(x, y)| game.current.get(x, y))
+                    {
+                        match selection.note_toggle {
+                            NoteToggleMode::Set => game.notes.set(x, y, n),
+                            NoteToggleMode::Unset => game.notes.unset(x, y, n),
+                        }
+                    }
+                }
+                InputKind::Release => {}
             }
-            InputKind::Release => {}
         },
     }
 }

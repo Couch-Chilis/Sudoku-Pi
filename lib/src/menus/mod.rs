@@ -58,10 +58,10 @@ pub fn menu_setup(
     main_screen: &mut EntityCommands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
-    images: &Images,
-    settings: &Settings,
     fonts: &Fonts,
     game: &Game,
+    images: &Images,
+    settings: &Settings,
 ) {
     main_screen.with_children(|screen| {
         // Logo.

@@ -1,5 +1,5 @@
 use super::{board_numbers::fill_numbers, wheel::init_wheel};
-use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Settings};
+use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Settings, Images};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
@@ -7,9 +7,9 @@ pub struct Board;
 
 pub fn build_board(
     parent: &mut EntityCommands,
-    asset_server: &AssetServer,
     fonts: &Fonts,
     game: &Game,
+    images: &Images,
     settings: &Settings,
 ) {
     parent.with_children(|screen| {
@@ -29,7 +29,7 @@ pub fn build_board(
 
         fill_numbers(&mut board, fonts, game, settings);
 
-        init_wheel(&mut board, asset_server, fonts);
+        init_wheel(&mut board, images, fonts);
     });
 }
 

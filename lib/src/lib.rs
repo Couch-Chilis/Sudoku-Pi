@@ -18,7 +18,7 @@ use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::window::{WindowMode, WindowResized};
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
-use game::{board_setup, highscore_screen_setup};
+use game::{board_setup, highscore_screen_setup, SliceHandles};
 use highscores::Highscores;
 use menus::menu_setup;
 use settings::Settings;
@@ -35,6 +35,17 @@ const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Medium.t
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
 const LOGO: &[u8] = include_bytes!("../../assets/logo.png");
+const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
+const SLICE_2: &[u8] = include_bytes!("../../assets/slice_2.png");
+const SLICE_3: &[u8] = include_bytes!("../../assets/slice_3.png");
+const SLICE_4: &[u8] = include_bytes!("../../assets/slice_4.png");
+const SLICE_5: &[u8] = include_bytes!("../../assets/slice_5.png");
+const SLICE_6: &[u8] = include_bytes!("../../assets/slice_6.png");
+const SLICE_7: &[u8] = include_bytes!("../../assets/slice_7.png");
+const SLICE_8: &[u8] = include_bytes!("../../assets/slice_8.png");
+const SLICE_9: &[u8] = include_bytes!("../../assets/slice_9.png");
+const TOP_LABEL: &[u8] = include_bytes!("../../assets/top-label.png");
+const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 
 #[derive(Clone, Default, Resource)]
 pub struct Fonts {
@@ -48,6 +59,17 @@ pub struct Images {
     cog: Handle<Image>,
     cog_pressed: Handle<Image>,
     logo: Handle<Image>,
+    slice_1: Handle<Image>,
+    slice_2: Handle<Image>,
+    slice_3: Handle<Image>,
+    slice_4: Handle<Image>,
+    slice_5: Handle<Image>,
+    slice_6: Handle<Image>,
+    slice_7: Handle<Image>,
+    slice_8: Handle<Image>,
+    slice_9: Handle<Image>,
+    top_label: Handle<Image>,
+    wheel: Handle<Image>,
 }
 
 #[derive(Default, Resource)]
@@ -110,6 +132,7 @@ pub fn main() {
     let mut app = App::new();
     app.init_resource::<Fonts>()
         .init_resource::<Images>()
+        .init_resource::<SliceHandles>()
         .insert_resource(game)
         .insert_resource(timer)
         .insert_resource(Settings::load())
@@ -134,13 +157,19 @@ pub fn main() {
         .add_plugin(game::GamePlugin)
         .add_plugin(menus::MenuPlugin);
 
-    if cfg!(feature = "steam") {
-        use bevy_steamworks::*;
-        app.add_plugin(SteamworksPlugin::new(AppId(892884)));
-    }
+    add_steamworks_plugin(&mut app);
 
     app.run();
 }
+
+#[cfg(feature = "steam")]
+fn add_steamworks_plugin(app: &mut App) {
+    use bevy_steamworks::*;
+    app.add_plugin(SteamworksPlugin::new(AppId(892884)));
+}
+
+#[cfg(not(feature = "steam"))]
+fn add_steamworks_plugin(_app: &mut App) {}
 
 fn setup(
     mut commands: Commands,
@@ -148,7 +177,6 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    asset_server: Res<AssetServer>,
     settings: Res<Settings>,
     game: Res<Game>,
     highscores: Res<Highscores>,
@@ -165,6 +193,17 @@ fn setup(
         cog: images.add(load_png(COG)),
         cog_pressed: images.add(load_png(COG_PRESSED)),
         logo: images.add(load_png(LOGO)),
+        slice_1: images.add(load_png(SLICE_1)),
+        slice_2: images.add(load_png(SLICE_2)),
+        slice_3: images.add(load_png(SLICE_3)),
+        slice_4: images.add(load_png(SLICE_4)),
+        slice_5: images.add(load_png(SLICE_5)),
+        slice_6: images.add(load_png(SLICE_6)),
+        slice_7: images.add(load_png(SLICE_7)),
+        slice_8: images.add(load_png(SLICE_8)),
+        slice_9: images.add(load_png(SLICE_9)),
+        top_label: images.add(load_png(TOP_LABEL)),
+        wheel: images.add(load_png(WHEEL)),
     };
 
     let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu);
@@ -172,10 +211,10 @@ fn setup(
         &mut main_screen,
         &mut meshes,
         &mut materials,
-        &images,
-        &settings,
         &fonts,
         &game,
+        &images,
+        &settings,
     );
 
     let mut game_screen = spawn_screen(&mut commands, ScreenState::Game);
@@ -183,9 +222,9 @@ fn setup(
         &mut game_screen,
         &mut meshes,
         &mut materials,
-        &asset_server,
         &fonts,
         &game,
+        &images,
         &settings,
     );
 
@@ -209,6 +248,7 @@ fn setup(
         },
     ));
 
+    commands.insert_resource(SliceHandles::load(&images));
     commands.insert_resource(fonts);
     commands.insert_resource(images);
 }
