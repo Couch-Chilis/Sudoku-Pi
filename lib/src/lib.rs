@@ -146,7 +146,7 @@ pub fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
-                resolution: (480., 720.).into(),
+                resolution: (390., 845.).into(),
                 mode: get_initial_window_mode(),
                 ..default()
             }),
@@ -379,6 +379,11 @@ fn spawn_screen<'w, 's, 'a>(
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
         transform: Transform::from_2d_scale(100_000., 100_000.),
+        style: if screen == ScreenState::Game {
+            FlexContainerStyle::default().with_gap(Val::Auto)
+        } else {
+            FlexContainerStyle::default()
+        },
         ..default()
     };
 

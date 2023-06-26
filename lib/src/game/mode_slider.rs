@@ -26,12 +26,8 @@ pub fn build_mode_slider(
         parent
             .spawn(FlexBundle::new(
                 FlexContainerStyle::row().with_padding(Size::new(Val::None, Val::Percent(25.))),
-                FlexItemStyle {
-                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(9.)),
-                    flex_grow: 2.,
-                    margin: Size::all(Val::Vmin(4.5)),
-                    ..default()
-                },
+                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
+                    .with_margin(Size::all(Val::Vmin(4.5))),
             ))
             .with_children(|row| build_items(row, meshes, materials, fonts));
     });
@@ -71,9 +67,9 @@ fn build_items(
                 knob_container.spawn((
                     Toggle,
                     MaterialMesh2dBundle {
-                        mesh: meshes.add(shape::Circle::new(0.25).into()).into(),
+                        mesh: meshes.add(shape::Circle::new(0.21).into()).into(),
                         material: materials.add(ColorMaterial::from(COLOR_TOGGLE_ON)),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
+                        transform: Transform::from_translation(Vec3::new(0., 0., 3.)),
                         ..default()
                     },
                 ));

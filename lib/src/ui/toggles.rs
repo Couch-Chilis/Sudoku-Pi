@@ -39,8 +39,17 @@ impl<'a> ToggleBuilder<'a> {
             .with_children(|icon_container| {
                 icon_container.spawn(MaterialMesh2dBundle {
                     mesh: self.meshes.add(shape::Circle::new(0.3).into()).into(),
-                    material: self.materials.add(ColorMaterial::from(COLOR_MAIN_DARKEST)),
+                    material: self
+                        .materials
+                        .add(ColorMaterial::from(COLOR_BUTTON_BACKGROUND)),
                     transform: Transform::default_2d(),
+                    ..default()
+                });
+
+                icon_container.spawn(MaterialMesh2dBundle {
+                    mesh: self.meshes.add(shape::Circle::new(0.25).into()).into(),
+                    material: self.materials.add(ColorMaterial::from(Color::WHITE)),
+                    transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
                     ..default()
                 });
 
@@ -48,13 +57,13 @@ impl<'a> ToggleBuilder<'a> {
                     Toggle,
                     marker,
                     MaterialMesh2dBundle {
-                        mesh: self.meshes.add(shape::Circle::new(0.25).into()).into(),
+                        mesh: self.meshes.add(shape::Circle::new(0.21).into()).into(),
                         material: self.materials.add(ColorMaterial::from(if enabled {
                             COLOR_TOGGLE_ON
                         } else {
                             COLOR_TOGGLE_OFF
                         })),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
+                        transform: Transform::from_translation(Vec3::new(0., 0., 3.)),
                         ..default()
                     },
                 ));

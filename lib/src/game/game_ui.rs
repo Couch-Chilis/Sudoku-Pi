@@ -23,6 +23,10 @@ pub fn init_game_ui(
     fonts: &Fonts,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
+    game_screen.with_children(|screen| {
+        screen.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()));
+    });
+
     build_timer_row(game_screen, |timer_row| {
         build_timer(timer_row, fonts);
     });
@@ -40,13 +44,17 @@ pub fn init_game_ui(
     board_builder(game_screen);
 
     build_mode_slider(game_screen, meshes, materials, fonts);
+
+    game_screen.with_children(|screen| {
+        screen.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()));
+    });
 }
 
 fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut ChildBuilder)) {
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::from_item_style(
-                FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(13.))
+                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(13.))
                     .with_margin(Size::all(Val::Vmin(2.5))),
             ))
             .with_children(child_builder);
@@ -109,7 +117,7 @@ pub fn build_button_row(
         screen
             .spawn(FlexBundle::new(
                 FlexContainerStyle::row().with_gap(Val::Auto),
-                FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(9.))
+                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
                     .with_margin(Size::all(Val::Vmin(4.5))),
             ))
             .with_children(child_builder);

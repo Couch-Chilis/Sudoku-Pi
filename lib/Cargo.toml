@@ -5,7 +5,6 @@ edition = "2021"
 publish = false
 
 [lib]
-crate-type = ["staticlib", "rlib", "cdylib"]
 
 [features]
 android_shared_stdcxx = ["bevy/android_shared_stdcxx"]
