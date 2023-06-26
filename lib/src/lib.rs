@@ -118,6 +118,13 @@ pub struct ScreenInteraction {
     screens: SmallVec<[ScreenState; 4]>,
 }
 
+/// Helps compensate zooming that occurs on iPhone Mini.
+#[derive(Default, Resource)]
+pub struct ZoomFactor {
+    x: f32,
+    y: f32,
+}
+
 #[bevy_main]
 pub fn main() {
     let game = Game::load();
@@ -137,6 +144,7 @@ pub fn main() {
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
+        .insert_resource(ZoomFactor::default())
         .add_state::<ScreenState>()
         .add_startup_system(setup)
         .add_system(on_escape)
@@ -318,6 +326,7 @@ fn on_resize(
     mut commands: Commands,
     mut events: EventReader<WindowResized>,
     mut screens: Query<(&mut Screen, &mut Transform)>,
+    mut zoom_factor: ResMut<ZoomFactor>,
     current_screen: Res<State<ScreenState>>,
     animators: Query<Entity, With<Animator<Transform>>>,
 ) {
@@ -327,6 +336,19 @@ fn on_resize(
 
     for entity in &animators {
         commands.entity(entity).remove::<Animator<Transform>>();
+    }
+
+    if cfg!(target_os = "ios") {
+        if zoom_factor.x == 0.0 {
+            zoom_factor.x = 1.0;
+            zoom_factor.y = 1.0;
+        } else if let Some(screen) = screens.iter().next().map(|(screen, _)| screen) {
+            zoom_factor.x = width / screen.width;
+            zoom_factor.y = height / screen.height;
+        }
+    } else {
+        zoom_factor.x = 1.0;
+        zoom_factor.y = 1.0;
     }
 
     for (mut screen, mut transform) in &mut screens {

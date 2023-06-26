@@ -6,7 +6,7 @@ mod mode_slider;
 mod wheel;
 
 use crate::sudoku::{self, get_x_and_y_from_pos, Game};
-use crate::{ui::*, Fonts, GameTimer, ScreenState, Settings, Images};
+use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings, ZoomFactor};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
@@ -213,6 +213,7 @@ fn on_touch_input(
     board: Query<&ComputedPosition, With<Board>>,
     mode: Res<State<ModeState>>,
     settings: Res<Settings>,
+    zoom_factor: Res<ZoomFactor>,
 ) {
     if !touches.is_changed() {
         return;
@@ -230,7 +231,8 @@ fn on_touch_input(
                 return;
             };
 
-            touch_position.y = window.height() - touch_position.y;
+            touch_position.x *= zoom_factor.x;
+            touch_position.y = window.height() - touch_position.y * zoom_factor.y;
 
             (input_kind, touch_position)
         } else {
@@ -318,7 +320,7 @@ fn on_input(
                 }
                 InputKind::Release => {}
             }
-        },
+        }
     }
 }
 

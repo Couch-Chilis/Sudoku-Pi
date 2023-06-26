@@ -1,5 +1,5 @@
 use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
-use crate::{constants::*, utils::SpriteExt, ScreenState};
+use crate::{constants::*, utils::SpriteExt, ScreenState, ZoomFactor};
 use bevy::{prelude::*, window::PrimaryWindow};
 
 pub type InteractionEntity<'a> = (
@@ -174,6 +174,7 @@ pub fn touch_interaction(
     touches: Res<Touches>,
     screen: Res<State<ScreenState>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
+    zoom_factor: Res<ZoomFactor>,
 ) {
     if !touches.is_changed() {
         return;
@@ -187,7 +188,8 @@ pub fn touch_interaction(
         return;
     };
 
-    touch_position.y = window.height() - touch_position.y;
+    touch_position.x *= zoom_factor.x;
+    touch_position.y = window.height() - touch_position.y * zoom_factor.y;
 
     let selected_entity = interaction_query
         .iter()
