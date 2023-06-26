@@ -13,7 +13,7 @@ use board_builder::{build_board, Board};
 use board_numbers::*;
 use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
 use highscore_screen::{highscore_button_actions, on_highscores_changed};
-use mode_slider::{slider_interaction, ModeState};
+use mode_slider::{slider_mouse_interaction,slider_touch_interaction,  ModeState};
 use std::num::NonZeroU8;
 use std::time::Duration;
 use wheel::{on_wheel_input, on_wheel_timer, render_wheel, Wheel};
@@ -41,7 +41,8 @@ impl Plugin for GamePlugin {
                 on_wheel_timer.run_if(in_state(ScreenState::Game)),
                 button_actions.run_if(in_state(ScreenState::Game)),
                 highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
-                slider_interaction.run_if(in_state(ScreenState::Game)),
+                slider_mouse_interaction.run_if(in_state(ScreenState::Game)),
+                slider_touch_interaction.run_if(in_state(ScreenState::Game)),
                 render_numbers.run_if(in_state(ScreenState::Game)),
                 render_notes.run_if(in_state(ScreenState::Game)),
                 render_wheel.run_if(in_state(ScreenState::Game)),

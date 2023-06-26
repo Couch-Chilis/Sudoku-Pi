@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, Fonts};
+use crate::{constants::*, ui::*, Fonts, ZoomFactor};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*, window::PrimaryWindow};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
@@ -104,15 +104,15 @@ fn build_items(
     toggle_builder.build_with_marker(row, (), false);
 }
 
-pub fn slider_interaction(
-    mut commands: Commands,
+pub fn slider_mouse_interaction(
+    commands: Commands,
     slider_query: Query<&ComputedPosition, With<ModeSlider>>,
-    mut next_state: ResMut<NextState<ModeState>>,
+    next_state: ResMut<NextState<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    buttons: Res<Input<MouseButton>>,
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if !mouse_buttons.just_pressed(MouseButton::Left) {
+    if !buttons.pressed(MouseButton::Left) {
         return;
     }
 
@@ -120,11 +120,48 @@ pub fn slider_interaction(
         return;
     };
 
+    slider_interaction(commands, slider_query, next_state, knob_query, cursor_position)
+}
+
+pub fn slider_touch_interaction(
+    commands: Commands,
+    slider_query: Query<&ComputedPosition, With<ModeSlider>>,
+    next_state: ResMut<NextState<ModeState>>,
+    knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
+    touches: Res<Touches>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    zoom_factor: Res<ZoomFactor>,
+) {
+    if !touches.is_changed() {
+        return;
+    }
+
+    let Some(mut touch_position) = touches.first_pressed_position() else {
+        return;
+    };
+
+    let Ok(window) = window_query.get_single() else {
+        return;
+    };
+
+    touch_position.x *= zoom_factor.x;
+    touch_position.y = window.height() - touch_position.y * zoom_factor.y;
+
+    slider_interaction(commands, slider_query, next_state, knob_query, touch_position)
+}
+
+fn slider_interaction(
+    mut commands: Commands,
+    slider_query: Query<&ComputedPosition, With<ModeSlider>>,
+    mut next_state: ResMut<NextState<ModeState>>,
+    knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
+    position: Vec2,
+) {
     let Ok(slider_position) = slider_query.get_single() else {
         return;
     };
 
-    if !slider_position.contains(cursor_position) {
+    if !slider_position.contains(position) {
         return;
     }
 
@@ -132,7 +169,7 @@ pub fn slider_interaction(
         return;
     };
 
-    let mode = if cursor_position.x > slider_position.x + 0.5 * slider_position.width {
+    let mode = if position.x > slider_position.x + 0.5 * slider_position.width {
         ModeState::Notes
     } else {
         ModeState::Normal
@@ -143,7 +180,7 @@ pub fn slider_interaction(
         EaseFunction::QuadraticInOut,
         Duration::from_millis(100),
         TransformTranslateKnobLens {
-            start: (cursor_position.x - slider_position.x - 0.5 * knob_position.width)
+            start: (position.x - slider_position.x - 0.5 * knob_position.width)
                 / slider_position.width,
             end: match mode {
                 ModeState::Normal => 0.,
