@@ -217,13 +217,15 @@ fn on_pointer_input(
                     }
                 }
                 InputKind::PressedMovement => {
-                    if let Some(n) = selection
-                        .selected_cell
-                        .and_then(|(x, y)| game.current.get(x, y))
-                    {
-                        match selection.note_toggle {
-                            NoteToggleMode::Set => game.notes.set(x, y, n),
-                            NoteToggleMode::Unset => game.notes.unset(x, y, n),
+                    if !game.current.has(x, y) {
+                        if let Some(n) = selection
+                            .selected_cell
+                            .and_then(|(x, y)| game.current.get(x, y))
+                        {
+                            match selection.note_toggle {
+                                NoteToggleMode::Set => game.notes.set(x, y, n),
+                                NoteToggleMode::Unset => game.notes.unset(x, y, n),
+                            }
                         }
                     }
                 }
