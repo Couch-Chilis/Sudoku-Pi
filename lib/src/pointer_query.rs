@@ -47,7 +47,9 @@ impl<'w, 's, 'a> PointerQueryExt for MouseQuery<'w, 's, 'a> {
     }
 
     fn get_changed_input_with_position(&self) -> Option<(InputKind, Vec2)> {
-        if self.0.is_changed() {
+        let (buttons, _, window_changes) = self;
+
+        if buttons.is_changed() || !window_changes.is_empty() {
             self.get_input_with_position()
         } else {
             None
