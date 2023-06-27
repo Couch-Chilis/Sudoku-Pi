@@ -5,6 +5,7 @@ mod constants;
 mod game;
 mod highscores;
 mod menus;
+mod pointer_query;
 mod settings;
 #[cfg(feature = "steam")]
 mod steam;

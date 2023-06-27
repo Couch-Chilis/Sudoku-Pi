@@ -27,8 +27,7 @@ impl Plugin for UiPlugin {
             )
             .add_systems((
                 interaction::keyboard_interaction,
-                interaction::mouse_interaction,
-                interaction::touch_interaction,
+                interaction::pointer_interaction,
                 interaction::button_interaction,
             ));
     }

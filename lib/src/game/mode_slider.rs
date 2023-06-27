@@ -1,5 +1,5 @@
-use crate::{constants::*, ui::*, Fonts, ZoomFactor};
-use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*, window::PrimaryWindow};
+use crate::{constants::*, pointer_query::*, ui::*, Fonts};
+use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
 
@@ -104,59 +104,17 @@ fn build_items(
     toggle_builder.build_with_marker(row, (), false);
 }
 
-pub fn slider_mouse_interaction(
-    commands: Commands,
-    slider_query: Query<&ComputedPosition, With<ModeSlider>>,
-    next_state: ResMut<NextState<ModeState>>,
-    knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
-    buttons: Res<Input<MouseButton>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-) {
-    if !buttons.pressed(MouseButton::Left) {
-        return;
-    }
-
-    let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
-        return;
-    };
-
-    slider_interaction(commands, slider_query, next_state, knob_query, cursor_position)
-}
-
-pub fn slider_touch_interaction(
-    commands: Commands,
-    slider_query: Query<&ComputedPosition, With<ModeSlider>>,
-    next_state: ResMut<NextState<ModeState>>,
-    knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
-    touches: Res<Touches>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    zoom_factor: Res<ZoomFactor>,
-) {
-    if !touches.is_changed() {
-        return;
-    }
-
-    let Some(mut touch_position) = touches.first_pressed_position() else {
-        return;
-    };
-
-    let Ok(window) = window_query.get_single() else {
-        return;
-    };
-
-    touch_position.x *= zoom_factor.x;
-    touch_position.y = window.height() - touch_position.y * zoom_factor.y;
-
-    slider_interaction(commands, slider_query, next_state, knob_query, touch_position)
-}
-
-fn slider_interaction(
+pub fn slider_interaction(
     mut commands: Commands,
     slider_query: Query<&ComputedPosition, With<ModeSlider>>,
     mut next_state: ResMut<NextState<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
-    position: Vec2,
+    pointer_query: PointerQuery,
 ) {
+    let Some((_, position)) = pointer_query.get_changed_input_with_position() else {
+        return;
+    };
+
     let Ok(slider_position) = slider_query.get_single() else {
         return;
     };
