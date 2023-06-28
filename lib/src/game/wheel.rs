@@ -1,10 +1,13 @@
 use super::{fill_number, get_board_x_and_y, Board, InputKind};
-use crate::{constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images};
+use crate::{
+    constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images,
+};
 use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch};
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
 const WHEEL_SIZE: f32 = 400.;
+const WHEEL_Z: f32 = 10.;
 
 #[derive(Component, Default)]
 pub struct Wheel {
@@ -205,7 +208,7 @@ pub fn render_wheel(
     let radius = get_radius(wheel);
     let Vec2 { x: cx, y: cy } = get_wheel_center(wheel, radius);
 
-    wheel_transform.translation = Vec3::new(cx, cy, 10.);
+    wheel_transform.translation = Vec3::new(cx, cy, WHEEL_Z);
     wheel_transform.scale = Vec3::new(radius / WHEEL_SIZE, radius / WHEEL_SIZE, 1.);
 
     if let Some(n) = wheel.selected_number {
@@ -217,10 +220,10 @@ pub fn render_wheel(
         let scale = bounce * radius / WHEEL_SIZE;
 
         *slice_texture = slice_handles.for_number(n);
-        slice_transform.translation = Vec3::new(cx, cy, 11.);
+        slice_transform.translation = Vec3::new(cx, cy, WHEEL_Z + 1.);
         slice_transform.scale = Vec3::new(scale, scale, 1.);
 
-        top_label_transform.translation = Vec3::new(cx, cy + 0.66 * radius, 10.);
+        top_label_transform.translation = Vec3::new(cx, cy + 0.66 * radius, WHEEL_Z);
         top_label_transform.scale = Vec3::new(radius / WHEEL_SIZE, radius / WHEEL_SIZE, 1.);
 
         for mut top_label_text in &mut top_label_text {
