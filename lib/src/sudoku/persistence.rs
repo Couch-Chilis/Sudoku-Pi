@@ -20,7 +20,7 @@ impl Game {
     /// Saves the game to disk.
     ///
     /// This is called automatically on drop.
-    fn save(&self) {
+    pub fn save(&self) {
         let game_path = ensure_sudoku_dir().join("game.json");
 
         if self.current == Sudoku::default() || self.is_solved() {

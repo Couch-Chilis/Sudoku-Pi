@@ -16,7 +16,7 @@ mod utils;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
-use bevy::window::{WindowMode, WindowResized};
+use bevy::window::{WindowCloseRequested, WindowMode, WindowResized};
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup, SliceHandles};
@@ -151,8 +151,10 @@ pub fn main() {
         .add_system(on_escape)
         .add_system(on_resize)
         .add_system(on_screen_change)
-        .add_system(on_before_exit)
+        .add_system(on_window_close)
+        .add_system(on_before_exit.after(on_window_close))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
+            close_when_requested: false,
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
                 resolution: (390., 845.).into(),
@@ -272,6 +274,7 @@ fn on_before_exit(
 ) {
     if !exit_events.is_empty() {
         game.elapsed_secs = game_timer.stopwatch.elapsed_secs();
+        game.save();
     }
 }
 
@@ -339,11 +342,8 @@ fn on_resize(
         commands.entity(entity).remove::<Animator<Transform>>();
     }
 
-    if cfg!(target_os = "ios") {
-        if zoom_factor.x == 0.0 {
-            zoom_factor.x = 1.0;
-            zoom_factor.y = 1.0;
-        } else if let Some(screen) = screens.iter().next().map(|(screen, _)| screen) {
+    if cfg!(target_os = "ios") && zoom_factor.x != 0.0 {
+        if let Some(screen) = screens.iter().next().map(|(screen, _)| screen) {
             zoom_factor.x = width / screen.width;
             zoom_factor.y = height / screen.height;
         }
@@ -363,6 +363,15 @@ fn on_resize(
             1.,
         );
         transform.scale = Vec3::new(*width, *height, 1.);
+    }
+}
+
+fn on_window_close(
+    mut app_exit_events: EventWriter<AppExit>,
+    window_close_events: EventReader<WindowCloseRequested>,
+) {
+    if !window_close_events.is_empty() {
+        app_exit_events.send(AppExit);
     }
 }
 
