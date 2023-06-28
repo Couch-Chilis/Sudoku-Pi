@@ -31,7 +31,7 @@ use utils::{SpriteExt, TransformExt};
 
 const BOLD_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Bold.ttf");
 const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Medium.ttf");
-//const REGULAR_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Regular.ttf");
+const LIGHT_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Light.ttf");
 
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
@@ -52,7 +52,7 @@ const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 pub struct Fonts {
     bold: Handle<Font>,
     medium: Handle<Font>,
-    //regular: Handle<Font>,
+    light: Handle<Font>,
 }
 
 #[derive(Clone, Default, Resource)]
@@ -197,7 +197,7 @@ fn setup(
     let fonts = Fonts {
         bold: fonts.add(Font::try_from_bytes(Vec::from(BOLD_FONT)).unwrap()),
         medium: fonts.add(Font::try_from_bytes(Vec::from(MEDIUM_FONT)).unwrap()),
-        //regular: fonts.add(Font::try_from_bytes(Vec::from(REGULAR_FONT)).unwrap()),
+        light: fonts.add(Font::try_from_bytes(Vec::from(LIGHT_FONT)).unwrap()),
     };
 
     let images = Images {

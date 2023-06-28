@@ -43,7 +43,11 @@ fn spawn_cell(
     let n = game.current.get(x, y);
 
     let number_style = TextStyle {
-        font: fonts.medium.clone(),
+        font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
+            fonts.light.clone()
+        } else {
+            fonts.bold.clone()
+        },
         font_size: 70.,
         color: if n.is_some() {
             get_number_color(game, settings, x, y)
@@ -108,6 +112,7 @@ fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle 
 
 pub(super) fn render_numbers(
     mut numbers: Query<(&Number, &mut Text)>,
+    fonts: Res<Fonts>,
     game: Res<Game>,
     settings: Res<Settings>,
 ) {
@@ -118,6 +123,11 @@ pub(super) fn render_numbers(
     for (Number(x, y), mut text) in &mut numbers {
         if let Some(n) = game.current.get(*x, *y) {
             text.sections[0].value = n.to_string();
+            text.sections[0].style.font = if game.is_completed(n) {
+                fonts.light.clone()
+            } else {
+                fonts.bold.clone()
+            };
             text.sections[0].style.color = get_number_color(&game, &settings, *x, *y);
         } else {
             text.sections[0].style.color = Color::NONE;

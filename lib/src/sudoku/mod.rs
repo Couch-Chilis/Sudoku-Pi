@@ -34,6 +34,19 @@ impl Game {
         self.start == Sudoku::default()
     }
 
+    /// Returns whether all the instances of a given number have been filled in.
+    pub fn is_completed(&self, n: NonZeroU8) -> bool {
+        for pos in 0..81 {
+            if let Some(solution_n) = self.solution.get_by_pos(pos) {
+                if solution_n == n && self.current.get_by_pos(pos) != Some(n) {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
     /// Returns whether the game is (correctly) solved.
     pub fn is_solved(&self) -> bool {
         !self.is_default() && self.current == self.solution
