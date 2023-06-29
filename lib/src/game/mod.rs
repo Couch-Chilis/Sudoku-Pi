@@ -43,7 +43,7 @@ impl Plugin for GamePlugin {
                 highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
                 slider_interaction.run_if(in_state(ScreenState::Game)),
                 render_numbers,
-                render_notes.run_if(in_state(ScreenState::Game)),
+                render_notes,
                 render_wheel,
                 render_highlights,
             ));
