@@ -13,6 +13,7 @@ pub(super) enum HighlightKind {
     InRange,
     Hint,
     Note,
+    Mistake,
 }
 
 pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, settings: &Settings) {
@@ -156,17 +157,24 @@ fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
     }
 }
 
-pub(super) fn render_notes(mut notes: Query<(&Note, &mut Text)>, game: Res<Game>) {
-    if !game.is_changed() {
+pub(super) fn render_notes(
+    mut notes: Query<(&Note, &mut Text)>,
+    game: Res<Game>,
+    settings: Res<Settings>,
+) {
+    if !game.is_changed() && !settings.is_changed() {
         return;
     }
 
-    for (Note(x, y, n), mut text) in &mut notes {
-        text.sections[0].style.color = if game.notes.has(*x, *y, *n) && !game.current.has(*x, *y) {
-            Color::BLACK
-        } else {
-            Color::NONE
-        };
+    for (&Note(x, y, n), mut text) in &mut notes {
+        text.sections[0].style.color =
+            if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
+                COLOR_MAIN_POP_DARK
+            } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
+                Color::BLACK
+            } else {
+                Color::NONE
+            };
     }
 }
 
@@ -193,10 +201,12 @@ pub(super) fn render_highlights(
 
         let selected_cell = game.current.get_by_pos(selected_pos);
         if let Some(n) = selected_cell {
-            // Find all the cells with notes containing the same number.
+            // Find all the cells with notes or mistakes containing the same number.
             for (pos, highlight) in highlights.iter_mut().enumerate() {
                 let (x, y) = get_x_and_y_from_pos(pos);
-                if game.notes.has(x, y, n) {
+                if settings.show_mistakes && game.mistakes.has(x, y, n) {
+                    *highlight = Some(HighlightKind::Mistake);
+                } else if game.notes.has(x, y, n) {
                     *highlight = Some(HighlightKind::Note);
                 }
             }
@@ -238,7 +248,7 @@ pub(super) fn render_highlights(
             Some(HighlightKind::SameNumber) => Color::rgba(0.9, 0.8, 0.0, 0.5),
             Some(HighlightKind::InRange) => Color::rgba(0.9, 0.8, 0.0, 0.2),
             Some(HighlightKind::Hint) => COLOR_HINT,
-            None | Some(HighlightKind::Note) => Color::NONE,
+            None | Some(HighlightKind::Note) | Some(HighlightKind::Mistake) => Color::NONE,
         };
         *sprite = Sprite::from_color(color);
     }
@@ -254,6 +264,7 @@ pub(super) fn render_highlights(
         };
         let color = match highlight_kind {
             Some(HighlightKind::Note) => Color::rgba(0.9, 0.8, 0.0, 0.5),
+            Some(HighlightKind::Mistake) => COLOR_MAIN_POP_DARK.with_a(0.5),
             _ => Color::NONE,
         };
         *sprite = Sprite::from_color(color);

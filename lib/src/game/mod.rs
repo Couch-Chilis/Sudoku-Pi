@@ -6,7 +6,7 @@ mod mode_slider;
 mod wheel;
 
 use crate::pointer_query::*;
-use crate::sudoku::{self, get_x_and_y_from_pos, Game};
+use crate::sudoku::{self, get_x_and_y_from_pos, Game, SetNumberOptions};
 use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -108,6 +108,7 @@ fn on_keyboard_input(
     mut game: ResMut<Game>,
     mut timer: ResMut<GameTimer>,
     mut selection: ResMut<Selection>,
+    settings: Res<Settings>,
     keys: Res<Input<KeyCode>>,
 ) {
     for key in keys.get_just_pressed() {
@@ -118,17 +119,17 @@ fn on_keyboard_input(
             Down => move_selection_relative(&mut selection, 0, 1),
             Left => move_selection_relative(&mut selection, -1, 0),
 
-            Key1 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 1),
-            Key2 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 2),
-            Key3 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 3),
-            Key4 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 4),
-            Key5 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 5),
-            Key6 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 6),
-            Key7 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 7),
-            Key8 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 8),
-            Key9 => handle_number_key(&mut game, &mut timer, &mut selection, &keys, 9),
+            Key1 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 1),
+            Key2 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 2),
+            Key3 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 3),
+            Key4 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 4),
+            Key5 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 5),
+            Key6 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 6),
+            Key7 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 7),
+            Key8 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 8),
+            Key9 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 9),
 
-            Slash => give_hint(&mut game, &mut timer, &mut selection),
+            Slash => give_hint(&mut game, &mut timer, &mut selection, &settings),
 
             Back | Delete => clear_selection(&mut game, &selection),
             _ => {}
@@ -153,6 +154,7 @@ fn handle_number_key(
     game: &mut Game,
     timer: &mut GameTimer,
     selection: &mut Selection,
+    settings: &Settings,
     keys: &Input<KeyCode>,
     n: u8,
 ) {
@@ -161,7 +163,7 @@ fn handle_number_key(
     if keys.pressed(KeyCode::LAlt) || keys.pressed(KeyCode::RAlt) {
         toggle_note(game, selection, n);
     } else {
-        fill_selected_number(game, timer, selection, n);
+        fill_selected_number(game, timer, selection, settings, n);
     }
 }
 
@@ -245,9 +247,26 @@ fn clear_selection(game: &mut Game, selection: &Selection) {
     }
 }
 
-fn fill_number(game: &mut Game, timer: &mut GameTimer, x: u8, y: u8, n: NonZeroU8) {
+fn fill_number(
+    game: &mut Game,
+    timer: &mut GameTimer,
+    settings: &Settings,
+    is_hint: bool,
+    x: u8,
+    y: u8,
+    n: NonZeroU8,
+) {
     let elapsed_secs = timer.stopwatch.elapsed_secs();
-    let new_elapsed_secs = game.set(x, y, n, elapsed_secs);
+    let new_elapsed_secs = game.set(
+        x,
+        y,
+        n,
+        SetNumberOptions {
+            elapsed_secs,
+            is_hint,
+            show_mistakes: settings.show_mistakes,
+        },
+    );
     if new_elapsed_secs != elapsed_secs {
         timer
             .stopwatch
@@ -259,10 +278,11 @@ fn fill_selected_number(
     game: &mut Game,
     timer: &mut GameTimer,
     selection: &mut Selection,
+    settings: &Settings,
     n: NonZeroU8,
 ) {
     if let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) {
-        fill_number(game, timer, x, y, n);
+        fill_number(game, timer, settings, false, x, y, n);
 
         if selection.hint == Some((x, y)) {
             selection.hint = None;
@@ -304,22 +324,28 @@ fn button_actions(
     mut timer: ResMut<GameTimer>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut selection: ResMut<Selection>,
+    settings: Res<Settings>,
     query: Query<(&Interaction, &UiButtonAction), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, action) in &query {
         if *interaction == Interaction::Pressed {
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
-                UiButtonAction::Hint => give_hint(&mut game, &mut timer, &mut selection),
+                UiButtonAction::Hint => give_hint(&mut game, &mut timer, &mut selection, &settings),
             }
         }
     }
 }
 
-fn give_hint(game: &mut Game, timer: &mut GameTimer, selection: &mut Selection) {
+fn give_hint(
+    game: &mut Game,
+    timer: &mut GameTimer,
+    selection: &mut Selection,
+    settings: &Settings,
+) {
     if let Some((x, y)) = selection.hint {
         if let Some(n) = game.solution.get(x, y) {
-            fill_number(game, timer, x, y, n);
+            fill_number(game, timer, settings, true, x, y, n);
             selection.hint = None;
         }
     } else if let Some(sudoku::Hint { x, y }) = game.get_hint() {

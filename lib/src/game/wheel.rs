@@ -165,7 +165,15 @@ pub fn on_wheel_input(
 
                 if let Some(selected_number) = wheel.selected_number {
                     let (x, y) = wheel.cell;
-                    fill_number(&mut game, &mut timer, x, y, selected_number);
+                    fill_number(
+                        &mut game,
+                        &mut timer,
+                        &settings,
+                        false,
+                        x,
+                        y,
+                        selected_number,
+                    );
                 }
             }
         }
