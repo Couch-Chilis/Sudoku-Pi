@@ -19,6 +19,7 @@ use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::window::{WindowCloseRequested, WindowMode, WindowResized};
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
+use bevy::winit::WindowDestroyed;
 use game::{board_setup, highscore_screen_setup, SliceHandles};
 use highscores::Highscores;
 use menus::menu_setup;
@@ -160,13 +161,14 @@ fn run_with_zoom_factor(zoom_factor: ZoomFactor) {
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
         .insert_resource(zoom_factor)
+        .add_event::<WindowDestroyed>()
         .add_state::<ScreenState>()
         .add_startup_system(setup)
         .add_system(on_escape)
         .add_system(on_resize)
         .add_system(on_screen_change)
         .add_system(on_window_close)
-        .add_system(on_before_exit.after(on_window_close))
+        .add_system(on_exit.after(on_window_close))
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             close_when_requested: false,
             primary_window: Some(Window {
@@ -281,12 +283,14 @@ fn setup(
 // Synchronize the timer to the game state right before the game exits.
 // We don't keep the timer in the game state updated all the time, because it
 // would trigger full rerenders of the board every frame.
-fn on_before_exit(
+fn on_exit(
     mut game: ResMut<Game>,
     game_timer: Res<GameTimer>,
-    exit_events: EventReader<AppExit>,
+    app_exit_events: EventReader<AppExit>,
+    destroyed_events: EventReader<WindowDestroyed>,
 ) {
-    if !exit_events.is_empty() {
+    if !app_exit_events.is_empty() || !destroyed_events.is_empty() {
+        println!("Saving before exit");
         game.elapsed_secs = game_timer.stopwatch.elapsed_secs();
         game.save();
     }
