@@ -36,11 +36,10 @@ impl Settings {
     /// Saves settings to disk.
     ///
     /// This is called automatically on drop.
-    fn save(&self) {
+    pub fn save(&self) {
         self.to_json()
             .and_then(|json| {
-                fs::write(ensure_sudoku_dir().join("settings.json"), json)
-                    .context("Can't write to file")
+                fs::write(ensure_sudoku_dir().join("settings.json"), json).map_err(anyhow::Error::from)
             })
             .unwrap_or_else(|err| println!("Can't save settings: {err}"));
     }
@@ -53,11 +52,5 @@ impl Settings {
     /// Parses settings from JSON.
     fn from_json(bytes: &[u8]) -> Result<Self, anyhow::Error> {
         serde_json::from_slice(bytes).map_err(anyhow::Error::from)
-    }
-}
-
-impl Drop for Settings {
-    fn drop(&mut self) {
-        self.save()
     }
 }

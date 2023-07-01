@@ -64,6 +64,8 @@ pub fn settings_toggle_actions(
                     settings.show_mistakes = !settings.show_mistakes;
                 }
             }
+
+            settings.save();
         }
     }
 }
