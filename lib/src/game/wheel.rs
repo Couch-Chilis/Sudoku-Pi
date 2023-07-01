@@ -148,7 +148,12 @@ pub fn on_wheel_input(
             if wheel.is_open {
                 let radius = get_radius(&wheel);
                 let selected_number = get_selected_number(&wheel, radius);
-                if selected_number != wheel.selected_number {
+                let may_select_number = settings.allow_invalid_wheel_numbers
+                    || match selected_number {
+                        Some(n) => game.current.may_set(wheel.cell.0, wheel.cell.1, n),
+                        None => true, // It should always be allowed to deselect.
+                    };
+                if may_select_number && selected_number != wheel.selected_number {
                     wheel.selected_number = selected_number;
                     wheel.slice_timer.reset();
                 }

@@ -7,6 +7,9 @@ use std::fs;
 #[derive(Deserialize, Resource, Serialize)]
 pub struct Settings {
     #[serde(default)]
+    pub allow_invalid_wheel_numbers: bool,
+
+    #[serde(default)]
     pub highlight_selection_lines: bool,
 
     #[serde(default)]
@@ -16,7 +19,8 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            highlight_selection_lines: false,
+            allow_invalid_wheel_numbers: true,
+            highlight_selection_lines: true,
             show_mistakes: true,
         }
     }

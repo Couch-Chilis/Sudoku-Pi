@@ -3,6 +3,7 @@ use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
 pub enum SettingsToggle {
+    AllowInvalidWheelNumbers,
     HighlightSelectionLines,
     ShowMistakes,
 }
@@ -10,6 +11,7 @@ pub enum SettingsToggle {
 impl SettingsToggle {
     pub fn is_enabled(&self, settings: &Settings) -> bool {
         match self {
+            SettingsToggle::AllowInvalidWheelNumbers => settings.allow_invalid_wheel_numbers,
             SettingsToggle::HighlightSelectionLines => settings.highlight_selection_lines,
             SettingsToggle::ShowMistakes => settings.show_mistakes,
         }

@@ -25,4 +25,4 @@ sudoku-lib = { path = "lib" }
 #bevy_tweening = { path = "../bevy_tweening" }
 #bevy-steamworks = { path = "../bevy-steamworks" }
 bevy_winit = { path = "bevy_winit" }
-winit = { path = "../winit" }
+#winit = { path = "../winit" }
