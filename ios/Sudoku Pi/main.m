@@ -1,8 +1,12 @@
 @import UIKit;
 
-void main_rs(void);
+void run_with_scales(double, double);
 
 int main(int argc, char *argv[]) {
-    main_rs();
+    UIScreen *screen = [UIScreen mainScreen];
+    CGFloat scale = screen.scale;
+    CGFloat nativeScale = screen.nativeScale;
+    
+    run_with_scales(scale, nativeScale);
     return 0;
 }

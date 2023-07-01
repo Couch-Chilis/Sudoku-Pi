@@ -126,8 +126,22 @@ pub struct ZoomFactor {
     y: f32,
 }
 
-#[bevy_main]
 pub fn main() {
+    run_with_zoom_factor(ZoomFactor::default())
+}
+
+#[no_mangle]
+#[cfg(target_os = "ios")]
+extern "C" fn run_with_scales(scale: f64, native_scale: f64) {
+    println!("Running with scales {scale} / {native_scale}");
+    let scale = (scale / native_scale) as f32;
+    run_with_zoom_factor(ZoomFactor {
+        x: scale,
+        y: scale
+    })
+}
+
+fn run_with_zoom_factor(zoom_factor: ZoomFactor) {
     let game = Game::load();
 
     let mut timer = GameTimer::default();
@@ -145,7 +159,7 @@ pub fn main() {
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
-        .insert_resource(ZoomFactor::default())
+        .insert_resource(zoom_factor)
         .add_state::<ScreenState>()
         .add_startup_system(setup)
         .add_system(on_escape)
@@ -330,7 +344,6 @@ fn on_resize(
     mut commands: Commands,
     mut events: EventReader<WindowResized>,
     mut screens: Query<(&mut Screen, &mut Transform)>,
-    mut zoom_factor: ResMut<ZoomFactor>,
     current_screen: Res<State<ScreenState>>,
     animators: Query<Entity, With<Animator<Transform>>>,
 ) {
@@ -340,16 +353,6 @@ fn on_resize(
 
     for entity in &animators {
         commands.entity(entity).remove::<Animator<Transform>>();
-    }
-
-    if cfg!(target_os = "ios") && zoom_factor.x != 0.0 {
-        if let Some(screen) = screens.iter().next().map(|(screen, _)| screen) {
-            zoom_factor.x = width / screen.width;
-            zoom_factor.y = height / screen.height;
-        }
-    } else {
-        zoom_factor.x = 1.0;
-        zoom_factor.y = 1.0;
     }
 
     for (mut screen, mut transform) in &mut screens {
