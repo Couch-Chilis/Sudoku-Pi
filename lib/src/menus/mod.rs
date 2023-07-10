@@ -34,22 +34,25 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(
-            difficulty_screen_button_actions.run_if(in_state(ScreenState::SelectDifficulty)),
-        )
-        .add_system(main_menu_button_actions.run_if(in_state(ScreenState::MainMenu)))
-        .add_system(settings_screen_button_actions.run_if(in_state(ScreenState::Settings)))
-        .add_system(settings_toggle_actions.run_if(in_state(ScreenState::Settings)))
-        .add_system(settings_icon_interaction.run_if(in_main_menu))
-        .add_system(menu_button_actions.run_if(in_main_menu))
-        .add_system(on_setting_change)
-        .add_system(on_screen_change.before(LayoutSystem::ApplyLayout));
+        app.add_systems(
+            Update,
+            (
+                difficulty_screen_button_actions.run_if(in_state(ScreenState::SelectDifficulty)),
+                main_menu_button_actions.run_if(in_state(ScreenState::MainMenu)),
+                settings_screen_button_actions.run_if(in_state(ScreenState::Settings)),
+                settings_toggle_actions.run_if(in_state(ScreenState::Settings)),
+                settings_icon_interaction.run_if(in_main_menu),
+                menu_button_actions.run_if(in_main_menu),
+                on_setting_change,
+                on_screen_change.before(LayoutSystem::ApplyLayout),
+            ),
+        );
     }
 }
 
 fn in_main_menu(state: Res<State<ScreenState>>) -> bool {
     matches!(
-        state.0,
+        state.get(),
         ScreenState::MainMenu | ScreenState::SelectDifficulty | ScreenState::Settings
     )
 }
@@ -187,7 +190,7 @@ fn on_screen_change(
     }
 
     use ScreenState::*;
-    if screen_state.0 == MainMenu {
+    if screen_state.get() == &MainMenu {
         // Respawn buttons when going back to main screen, because the
         // Continue button may have (dis)appeared.
         for (container_entity, children, screen_interaction) in &button_containers {
@@ -202,7 +205,7 @@ fn on_screen_change(
         }
     }
 
-    let new_rotation = match screen_state.0 {
+    let new_rotation = match screen_state.get() {
         MainMenu | Game => 0.,
         SelectDifficulty => 0.5 * PI,
         Settings => -0.5 * PI,
@@ -216,7 +219,7 @@ fn on_screen_change(
             continue;
         }
 
-        let animator = match screen_state.0 {
+        let animator = match screen_state.get() {
             // When going from the difficulty selection to the game, we just
             // reset the transform without animation so everything is back to
             // the starting position when going out of the game.
@@ -276,7 +279,7 @@ fn menu_button_actions(
         if *interaction == Interaction::Pressed {
             use MenuButtonAction::*;
             match action {
-                Settings => screen_state.set(if current_state.0 == ScreenState::Settings {
+                Settings => screen_state.set(if current_state.get() == &ScreenState::Settings {
                     ScreenState::MainMenu
                 } else {
                     ScreenState::Settings

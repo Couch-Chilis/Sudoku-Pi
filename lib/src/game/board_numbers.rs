@@ -166,7 +166,7 @@ pub(super) fn render_highlights(
         return;
     }
 
-    if screen.0 != ScreenState::Game && screen.0 != ScreenState::Highscores {
+    if screen.get() != &ScreenState::Game && screen.get() != &ScreenState::Highscores {
         return;
     }
 

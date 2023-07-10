@@ -138,11 +138,11 @@ pub fn main() {
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
         .add_state::<ScreenState>()
-        .add_startup_system(setup)
-        .add_system(on_escape)
-        .add_system(on_resize)
-        .add_system(on_screen_change)
-        .add_system(on_before_exit)
+        .add_systems(Startup, setup)
+        .add_systems(
+            Update,
+            (on_escape, on_resize, on_screen_change, on_before_exit),
+        )
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
@@ -152,10 +152,12 @@ pub fn main() {
             }),
             ..default()
         }))
-        .add_plugin(TweeningPlugin)
-        .add_plugin(UiPlugin)
-        .add_plugin(game::GamePlugin)
-        .add_plugin(menus::MenuPlugin);
+        .add_plugins((
+            TweeningPlugin,
+            UiPlugin,
+            game::GamePlugin,
+            menus::MenuPlugin,
+        ));
 
     add_steamworks_plugin(&mut app);
 
@@ -165,7 +167,7 @@ pub fn main() {
 #[cfg(feature = "steam")]
 fn add_steamworks_plugin(app: &mut App) {
     use bevy_steamworks::*;
-    app.add_plugin(SteamworksPlugin::new(AppId(892884)));
+    app.add_plugins(SteamworksPlugin::new(AppId(892884)));
 }
 
 #[cfg(not(feature = "steam"))]
@@ -273,7 +275,7 @@ fn on_escape(
     mut app_exit_events: EventWriter<AppExit>,
 ) {
     if input.just_pressed(KeyCode::Escape) {
-        if current_state.0 == ScreenState::MainMenu {
+        if current_state.get() == &ScreenState::MainMenu {
             app_exit_events.send(AppExit);
         } else {
             next_state.set(ScreenState::MainMenu);
@@ -290,12 +292,12 @@ fn on_screen_change(
         return;
     }
 
-    let (offset_x, offset_y) = get_tile_offset_for_screen(screen_state.0);
+    let (offset_x, offset_y) = get_tile_offset_for_screen(*screen_state.get());
 
     for (entity, screen, transform) in &screens {
         let tween = Tween::new(
             EaseFunction::QuadraticInOut,
-            Duration::from_millis(if screen_state.0 == ScreenState::Highscores {
+            Duration::from_millis(if screen_state.get() == &ScreenState::Highscores {
                 2000
             } else {
                 200
@@ -333,7 +335,7 @@ fn on_resize(
         screen.width = *width;
         screen.height = *height;
 
-        let (offset_x, offset_y) = get_tile_offset_for_screen(current_screen.0);
+        let (offset_x, offset_y) = get_tile_offset_for_screen(*current_screen.get());
         transform.translation = Vec3::new(
             width * (screen.tile_x - offset_x),
             height * (screen.tile_y - offset_y),

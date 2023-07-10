@@ -20,16 +20,25 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_set(LayoutSystem::ApplyLayout.before(TransformSystem::TransformPropagate))
-            .add_system(layout::layout_system.in_set(LayoutSystem::ApplyLayout))
-            .add_system(
+        app.configure_set(
+            PostUpdate,
+            LayoutSystem::ApplyLayout.before(TransformSystem::TransformPropagate),
+        )
+        .add_systems(
+            PostUpdate,
+            (
+                layout::layout_system.in_set(LayoutSystem::ApplyLayout),
                 component_animator_system::<FlexItemStyle>.before(LayoutSystem::ApplyLayout),
-            )
-            .add_systems((
+            ),
+        )
+        .add_systems(
+            Update,
+            (
                 interaction::keyboard_interaction,
                 interaction::mouse_interaction,
                 interaction::touch_interaction,
                 interaction::button_interaction,
-            ));
+            ),
+        );
     }
 }

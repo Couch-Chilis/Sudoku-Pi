@@ -23,15 +23,15 @@ pub fn keyboard_interaction(
     screen: Res<State<ScreenState>>,
     keys: Res<Input<KeyCode>>,
 ) {
-    if screen.0 == ScreenState::Game {
+    if screen.get() == &ScreenState::Game {
         return; // Game screen has its own controls.
     }
 
     for key in keys.get_just_pressed() {
         use KeyCode::*;
         match key {
-            Up | Right | Down | Left => move_selection(&mut interaction_query, &screen.0, *key),
-            Return => confirm_selection(&mut interaction_query, &screen.0),
+            Up | Right | Down | Left => move_selection(&mut interaction_query, screen.get(), *key),
+            Return => confirm_selection(&mut interaction_query, screen.get()),
             _ => {}
         }
     }
@@ -139,7 +139,7 @@ pub fn mouse_interaction(
     let selected_entity = interaction_query
         .iter()
         .find(|(_, _, computed_position, computed_visibility)| {
-            computed_position.screens.contains(&screen.0)
+            computed_position.screens.contains(screen.get())
                 && computed_visibility.is_visible()
                 && computed_position.contains(cursor_position)
         })
@@ -154,7 +154,7 @@ pub fn mouse_interaction(
                     } else {
                         Interaction::Selected
                     }
-                } else if computed_position.screens.contains(&screen.0) {
+                } else if computed_position.screens.contains(screen.get()) {
                     Interaction::None
                 } else {
                     interaction.clone()
@@ -192,7 +192,7 @@ pub fn touch_interaction(
     let selected_entity = interaction_query
         .iter()
         .find(|(_, _, computed_position, computed_visibility)| {
-            computed_position.screens.contains(&screen.0)
+            computed_position.screens.contains(screen.get())
                 && computed_visibility.is_visible()
                 && computed_position.contains(touch_position)
         })
@@ -207,7 +207,7 @@ pub fn touch_interaction(
                     } else {
                         Interaction::Selected
                     }
-                } else if computed_position.screens.contains(&screen.0) {
+                } else if computed_position.screens.contains(screen.get()) {
                     Interaction::None
                 } else {
                     interaction.clone()

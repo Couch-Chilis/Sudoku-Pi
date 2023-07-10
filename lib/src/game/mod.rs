@@ -6,7 +6,7 @@ mod mode_slider;
 mod wheel;
 
 use crate::sudoku::{self, get_x_and_y_from_pos, Game};
-use crate::{ui::*, Fonts, GameTimer, ScreenState, Settings, Images};
+use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::{prelude::*, window::PrimaryWindow};
 use board_builder::{build_board, Board};
@@ -28,25 +28,31 @@ impl Plugin for GamePlugin {
         app.insert_resource(Selection::default())
             .init_resource::<SliceHandles>()
             .add_state::<ModeState>()
-            .add_systems((
-                on_keyboard_input.run_if(in_state(ScreenState::Game)),
-                on_mouse_input.run_if(in_state(ScreenState::Game)),
-                on_touch_input.run_if(in_state(ScreenState::Game)),
-                on_score_changed.run_if(in_state(ScreenState::Game)),
-                on_highscores_changed,
-                on_time_changed,
-                on_timer,
-            ))
-            .add_systems((
-                on_wheel_timer.run_if(in_state(ScreenState::Game)),
-                button_actions.run_if(in_state(ScreenState::Game)),
-                highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
-                slider_interaction.run_if(in_state(ScreenState::Game)),
-                render_numbers.run_if(in_state(ScreenState::Game)),
-                render_notes.run_if(in_state(ScreenState::Game)),
-                render_wheel.run_if(in_state(ScreenState::Game)),
-                render_highlights,
-            ));
+            .add_systems(
+                Update,
+                (
+                    on_keyboard_input.run_if(in_state(ScreenState::Game)),
+                    on_mouse_input.run_if(in_state(ScreenState::Game)),
+                    on_touch_input.run_if(in_state(ScreenState::Game)),
+                    on_score_changed.run_if(in_state(ScreenState::Game)),
+                    on_highscores_changed,
+                    on_time_changed,
+                    on_timer,
+                ),
+            )
+            .add_systems(
+                Update,
+                (
+                    on_wheel_timer.run_if(in_state(ScreenState::Game)),
+                    button_actions.run_if(in_state(ScreenState::Game)),
+                    highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
+                    slider_interaction.run_if(in_state(ScreenState::Game)),
+                    render_numbers.run_if(in_state(ScreenState::Game)),
+                    render_notes.run_if(in_state(ScreenState::Game)),
+                    render_wheel.run_if(in_state(ScreenState::Game)),
+                    render_highlights,
+                ),
+            );
     }
 }
 
@@ -158,7 +164,7 @@ fn handle_number_key(
 ) {
     let n = NonZeroU8::new(n).unwrap();
 
-    if keys.pressed(KeyCode::LAlt) || keys.pressed(KeyCode::RAlt) {
+    if keys.pressed(KeyCode::AltLeft) || keys.pressed(KeyCode::AltRight) {
         toggle_note(game, selection, n);
     } else {
         fill_selected_number(game, timer, selection, n);
@@ -274,7 +280,7 @@ fn on_input(
 
     let board_x_and_y = get_board_x_and_y(board_position, position);
 
-    match mode.0 {
+    match mode.get() {
         ModeState::Normal => {
             if input_kind == InputKind::Press {
                 if let Some((x, y)) = board_x_and_y {
@@ -318,7 +324,7 @@ fn on_input(
                 }
                 InputKind::Release => {}
             }
-        },
+        }
     }
 }
 
@@ -422,12 +428,12 @@ fn on_timer(
     time: Res<Time>,
 ) {
     if game.is_solved() {
-        if screen.0 == ScreenState::Game || screen.0 == ScreenState::Highscores {
+        if screen.get() == &ScreenState::Game || screen.get() == &ScreenState::Highscores {
             // Show a little animation for the solved state.
             let (x, y) = get_x_and_y_from_pos(((time.elapsed().as_millis() / 200) % 81) as usize);
             selection.selected_cell = Some((x, y));
         }
-    } else if !game.is_default() && screen.0 == ScreenState::Game {
+    } else if !game.is_default() && screen.get() == &ScreenState::Game {
         game_timer.stopwatch.tick(time.delta());
     }
 }
