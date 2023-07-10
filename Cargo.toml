@@ -6,7 +6,7 @@ edition = "2021"
 publish = false
 
 [workspace]
-members = [".", "lib"]
+members = [".", "lib", "bevy_winit"]
 
 [profile.dev]
 opt-level = 1
@@ -18,7 +18,7 @@ opt-level = 3
 identifier = "nl.couch-chilis.sudoku-pi"
 
 [dependencies]
-sudoku-lib = { path = "lib", features = ["steam"] }
+sudoku-lib = { path = "lib" }
 
 [patch.crates-io]
 #bevy = { path = "../bevy" }

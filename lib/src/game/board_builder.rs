@@ -1,5 +1,5 @@
 use super::{board_numbers::fill_numbers, wheel::init_wheel};
-use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Settings, Images};
+use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Images, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
@@ -75,9 +75,9 @@ fn draw_lines(board: &mut EntityCommands) {
 fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
     use Thickness::*;
     let (thickness, color, z) = match thickness {
-        Thin => (0.05 * CELL_SIZE, COLOR_BOARD_LINE_THIN, 2.),
-        Medium => (0.1 * CELL_SIZE, COLOR_BOARD_LINE_MEDIUM, 3.),
-        Thick => (0.15 * CELL_SIZE, COLOR_BOARD_LINE_THICK, 4.),
+        Thin => (0.05 * CELL_SIZE, COLOR_BOARD_LINE_THIN, 5.),
+        Medium => (0.1 * CELL_SIZE, COLOR_BOARD_LINE_MEDIUM, 6.),
+        Thick => (0.15 * CELL_SIZE, COLOR_BOARD_LINE_THICK, 7.),
     };
 
     use Orientation::*;

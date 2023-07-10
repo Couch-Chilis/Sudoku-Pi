@@ -5,6 +5,7 @@ mod constants;
 mod game;
 mod highscores;
 mod menus;
+mod pointer_query;
 mod settings;
 #[cfg(feature = "steam")]
 mod steam;
@@ -15,7 +16,7 @@ mod utils;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
-use bevy::window::{WindowMode, WindowResized};
+use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
 use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup, SliceHandles};
@@ -30,7 +31,7 @@ use utils::{SpriteExt, TransformExt};
 
 const BOLD_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Bold.ttf");
 const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Medium.ttf");
-//const REGULAR_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Regular.ttf");
+const LIGHT_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Light.ttf");
 
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
@@ -51,7 +52,7 @@ const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 pub struct Fonts {
     bold: Handle<Font>,
     medium: Handle<Font>,
-    //regular: Handle<Font>,
+    light: Handle<Font>,
 }
 
 #[derive(Clone, Default, Resource)]
@@ -118,8 +119,26 @@ pub struct ScreenInteraction {
     screens: SmallVec<[ScreenState; 4]>,
 }
 
-#[bevy_main]
+/// Helps compensate zooming that occurs on iPhone Mini.
+#[derive(Default, Resource)]
+pub struct ZoomFactor {
+    x: f32,
+    y: f32,
+}
+
 pub fn main() {
+    run_with_zoom_factor(ZoomFactor::default())
+}
+
+#[no_mangle]
+#[cfg(target_os = "ios")]
+extern "C" fn run_with_scales(scale: f64, native_scale: f64) {
+    println!("Running with scales {scale} / {native_scale}");
+    let scale = (scale / native_scale) as f32;
+    run_with_zoom_factor(ZoomFactor { x: scale, y: scale })
+}
+
+fn run_with_zoom_factor(zoom_factor: ZoomFactor) {
     let game = Game::load();
 
     let mut timer = GameTimer::default();
@@ -137,16 +156,25 @@ pub fn main() {
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
+        .insert_resource(zoom_factor)
+        .add_event::<WindowDestroyed>()
         .add_state::<ScreenState>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
-            (on_escape, on_resize, on_screen_change, on_before_exit),
+            (
+                on_escape,
+                on_resize,
+                on_screen_change,
+                on_window_close,
+                on_exit.after(on_window_close),
+            ),
         )
         .add_plugins(DefaultPlugins.set(WindowPlugin {
+            close_when_requested: false,
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
-                resolution: (480., 720.).into(),
+                resolution: (390., 845.).into(),
                 mode: get_initial_window_mode(),
                 ..default()
             }),
@@ -188,7 +216,7 @@ fn setup(
     let fonts = Fonts {
         bold: fonts.add(Font::try_from_bytes(Vec::from(BOLD_FONT)).unwrap()),
         medium: fonts.add(Font::try_from_bytes(Vec::from(MEDIUM_FONT)).unwrap()),
-        //regular: fonts.add(Font::try_from_bytes(Vec::from(REGULAR_FONT)).unwrap()),
+        light: fonts.add(Font::try_from_bytes(Vec::from(LIGHT_FONT)).unwrap()),
     };
 
     let images = Images {
@@ -258,13 +286,16 @@ fn setup(
 // Synchronize the timer to the game state right before the game exits.
 // We don't keep the timer in the game state updated all the time, because it
 // would trigger full rerenders of the board every frame.
-fn on_before_exit(
+fn on_exit(
     mut game: ResMut<Game>,
     game_timer: Res<GameTimer>,
-    exit_events: EventReader<AppExit>,
+    app_exit_events: EventReader<AppExit>,
+    destroyed_events: EventReader<WindowDestroyed>,
 ) {
-    if !exit_events.is_empty() {
+    if !app_exit_events.is_empty() || !destroyed_events.is_empty() {
+        println!("Saving before exit");
         game.elapsed_secs = game_timer.stopwatch.elapsed_secs();
+        game.save();
     }
 }
 
@@ -345,6 +376,15 @@ fn on_resize(
     }
 }
 
+fn on_window_close(
+    mut app_exit_events: EventWriter<AppExit>,
+    window_close_events: EventReader<WindowCloseRequested>,
+) {
+    if !window_close_events.is_empty() {
+        app_exit_events.send(AppExit);
+    }
+}
+
 fn get_initial_window_mode() -> WindowMode {
     if cfg!(target_os = "ios") || std::env::var_os("SteamTenfoot").is_some() {
         WindowMode::BorderlessFullscreen
@@ -381,6 +421,11 @@ fn spawn_screen<'w, 's, 'a>(
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
         transform: Transform::from_2d_scale(100_000., 100_000.),
+        style: if screen == ScreenState::Game {
+            FlexContainerStyle::default().with_gap(Val::Auto)
+        } else {
+            FlexContainerStyle::default()
+        },
         ..default()
     };
 

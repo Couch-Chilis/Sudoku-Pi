@@ -30,7 +30,14 @@ pub fn spawn_settings(
     toggles.build_settings_toggle(
         parent,
         settings,
-        "Highlight selection lines",
+        "Allow numbers in range",
+        AllowInvalidWheelNumbers,
+    );
+
+    toggles.build_settings_toggle(
+        parent,
+        settings,
+        "Highlight cells in range",
         HighlightSelectionLines,
     );
 
@@ -57,6 +64,9 @@ pub fn settings_toggle_actions(
     for (interaction, toggle) in &query {
         if *interaction == Interaction::Pressed {
             match toggle {
+                SettingsToggle::AllowInvalidWheelNumbers => {
+                    settings.allow_invalid_wheel_numbers = !settings.allow_invalid_wheel_numbers;
+                }
                 SettingsToggle::HighlightSelectionLines => {
                     settings.highlight_selection_lines = !settings.highlight_selection_lines;
                 }
@@ -64,6 +74,8 @@ pub fn settings_toggle_actions(
                     settings.show_mistakes = !settings.show_mistakes;
                 }
             }
+
+            settings.save();
         }
     }
 }

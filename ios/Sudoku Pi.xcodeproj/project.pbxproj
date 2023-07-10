@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		95317E5A2A4CD0F800F6DEB0 /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95317E592A4CD0F800F6DEB0 /* Resources.xcassets */; };
 		95F989692A421E860028C43B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F989682A421E860028C43B /* main.m */; };
 		95F989832A422BB00028C43B /* libsudoku_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F989822A422B990028C43B /* libsudoku_lib.a */; };
 		95F989842A422BC40028C43B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F9897C2A4229BA0028C43B /* AudioToolbox.framework */; };
@@ -14,6 +15,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		95317E592A4CD0F800F6DEB0 /* Resources.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources.xcassets; sourceTree = "<group>"; };
 		95F989502A421E850028C43B /* Sudoku Pi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sudoku Pi.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		95F989682A421E860028C43B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		95F989732A42247B0028C43B /* libsudoku_lib.d */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.dtrace; name = libsudoku_lib.d; path = "../target/aarch64-apple-ios/release/libsudoku_lib.d"; sourceTree = "<group>"; };
@@ -42,6 +44,7 @@
 		95F989472A421E850028C43B = {
 			isa = PBXGroup;
 			children = (
+				95317E592A4CD0F800F6DEB0 /* Resources.xcassets */,
 				95F989522A421E850028C43B /* Sudoku Pi */,
 				95F989512A421E850028C43B /* Products */,
 				95F989722A42247B0028C43B /* Frameworks */,
@@ -135,6 +138,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95317E5A2A4CD0F800F6DEB0 /* Resources.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,7 +270,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 24ZH6FMFEQ;
@@ -300,7 +306,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 24ZH6FMFEQ;

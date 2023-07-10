@@ -70,7 +70,9 @@ pub fn menu_setup(
         // Logo.
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::row().with_gap(Val::Auto),
+                FlexContainerStyle::row()
+                    .with_gap(Val::Auto)
+                    .with_padding(Size::all(Val::Vmin(5.))),
                 FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.)),
             ))
             .with_children(|logo_section| {

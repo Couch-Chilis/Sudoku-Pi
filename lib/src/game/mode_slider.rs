@@ -1,5 +1,5 @@
-use crate::{constants::*, ui::*, Fonts};
-use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*, window::PrimaryWindow};
+use crate::{constants::*, pointer_query::*, ui::*, Fonts};
+use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
 
@@ -26,12 +26,8 @@ pub fn build_mode_slider(
         parent
             .spawn(FlexBundle::new(
                 FlexContainerStyle::row().with_padding(Size::new(Val::None, Val::Percent(25.))),
-                FlexItemStyle {
-                    flex_base: Size::new(Val::Vmin(90.), Val::Vmin(9.)),
-                    flex_grow: 2.,
-                    margin: Size::all(Val::Vmin(4.5)),
-                    ..default()
-                },
+                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
+                    .with_margin(Size::all(Val::Vmin(4.5))),
             ))
             .with_children(|row| build_items(row, meshes, materials, fonts));
     });
@@ -71,9 +67,9 @@ fn build_items(
                 knob_container.spawn((
                     Toggle,
                     MaterialMesh2dBundle {
-                        mesh: meshes.add(shape::Circle::new(0.25).into()).into(),
+                        mesh: meshes.add(shape::Circle::new(0.21).into()).into(),
                         material: materials.add(ColorMaterial::from(COLOR_TOGGLE_ON)),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
+                        transform: Transform::from_translation(Vec3::new(0., 0., 3.)),
                         ..default()
                     },
                 ));
@@ -113,14 +109,9 @@ pub fn slider_interaction(
     slider_query: Query<&ComputedPosition, With<ModeSlider>>,
     mut next_state: ResMut<NextState<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
-    mouse_buttons: Res<Input<MouseButton>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
+    pointer_query: PointerQuery,
 ) {
-    if !mouse_buttons.just_pressed(MouseButton::Left) {
-        return;
-    }
-
-    let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
+    let Some((_, position)) = pointer_query.get_changed_input_with_position() else {
         return;
     };
 
@@ -128,7 +119,7 @@ pub fn slider_interaction(
         return;
     };
 
-    if !slider_position.contains(cursor_position) {
+    if !slider_position.contains(position) {
         return;
     }
 
@@ -136,7 +127,7 @@ pub fn slider_interaction(
         return;
     };
 
-    let mode = if cursor_position.x > slider_position.x + 0.5 * slider_position.width {
+    let mode = if position.x > slider_position.x + 0.5 * slider_position.width {
         ModeState::Notes
     } else {
         ModeState::Normal
@@ -147,7 +138,7 @@ pub fn slider_interaction(
         EaseFunction::QuadraticInOut,
         Duration::from_millis(100),
         TransformTranslateKnobLens {
-            start: (cursor_position.x - slider_position.x - 0.5 * knob_position.width)
+            start: (position.x - slider_position.x - 0.5 * knob_position.width)
                 / slider_position.width,
             end: match mode {
                 ModeState::Normal => 0.,

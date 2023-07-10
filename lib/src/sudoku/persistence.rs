@@ -20,7 +20,7 @@ impl Game {
     /// Saves the game to disk.
     ///
     /// This is called automatically on drop.
-    fn save(&self) {
+    pub fn save(&self) {
         let game_path = ensure_sudoku_dir().join("game.json");
 
         if self.current == Sudoku::default() || self.is_solved() {
@@ -49,6 +49,7 @@ impl Game {
                     start,
                     current,
                     notes,
+                    mistakes,
                     difficulty,
                     score,
                     elapsed_secs,
@@ -59,6 +60,7 @@ impl Game {
                         current,
                         solution,
                         notes,
+                        mistakes,
                         difficulty,
                         score,
                         elapsed_secs,
@@ -81,6 +83,7 @@ pub struct SerializedGame {
     pub start: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+    pub mistakes: Notes,
     pub difficulty: Difficulty,
     pub score: u32,
     pub elapsed_secs: f32,
@@ -92,6 +95,7 @@ impl From<&Game> for SerializedGame {
             start: game.start.clone(),
             current: game.current.clone(),
             notes: game.notes.clone(),
+            mistakes: game.mistakes.clone(),
             difficulty: game.difficulty,
             score: game.score,
             elapsed_secs: game.elapsed_secs,

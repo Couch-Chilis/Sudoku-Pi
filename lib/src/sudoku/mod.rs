@@ -15,6 +15,24 @@ pub use solver::Difficulty;
 const START_MULTIPLIERS_BY_DIFFICULTY: [i32; 5] = [20, 40, 60, 80, 100];
 const TIME_FOR_MULTIPLIER: i32 = 20;
 
+pub struct SetNumberOptions {
+    /// The current timer, in seconds.
+    ///
+    /// [`Game::set()`] will return this timer, with an optional penalty applied
+    /// if the number was wrong.
+    pub elapsed_secs: f32,
+
+    /// Set to `true` if the number is being set as a hint.
+    ///
+    /// The user will not receive points for setting this number.
+    pub is_hint: bool,
+
+    /// Whether mistakes should be shown upfront. If `false`, the number will
+    /// be filled in even if it is wrong. If `true`, and the number is wrong,
+    /// it will be recorded in the game's `mistakes`.
+    pub show_mistakes: bool,
+}
+
 /// A Sudoku game with a starting board and a solution, a current state, and
 /// notes.
 #[derive(Default, Resource)]
@@ -23,6 +41,7 @@ pub struct Game {
     pub solution: Sudoku,
     pub current: Sudoku,
     pub notes: Notes,
+    pub mistakes: Notes,
     pub difficulty: Difficulty,
     pub score: u32,
     pub elapsed_secs: f32,
@@ -32,6 +51,19 @@ impl Game {
     /// Returns whether the game is in its default (uninitialized) state.
     pub fn is_default(&self) -> bool {
         self.start == Sudoku::default()
+    }
+
+    /// Returns whether all the instances of a given number have been filled in.
+    pub fn is_completed(&self, n: NonZeroU8) -> bool {
+        for pos in 0..81 {
+            if let Some(solution_n) = self.solution.get_by_pos(pos) {
+                if solution_n == n && self.current.get_by_pos(pos) != Some(n) {
+                    return false;
+                }
+            }
+        }
+
+        true
     }
 
     /// Returns whether the game is (correctly) solved.
@@ -51,18 +83,23 @@ impl Game {
     ///
     /// Returns the `elapsed_secs` with a possible penalty applied if the set
     /// number was incorrect.
-    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8, elapsed_secs: f32) -> f32 {
+    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8, options: SetNumberOptions) -> f32 {
+        let SetNumberOptions {
+            elapsed_secs,
+            is_hint,
+            show_mistakes,
+        } = options;
+
         if self.start.has(x, y) {
             return elapsed_secs; // Starting numbers may not be replaced.
         }
 
-        // We need an updated time spent to calculate the score increase.
-        self.elapsed_secs = elapsed_secs;
+        let is_correct = self.solution.get(x, y) == Some(n);
 
-        self.current = self.current.set(x, y, n);
-        self.notes.remove_all_notes_affected_by_set(x, y, n);
+        if is_correct && !is_hint {
+            // We need an updated time spent to calculate the score increase.
+            self.elapsed_secs = elapsed_secs;
 
-        if self.solution.get(x, y) == Some(n) {
             let multiplier = (START_MULTIPLIERS_BY_DIFFICULTY
                 .get(self.difficulty as usize)
                 .cloned()
@@ -70,9 +107,17 @@ impl Game {
                 - elapsed_secs as i32 / TIME_FOR_MULTIPLIER)
                 .max(1);
             self.score += self.calculate_score(x, y, n) * multiplier as u32;
+        }
+
+        if is_correct || !show_mistakes {
+            self.current = self.current.set(x, y, n);
+            self.notes.remove_all_notes_affected_by_set(x, y, n);
 
             elapsed_secs
         } else {
+            self.mistakes.set(x, y, n);
+            self.notes.unset(x, y, n);
+
             elapsed_secs + TIME_FOR_MULTIPLIER as f32
         }
     }

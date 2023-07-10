@@ -1,6 +1,6 @@
 use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
-use crate::{constants::*, utils::SpriteExt, ScreenState};
-use bevy::{prelude::*, window::PrimaryWindow};
+use crate::{constants::*, pointer_query::*, utils::SpriteExt, ScreenState};
+use bevy::prelude::*;
 
 pub type InteractionEntity<'a> = (
     Entity,
@@ -121,80 +121,26 @@ fn confirm_selection(interaction_query: &mut InteractionQuery, screen: &ScreenSt
     }
 }
 
-pub fn mouse_interaction(
+pub fn pointer_interaction(
     mut interaction_query: InteractionQuery,
-    mouse_buttons: Res<Input<MouseButton>>,
     screen: Res<State<ScreenState>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    window_changes: Query<(With<PrimaryWindow>, Changed<Window>)>,
+    pointer_query: PointerQuery,
 ) {
-    if !mouse_buttons.is_changed() && window_changes.is_empty() {
-        return;
-    }
-
-    let Some(cursor_position) = window_query.get_single().ok().and_then(|window| window.cursor_position()) else {
-        return;
-    };
-
-    let selected_entity = interaction_query
-        .iter()
-        .find(|(_, _, computed_position, computed_visibility)| {
-            computed_position.screens.contains(screen.get())
-                && computed_visibility.is_visible()
-                && computed_position.contains(cursor_position)
-        })
-        .map(|(entity, ..)| entity);
-
-    for (entity, mut interaction, computed_position, _) in &mut interaction_query {
-        let new_interaction = match selected_entity {
-            Some(selected_entity) => {
-                if selected_entity == entity {
-                    if mouse_buttons.just_pressed(MouseButton::Left) {
-                        Interaction::Pressed
-                    } else {
-                        Interaction::Selected
-                    }
-                } else if computed_position.screens.contains(screen.get()) {
-                    Interaction::None
-                } else {
-                    interaction.clone()
-                }
-            }
-            None => interaction.clone(),
+    let Some((input_kind, position)) = pointer_query
+        .get_changed_input_with_position()
+        .map(|(input_kind, position)| (Some(input_kind), position))
+        .or_else(|| {
+            pointer_query.get_changed_hover().map(|position| (None, position))
+        }) else {
+            return;
         };
 
-        if *interaction != new_interaction {
-            *interaction = new_interaction;
-        }
-    }
-}
-
-pub fn touch_interaction(
-    mut interaction_query: InteractionQuery,
-    touches: Res<Touches>,
-    screen: Res<State<ScreenState>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-) {
-    if !touches.is_changed() {
-        return;
-    }
-
-    let Some(mut touch_position) = touches.first_pressed_position() else {
-        return;
-    };
-
-    let Ok(window) = window_query.get_single() else {
-        return;
-    };
-
-    touch_position.y = window.height() - touch_position.y;
-
     let selected_entity = interaction_query
         .iter()
         .find(|(_, _, computed_position, computed_visibility)| {
             computed_position.screens.contains(screen.get())
                 && computed_visibility.is_visible()
-                && computed_position.contains(touch_position)
+                && computed_position.contains(position)
         })
         .map(|(entity, ..)| entity);
 
@@ -202,7 +148,7 @@ pub fn touch_interaction(
         let new_interaction = match selected_entity {
             Some(selected_entity) => {
                 if selected_entity == entity {
-                    if touches.any_just_pressed() {
+                    if input_kind == Some(InputKind::Press) {
                         Interaction::Pressed
                     } else {
                         Interaction::Selected

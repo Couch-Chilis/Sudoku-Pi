@@ -38,14 +38,22 @@ impl TransformExt for Transform {
 pub fn ensure_sudoku_dir() -> PathBuf {
     #[allow(deprecated)]
     let parent_dir = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
-    let sudoku_dir = parent_dir.join(".sudoku");
+
+    let sudoku_dir = parent_dir.join(if cfg!(target_os = "ios") {
+        "Library/Application support"
+    } else {
+        ".sudoku"
+    });
     if sudoku_dir.exists() {
         return sudoku_dir;
     }
 
     match fs::create_dir_all(&sudoku_dir) {
         Ok(()) => sudoku_dir,
-        Err(_) => parent_dir,
+        Err(err) => {
+            warn!("Falling back to parent dir ({parent_dir:?}): {err:?}");
+            parent_dir
+        }
     }
 }
 
