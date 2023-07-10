@@ -6,7 +6,7 @@ edition = "2021"
 publish = false
 
 [workspace]
-members = [".", "lib", "bevy_winit"]
+members = [".", "lib"]
 
 [profile.dev]
 opt-level = 1
