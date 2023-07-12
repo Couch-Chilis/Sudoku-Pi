@@ -71,12 +71,6 @@ impl Game {
     }
 }
 
-impl Drop for Game {
-    fn drop(&mut self) {
-        self.save()
-    }
-}
-
 /// The serialized game state, without its solution.
 #[derive(Serialize, Deserialize)]
 pub struct SerializedGame {

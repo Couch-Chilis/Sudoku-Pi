@@ -15,25 +15,37 @@ impl Highscores {
     ///
     /// Does nothing if the score doesn't reach the highscores.
     pub fn add(&mut self, new_score: u32, new_time: f32) {
-        self.add_score(new_score);
-        self.add_time(new_time);
-    }
+        let score_added = self.add_score(new_score);
+        let time_added = self.add_time(new_time);
 
-    fn add_score(&mut self, new_score: u32) {
-        if let Some(index) = self.best_scores.iter().position(|score| new_score > *score) {
-            self.best_scores.insert(index, new_score);
-            self.best_scores.truncate(MAX_NUM_HIGHSCORES);
-        } else if self.best_scores.len() < MAX_NUM_HIGHSCORES {
-            self.best_scores.push(new_score);
+        if score_added || time_added {
+            self.save();
         }
     }
 
-    fn add_time(&mut self, new_time: f32) {
+    fn add_score(&mut self, new_score: u32) -> bool {
+        if let Some(index) = self.best_scores.iter().position(|score| new_score > *score) {
+            self.best_scores.insert(index, new_score);
+            self.best_scores.truncate(MAX_NUM_HIGHSCORES);
+            true
+        } else if self.best_scores.len() < MAX_NUM_HIGHSCORES {
+            self.best_scores.push(new_score);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn add_time(&mut self, new_time: f32) -> bool {
         if let Some(index) = self.best_times.iter().position(|time| new_time < *time) {
             self.best_times.insert(index, new_time);
             self.best_times.truncate(MAX_NUM_HIGHSCORES);
+            true
         } else if self.best_times.len() < MAX_NUM_HIGHSCORES {
             self.best_times.push(new_time);
+            true
+        } else {
+            false
         }
     }
 
@@ -67,11 +79,5 @@ impl Highscores {
     /// Parses highscores from JSON.
     fn from_json(bytes: &[u8]) -> Result<Self, anyhow::Error> {
         serde_json::from_slice(bytes).map_err(anyhow::Error::from)
-    }
-}
-
-impl Drop for Highscores {
-    fn drop(&mut self) {
-        self.save()
     }
 }
