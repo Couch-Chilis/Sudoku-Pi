@@ -279,10 +279,13 @@ fn get_wheel_center(wheel: &Wheel, radius: f32) -> Vec2 {
     }
 
     let mut cy = wheel.start_position.y;
-    if cy + radius > overflow_ratio {
-        cy = overflow_ratio - radius;
-    } else if cy - radius < -overflow_ratio {
-        cy = -overflow_ratio + radius;
+    // iOS only supports portrait for now
+    if cfg!(not(target_os = "ios")) {
+        if cy + radius > overflow_ratio {
+            cy = overflow_ratio - radius;
+        } else if cy - radius < -overflow_ratio {
+            cy = -overflow_ratio + radius;
+        }
     }
 
     Vec2::new(cx, cy)

@@ -37,13 +37,15 @@ impl<'w, 's, 'a> PointerQueryExt for MouseQuery<'w, 's, 'a> {
         if (buttons.is_changed() || !window_changes.is_empty())
             && !buttons.pressed(MouseButton::Left)
         {
-            window_query
-                .get_single()
-                .ok()
-                .and_then(|window| window.cursor_position())
-        } else {
-            None
+            if let Ok(window) = window_query.get_single() {
+                if let Some(mut position) = window.cursor_position() {
+                    position.y = window.height() - position.y;
+                    return Some(position);
+                }
+            }
         }
+
+        None
     }
 
     fn get_changed_input_with_position(&self) -> Option<(InputKind, Vec2)> {
@@ -69,11 +71,14 @@ impl<'w, 's, 'a> PointerQueryExt for MouseQuery<'w, 's, 'a> {
             return None;
         };
 
-        window_query
-            .get_single()
-            .ok()
-            .and_then(|window| window.cursor_position())
-            .map(|position| (input_kind, position))
+        if let Ok(window) = window_query.get_single() {
+            if let Some(mut position) = window.cursor_position() {
+                position.y = window.height() - position.y;
+                return Some((input_kind, position));
+            }
+        }
+
+        None
     }
 }
 
