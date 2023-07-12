@@ -50,6 +50,11 @@ impl Notes {
         notes
     }
 
+    /// Clears the notes in a single cell.
+    pub fn clear(&mut self, x: u8, y: u8) {
+        self.cells[get_pos(x, y)] = 0;
+    }
+
     /// A set of twins are two cells that are within range of one another that
     /// both have the same numbers in their notes.
     ///

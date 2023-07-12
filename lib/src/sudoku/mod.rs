@@ -109,16 +109,17 @@ impl Game {
             self.score += self.calculate_score(x, y, n) * multiplier as u32;
         }
 
-        if is_correct || !show_mistakes {
-            self.current = self.current.set(x, y, n);
-            self.notes.remove_all_notes_affected_by_set(x, y, n);
-
-            elapsed_secs
-        } else {
+        if show_mistakes && !is_correct {
             self.mistakes.set(x, y, n);
             self.notes.unset(x, y, n);
 
             elapsed_secs + TIME_FOR_MULTIPLIER as f32
+        } else {
+            self.current = self.current.set(x, y, n);
+            self.notes.remove_all_notes_affected_by_set(x, y, n);
+            self.mistakes.clear(x, y);
+
+            elapsed_secs
         }
     }
 
