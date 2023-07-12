@@ -1,3 +1,4 @@
+use super::Wheel;
 use crate::{constants::*, pointer_query::*, ui::*, Fonts};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
@@ -110,7 +111,16 @@ pub fn slider_interaction(
     mut next_state: ResMut<NextState<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
     pointer_query: PointerQuery,
+    wheel_query: Query<&Wheel>,
 ) {
+    if wheel_query
+        .get_single()
+        .map(Wheel::is_open)
+        .unwrap_or_default()
+    {
+        return;
+    }
+
     let Some((_, position)) = pointer_query.get_changed_input_with_position() else {
         return;
     };

@@ -2,7 +2,7 @@ use super::{fill_number, get_board_x_and_y, Board, InputKind, Selection};
 use crate::{
     constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images,
 };
-use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch};
+use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch, window::PrimaryWindow};
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
@@ -12,12 +12,19 @@ const WHEEL_Z: f32 = 10.;
 #[derive(Component, Default)]
 pub struct Wheel {
     cell: (u8, u8),
+    center_position: Vec2,
     start_position: Vec2,
     current_position: Vec2,
     is_open: bool,
     spawn_timer: Stopwatch,
     selected_number: Option<NonZeroU8>,
     slice_timer: Stopwatch,
+}
+
+impl Wheel {
+    pub fn is_open(&self) -> bool {
+        self.is_open
+    }
 }
 
 #[derive(Component)]
@@ -137,6 +144,7 @@ pub fn on_wheel_input(
                 };
 
                 if should_open {
+                    wheel.center_position = translation;
                     wheel.start_position = translation;
                     wheel.cell = (x, y);
                     wheel.spawn_timer.reset();
@@ -147,8 +155,7 @@ pub fn on_wheel_input(
         }
         InputKind::PressedMovement => {
             if wheel.is_open {
-                let radius = get_radius(&wheel);
-                let selected_number = get_selected_number(&wheel, radius);
+                let selected_number = get_selected_number(&wheel);
                 let may_select_number = settings.allow_invalid_wheel_numbers
                     || match selected_number {
                         Some(n) => game.current.may_set(wheel.cell.0, wheel.cell.1, n),
@@ -195,13 +202,17 @@ pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
 }
 
 pub fn render_wheel(
-    mut wheel: Query<(&mut Transform, &Wheel), (Changed<Wheel>, Without<Slice>, Without<TopLabel>)>,
+    mut wheel: Query<
+        (&mut Transform, &mut Wheel),
+        (Changed<Wheel>, Without<Slice>, Without<TopLabel>),
+    >,
     mut slice: Query<(&mut Transform, &mut Handle<Image>), (With<Slice>, Without<TopLabel>)>,
     mut top_label: Query<&mut Transform, (With<TopLabel>, Without<Wheel>, Without<Slice>)>,
     mut top_label_text: Query<&mut Text, With<TopLabelText>>,
     slice_handles: Res<SliceHandles>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
-    let Ok((mut wheel_transform, wheel)) = wheel.get_single_mut() else {
+    let Ok((mut wheel_transform, mut wheel)) = wheel.get_single_mut() else {
         return;
     };
 
@@ -213,6 +224,10 @@ pub fn render_wheel(
         return;
     };
 
+    let Ok(window) = window_query.get_single() else {
+        return;
+    };
+
     if !wheel.is_open {
         *wheel_transform = Transform::from_2d_scale(0., 0.);
         *slice_transform = Transform::from_2d_scale(0., 0.);
@@ -220,8 +235,13 @@ pub fn render_wheel(
         return;
     }
 
-    let radius = get_radius(wheel);
-    let Vec2 { x: cx, y: cy } = get_wheel_center(wheel, radius);
+    let radius = get_radius(&wheel);
+    let center_position = get_wheel_center(window, &wheel, radius);
+    if wheel.center_position != center_position {
+        wheel.center_position = center_position;
+    }
+
+    let Vec2 { x: cx, y: cy } = center_position;
 
     wheel_transform.translation = Vec3::new(cx, cy, WHEEL_Z);
     wheel_transform.scale = Vec3::new(radius / WHEEL_SIZE, radius / WHEEL_SIZE, 1.);
@@ -268,31 +288,29 @@ fn get_radius(wheel: &Wheel) -> f32 {
 ///
 /// The center position is usually the position where the press started, but it
 /// maybe adjusted to avoid the wheel from going outside the screen dimensions.
-fn get_wheel_center(wheel: &Wheel, radius: f32) -> Vec2 {
+fn get_wheel_center(window: &Window, wheel: &Wheel, radius: f32) -> Vec2 {
     let overflow_ratio = 0.9;
 
     let mut cx = wheel.start_position.x;
-    if cx + radius > overflow_ratio {
-        cx = overflow_ratio - radius;
-    } else if cx - radius < -overflow_ratio {
-        cx = -overflow_ratio + radius;
-    }
-
     let mut cy = wheel.start_position.y;
-    // iOS only supports portrait for now
-    if cfg!(not(target_os = "ios")) {
+
+    if window.width() > window.height() {
         if cy + radius > overflow_ratio {
             cy = overflow_ratio - radius;
         } else if cy - radius < -overflow_ratio {
             cy = -overflow_ratio + radius;
         }
+    } else if cx + radius > overflow_ratio {
+        cx = overflow_ratio - radius;
+    } else if cx - radius < -overflow_ratio {
+        cx = -overflow_ratio + radius;
     }
 
     Vec2::new(cx, cy)
 }
 
-fn get_selected_number(wheel: &Wheel, radius: f32) -> Option<NonZeroU8> {
-    let center = get_wheel_center(wheel, radius);
+fn get_selected_number(wheel: &Wheel) -> Option<NonZeroU8> {
+    let center = wheel.center_position;
 
     let current_x = wheel.current_position.x;
     let current_y = wheel.current_position.y;

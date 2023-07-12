@@ -1,5 +1,5 @@
 use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
-use crate::{constants::*, pointer_query::*, utils::SpriteExt, ScreenState};
+use crate::{constants::*, game::Wheel, pointer_query::*, utils::SpriteExt, ScreenState};
 use bevy::prelude::*;
 
 pub type InteractionEntity<'a> = (
@@ -125,7 +125,16 @@ pub fn pointer_interaction(
     mut interaction_query: InteractionQuery,
     screen: Res<State<ScreenState>>,
     pointer_query: PointerQuery,
+    wheel_query: Query<&Wheel>,
 ) {
+    if wheel_query
+        .get_single()
+        .map(Wheel::is_open)
+        .unwrap_or_default()
+    {
+        return;
+    }
+
     let Some((input_kind, position)) = pointer_query
         .get_changed_input_with_position()
         .map(|(input_kind, position)| (Some(input_kind), position))

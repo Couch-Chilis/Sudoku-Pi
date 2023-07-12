@@ -17,10 +17,10 @@ use highscore_screen::{highscore_button_actions, on_highscores_changed};
 use mode_slider::{slider_interaction, ModeState};
 use std::num::NonZeroU8;
 use std::time::Duration;
-use wheel::{on_wheel_input, on_wheel_timer, render_wheel, Wheel};
+use wheel::{on_wheel_input, on_wheel_timer, render_wheel};
 
 pub use highscore_screen::highscore_screen_setup;
-pub use wheel::SliceHandles;
+pub use wheel::{SliceHandles, Wheel};
 
 pub struct GamePlugin;
 
