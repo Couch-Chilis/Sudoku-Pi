@@ -1,4 +1,4 @@
-use super::{fill_number, get_board_x_and_y, Board, InputKind};
+use super::{fill_number, get_board_x_and_y, Board, InputKind, Selection};
 use crate::{
     constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images,
 };
@@ -106,6 +106,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
 pub fn on_wheel_input(
     mut wheel: Query<&mut Wheel>,
     mut game: ResMut<Game>,
+    mut selection: ResMut<Selection>,
     mut timer: ResMut<GameTimer>,
     input_kind: InputKind,
     position: Vec2,
@@ -163,16 +164,17 @@ pub fn on_wheel_input(
             if wheel.is_open {
                 wheel.is_open = false;
 
-                if let Some(selected_number) = wheel.selected_number {
+                if let Some(n) = wheel.selected_number {
                     let (x, y) = wheel.cell;
                     fill_number(
                         &mut game,
                         &mut timer,
+                        &mut selection,
                         &settings,
                         false,
                         x,
                         y,
-                        selected_number,
+                        n,
                     );
                 }
             }

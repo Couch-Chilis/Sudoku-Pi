@@ -201,7 +201,9 @@ fn on_pointer_input(
                 }
             }
 
-            on_wheel_input(wheel, game, timer, input_kind, position, board, settings);
+            on_wheel_input(
+                wheel, game, selection, timer, input_kind, position, board, settings,
+            );
         }
         ModeState::Notes => {
             let Some((x, y)) = board_x_and_y else {
@@ -256,6 +258,7 @@ fn clear_selection(game: &mut Game, selection: &Selection) {
 fn fill_number(
     game: &mut Game,
     timer: &mut GameTimer,
+    selection: &mut Selection,
     settings: &Settings,
     is_hint: bool,
     x: u8,
@@ -263,20 +266,21 @@ fn fill_number(
     n: NonZeroU8,
 ) {
     let elapsed_secs = timer.stopwatch.elapsed_secs();
-    let new_elapsed_secs = game.set(
-        x,
-        y,
-        n,
-        SetNumberOptions {
-            elapsed_secs,
-            is_hint,
-            show_mistakes: settings.show_mistakes,
-        },
-    );
+    let options = SetNumberOptions {
+        elapsed_secs,
+        is_hint,
+        show_mistakes: settings.show_mistakes,
+    };
+
+    let new_elapsed_secs = game.set(x, y, n, options);
     if new_elapsed_secs != elapsed_secs {
         timer
             .stopwatch
             .set_elapsed(Duration::from_secs_f32(new_elapsed_secs));
+    }
+
+    if selection.hint == Some((x, y)) {
+        selection.hint = None;
     }
 }
 
@@ -288,11 +292,7 @@ fn fill_selected_number(
     n: NonZeroU8,
 ) {
     if let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) {
-        fill_number(game, timer, settings, false, x, y, n);
-
-        if selection.hint == Some((x, y)) {
-            selection.hint = None;
-        }
+        fill_number(game, timer, selection, settings, false, x, y, n);
     }
 }
 
@@ -351,8 +351,7 @@ fn give_hint(
 ) {
     if let Some((x, y)) = selection.hint {
         if let Some(n) = game.solution.get(x, y) {
-            fill_number(game, timer, settings, true, x, y, n);
-            selection.hint = None;
+            fill_number(game, timer, selection, settings, true, x, y, n);
         }
     } else if let Some(sudoku::Hint { x, y }) = game.get_hint() {
         selection.hint = Some((x, y));
