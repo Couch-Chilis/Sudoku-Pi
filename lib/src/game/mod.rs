@@ -6,10 +6,11 @@ mod mode_slider;
 mod wheel;
 
 use crate::pointer_query::*;
-use crate::sudoku::{self, get_x_and_y_from_pos, Game, SetNumberOptions};
+use crate::sudoku::{self, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
 use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
+use bevy::time::Stopwatch;
 use board_builder::{build_board, Board};
 use board_numbers::*;
 use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
@@ -57,7 +58,31 @@ impl Plugin for GamePlugin {
 }
 
 #[derive(Component)]
-struct Note(u8, u8, NonZeroU8);
+pub struct Note {
+    x: u8,
+    y: u8,
+    n: NonZeroU8,
+    animation_kind: Option<NoteAnimationKind>,
+    animation_timer: Stopwatch,
+}
+
+impl Note {
+    fn new(x: u8, y: u8, n: NonZeroU8) -> Self {
+        Self {
+            x,
+            y,
+            n,
+            animation_kind: None,
+            animation_timer: Stopwatch::new(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum NoteAnimationKind {
+    Mistake,
+    FadeOut(Duration),
+}
 
 #[derive(Component)]
 struct Number(u8, u8);
@@ -114,6 +139,7 @@ fn on_keyboard_input(
     mut game: ResMut<Game>,
     mut timer: ResMut<GameTimer>,
     mut selection: ResMut<Selection>,
+    mut notes: Query<&mut Note>,
     settings: Res<Settings>,
     keys: Res<Input<KeyCode>>,
 ) {
@@ -125,17 +151,89 @@ fn on_keyboard_input(
             Down => move_selection_relative(&mut selection, 0, 1),
             Left => move_selection_relative(&mut selection, -1, 0),
 
-            Key1 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 1),
-            Key2 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 2),
-            Key3 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 3),
-            Key4 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 4),
-            Key5 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 5),
-            Key6 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 6),
-            Key7 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 7),
-            Key8 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 8),
-            Key9 => handle_number_key(&mut game, &mut timer, &mut selection, &settings, &keys, 9),
+            Key1 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                1,
+            ),
+            Key2 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                2,
+            ),
+            Key3 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                3,
+            ),
+            Key4 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                4,
+            ),
+            Key5 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                5,
+            ),
+            Key6 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                6,
+            ),
+            Key7 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                7,
+            ),
+            Key8 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                8,
+            ),
+            Key9 => handle_number_key(
+                &mut game,
+                &mut timer,
+                &mut selection,
+                &mut notes,
+                &settings,
+                &keys,
+                9,
+            ),
 
-            Slash => give_hint(&mut game, &mut timer, &mut selection, &settings),
+            Slash => give_hint(&mut game, &mut timer, &mut selection, &mut notes, &settings),
 
             Back | Delete => clear_selection(&mut game, &selection),
             _ => {}
@@ -160,6 +258,7 @@ fn handle_number_key(
     game: &mut Game,
     timer: &mut GameTimer,
     selection: &mut Selection,
+    notes: &mut Query<&mut Note>,
     settings: &Settings,
     keys: &Input<KeyCode>,
     n: u8,
@@ -169,13 +268,14 @@ fn handle_number_key(
     if keys.pressed(KeyCode::AltLeft) || keys.pressed(KeyCode::AltRight) {
         toggle_note(game, selection, n);
     } else {
-        fill_selected_number(game, timer, selection, settings, n);
+        fill_selected_number(game, timer, selection, notes, settings, n);
     }
 }
 
 fn on_pointer_input(
     mut game: ResMut<Game>,
     mut selection: ResMut<Selection>,
+    notes: Query<&mut Note>,
     timer: ResMut<GameTimer>,
     wheel: Query<&mut Wheel>,
     board: Query<&ComputedPosition, With<Board>>,
@@ -202,7 +302,7 @@ fn on_pointer_input(
             }
 
             on_wheel_input(
-                wheel, game, selection, timer, input_kind, position, board, settings,
+                wheel, game, selection, notes, timer, input_kind, position, board, settings,
             );
         }
         ModeState::Notes => {
@@ -259,6 +359,7 @@ fn fill_number(
     game: &mut Game,
     timer: &mut GameTimer,
     selection: &mut Selection,
+    notes: &mut Query<&mut Note>,
     settings: &Settings,
     is_hint: bool,
     x: u8,
@@ -272,8 +373,12 @@ fn fill_number(
         show_mistakes: settings.show_mistakes,
     };
 
+    let previous_notes = game.notes.clone();
+
     let new_elapsed_secs = game.set(x, y, n, options);
     if new_elapsed_secs != elapsed_secs {
+        animate_mistake(notes, x, y, n);
+
         timer
             .stopwatch
             .set_elapsed(Duration::from_secs_f32(new_elapsed_secs));
@@ -282,17 +387,54 @@ fn fill_number(
     if selection.hint == Some((x, y)) {
         selection.hint = None;
     }
+
+    animate_cleared_notes(notes, &game.notes, &previous_notes, x, y);
+}
+
+fn animate_cleared_notes(
+    notes: &mut Query<&mut Note>,
+    current_notes: &Notes,
+    previous_notes: &Notes,
+    set_x: u8,
+    set_y: u8,
+) {
+    let cleared_notes = current_notes.get_cleared_since(previous_notes);
+    for mut note in notes {
+        let x = note.x;
+        let y = note.y;
+        let n = note.n;
+
+        if (x != set_x || y != set_y) && cleared_notes.contains(&(x, y, n)) {
+            let distance = (((x as f32) - (set_x as f32)).powi(2)
+                + ((y as f32) - (set_y as f32)).powi(2))
+            .sqrt();
+            note.animation_kind = Some(NoteAnimationKind::FadeOut(Duration::from_secs_f32(
+                distance,
+            )));
+            note.animation_timer.reset();
+        }
+    }
+}
+
+fn animate_mistake(notes: &mut Query<&mut Note>, set_x: u8, set_y: u8, set_n: NonZeroU8) {
+    for mut note in notes {
+        if note.x == set_x && note.y == set_y && note.n == set_n {
+            note.animation_kind = Some(NoteAnimationKind::Mistake);
+            note.animation_timer.reset();
+        }
+    }
 }
 
 fn fill_selected_number(
     game: &mut Game,
     timer: &mut GameTimer,
     selection: &mut Selection,
+    notes: &mut Query<&mut Note>,
     settings: &Settings,
     n: NonZeroU8,
 ) {
     if let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) {
-        fill_number(game, timer, selection, settings, false, x, y, n);
+        fill_number(game, timer, selection, notes, settings, false, x, y, n);
     }
 }
 
@@ -330,6 +472,7 @@ fn button_actions(
     mut timer: ResMut<GameTimer>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut selection: ResMut<Selection>,
+    mut notes: Query<&mut Note>,
     settings: Res<Settings>,
     query: Query<(&Interaction, &UiButtonAction), (Changed<Interaction>, With<Button>)>,
 ) {
@@ -337,7 +480,9 @@ fn button_actions(
         if *interaction == Interaction::Pressed {
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
-                UiButtonAction::Hint => give_hint(&mut game, &mut timer, &mut selection, &settings),
+                UiButtonAction::Hint => {
+                    give_hint(&mut game, &mut timer, &mut selection, &mut notes, &settings)
+                }
             }
         }
     }
@@ -347,11 +492,12 @@ fn give_hint(
     game: &mut Game,
     timer: &mut GameTimer,
     selection: &mut Selection,
+    notes: &mut Query<&mut Note>,
     settings: &Settings,
 ) {
     if let Some((x, y)) = selection.hint {
         if let Some(n) = game.solution.get(x, y) {
-            fill_number(game, timer, selection, settings, true, x, y, n);
+            fill_number(game, timer, selection, notes, settings, true, x, y, n);
         }
     } else if let Some(sudoku::Hint { x, y }) = game.get_hint() {
         selection.hint = Some((x, y));

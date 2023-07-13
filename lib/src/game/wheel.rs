@@ -1,4 +1,4 @@
-use super::{fill_number, get_board_x_and_y, Board, InputKind, Selection};
+use super::{fill_number, get_board_x_and_y, Board, InputKind, Note, Selection};
 use crate::{
     constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images,
 };
@@ -114,6 +114,7 @@ pub fn on_wheel_input(
     mut wheel: Query<&mut Wheel>,
     mut game: ResMut<Game>,
     mut selection: ResMut<Selection>,
+    mut notes: Query<&mut Note>,
     mut timer: ResMut<GameTimer>,
     input_kind: InputKind,
     position: Vec2,
@@ -177,6 +178,7 @@ pub fn on_wheel_input(
                         &mut game,
                         &mut timer,
                         &mut selection,
+                        &mut notes,
                         &settings,
                         false,
                         x,

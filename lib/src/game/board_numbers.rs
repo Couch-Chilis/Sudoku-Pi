@@ -1,5 +1,11 @@
-use super::{Note, Number, ScreenState, Selection};
-use crate::{constants::*, sudoku::*, ui::*, utils::SpriteExt, Fonts, Settings};
+use super::{Note, NoteAnimationKind, Number, ScreenState, Selection};
+use crate::{
+    constants::*,
+    sudoku::*,
+    ui::*,
+    utils::{SpriteExt, TransformExt},
+    Fonts, Settings,
+};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
@@ -82,7 +88,7 @@ fn spawn_cell(
                         let n = NonZeroU8::new(note_x + 3 * note_y).unwrap();
                         note_column
                             .spawn((
-                                Note(x, y, n),
+                                Note::new(x, y, n),
                                 FlexBundle::new(
                                     FlexContainerStyle::default(),
                                     FlexItemStyle::available_size(),
@@ -110,7 +116,7 @@ fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundl
 
 fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
     (
-        Note(x, y, n),
+        Note::new(x, y, n),
         FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style))
             .with_translation(0., 1.),
     )
@@ -127,17 +133,22 @@ pub(super) fn render_numbers(
     }
 
     for (Number(x, y), mut text) in &mut numbers {
-        if let Some(n) = game.current.get(*x, *y) {
+        let current_color = text.sections[0].style.color;
+        let new_color = if let Some(n) = game.current.get(*x, *y) {
             text.sections[0].value = n.to_string();
             text.sections[0].style.font = if game.is_completed(n) {
                 fonts.light.clone()
             } else {
                 fonts.bold.clone()
             };
-            text.sections[0].style.color = get_number_color(&game, &settings, *x, *y);
+            get_number_color(&game, &settings, *x, *y)
         } else {
-            text.sections[0].style.color = Color::NONE;
+            Color::NONE
         };
+
+        if new_color != current_color {
+            text.sections[0].style.color = new_color;
+        }
     }
 }
 
@@ -158,33 +169,53 @@ fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
 }
 
 pub(super) fn render_notes(
-    mut notes: Query<(&Note, &mut Text)>,
+    mut notes: Query<(&mut Note, &mut Text)>,
     game: Res<Game>,
     settings: Res<Settings>,
+    time: Res<Time>,
 ) {
     if !game.is_changed() && !settings.is_changed() {
         return;
     }
 
-    for (&Note(x, y, n), mut text) in &mut notes {
-        text.sections[0].style.color =
+    for (mut note, mut text) in &mut notes {
+        let x = note.x;
+        let y = note.y;
+        let n = note.n;
+
+        let current_color = text.sections[0].style.color;
+        let new_color =
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
                 COLOR_MAIN_POP_DARK
             } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
                 Color::BLACK
+            } else if let Some(NoteAnimationKind::FadeOut(duration)) = note.animation_kind {
+                let a = 1. - (duration.as_secs_f32() / note.animation_timer.elapsed_secs());
+                if a <= 0. {
+                    note.animation_kind = None;
+                    Color::NONE
+                } else {
+                    note.animation_timer.tick(time.delta());
+                    Color::rgba(0., 0., 0., a)
+                }
             } else {
                 Color::NONE
             };
+
+        if new_color != current_color {
+            text.sections[0].style.color = new_color;
+        }
     }
 }
 
 pub(super) fn render_highlights(
     mut cells: Query<(&Number, &mut Sprite), Without<Note>>,
-    mut notes: Query<(&Note, &mut Sprite), Without<Number>>,
+    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite), Without<Number>>,
     screen: Res<State<ScreenState>>,
     game: Res<Game>,
     settings: Res<Settings>,
     selection: Res<Selection>,
+    time: Res<Time>,
 ) {
     if !game.is_changed() && !selection.is_changed() && !settings.is_changed() {
         return;
@@ -253,12 +284,12 @@ pub(super) fn render_highlights(
         *sprite = Sprite::from_color(color);
     }
 
-    for (note, mut sprite) in &mut notes {
+    for (mut note, mut flex_item_style, mut sprite) in &mut notes {
         let selected_number = selection
             .selected_cell
             .and_then(|(x, y)| game.current.get(x, y));
-        let highlight_kind = if selected_number.map(|n| note.2 == n).unwrap_or_default() {
-            highlights[get_pos(note.0, note.1)]
+        let highlight_kind = if selected_number.map(|n| note.n == n).unwrap_or_default() {
+            highlights[get_pos(note.x, note.y)]
         } else {
             None
         };
@@ -268,5 +299,26 @@ pub(super) fn render_highlights(
             _ => Color::NONE,
         };
         *sprite = Sprite::from_color(color);
+
+        if note.animation_kind == Some(NoteAnimationKind::Mistake) {
+            let elapsed_secs = note.animation_timer.elapsed_secs() - 0.5; // delay
+            flex_item_style.transform = if elapsed_secs > 0.5 {
+                note.animation_kind = None;
+                Transform::default_2d()
+            } else {
+                note.animation_timer.tick(time.delta());
+                let scale = if elapsed_secs < 0. {
+                    Vec3::new(3., 3., 1.)
+                } else {
+                    let zoom = 3. - elapsed_secs * 4.;
+                    Vec3::new(zoom, zoom, 1.)
+                };
+                Transform {
+                    translation: Vec3::new(0., 0., 0.),
+                    scale,
+                    ..default()
+                }
+            };
+        }
     }
 }

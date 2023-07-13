@@ -351,6 +351,28 @@ impl Notes {
         self.cells[get_pos(x, y)]
     }
 
+    /// Returns all the notes that were present in `other` which are not present
+    /// in the current notes.
+    pub fn get_cleared_since(&self, other: &Self) -> Vec<(u8, u8, NonZeroU8)> {
+        let mut cleared_notes = Vec::new();
+        for pos in 0..81 {
+            let current_cell = self.cells[pos];
+            let other_cell = other.cells[pos];
+
+            if current_cell != other_cell {
+                for n in 1..9 {
+                    let bit = 1 << n;
+                    if other_cell & bit > 0 && current_cell & bit == 0 {
+                        let (x, y) = get_x_and_y_from_pos(pos);
+                        cleared_notes.push((x, y, NonZeroU8::new(n).unwrap()));
+                    }
+                }
+            }
+        }
+
+        cleared_notes
+    }
+
     /// The lone ranger is Sudoku's most basic strategy for finding numbers to
     /// fill in: When a cell is the only cell within a row, column, or block
     /// that is a valid position for a given number, that number must be the
