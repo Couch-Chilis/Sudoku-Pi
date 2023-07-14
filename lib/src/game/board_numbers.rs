@@ -128,10 +128,6 @@ pub(super) fn render_numbers(
     game: Res<Game>,
     settings: Res<Settings>,
 ) {
-    if !game.is_changed() && !settings.is_changed() {
-        return;
-    }
-
     for (Number(x, y), mut text) in &mut numbers {
         let current_color = text.sections[0].style.color;
         let new_color = if let Some(n) = game.current.get(*x, *y) {
@@ -174,10 +170,6 @@ pub(super) fn render_notes(
     settings: Res<Settings>,
     time: Res<Time>,
 ) {
-    if !game.is_changed() && !settings.is_changed() {
-        return;
-    }
-
     for (mut note, mut text) in &mut notes {
         let x = note.x;
         let y = note.y;
@@ -190,12 +182,17 @@ pub(super) fn render_notes(
             } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
                 Color::BLACK
             } else if let Some(NoteAnimationKind::FadeOut(duration)) = note.animation_kind {
-                let a = 1. - (duration.as_secs_f32() / note.animation_timer.elapsed_secs());
+                println!(
+                    "fade out {} / {}",
+                    note.animation_timer,
+                    duration.as_secs_f32()
+                );
+                let a = 1. - note.animation_timer / duration.as_secs_f32();
                 if a <= 0. {
                     note.animation_kind = None;
                     Color::NONE
                 } else {
-                    note.animation_timer.tick(time.delta());
+                    note.animation_timer += time.delta().as_secs_f32();
                     Color::rgba(0., 0., 0., a)
                 }
             } else {
@@ -301,12 +298,12 @@ pub(super) fn render_highlights(
         *sprite = Sprite::from_color(color);
 
         if note.animation_kind == Some(NoteAnimationKind::Mistake) {
-            let elapsed_secs = note.animation_timer.elapsed_secs() - 0.5; // delay
+            let elapsed_secs = note.animation_timer - 0.5; // delay
             flex_item_style.transform = if elapsed_secs > 0.5 {
                 note.animation_kind = None;
                 Transform::default_2d()
             } else {
-                note.animation_timer.tick(time.delta());
+                note.animation_timer += time.delta().as_secs_f32();
                 let scale = if elapsed_secs < 0. {
                     Vec3::new(3., 3., 1.)
                 } else {

@@ -10,7 +10,6 @@ use crate::sudoku::{self, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
 use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use bevy::time::Stopwatch;
 use board_builder::{build_board, Board};
 use board_numbers::*;
 use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
@@ -63,7 +62,7 @@ pub struct Note {
     y: u8,
     n: NonZeroU8,
     animation_kind: Option<NoteAnimationKind>,
-    animation_timer: Stopwatch,
+    animation_timer: f32,
 }
 
 impl Note {
@@ -73,7 +72,7 @@ impl Note {
             y,
             n,
             animation_kind: None,
-            animation_timer: Stopwatch::new(),
+            animation_timer: 0.,
         }
     }
 }
@@ -409,9 +408,9 @@ fn animate_cleared_notes(
                 + ((y as f32) - (set_y as f32)).powi(2))
             .sqrt();
             note.animation_kind = Some(NoteAnimationKind::FadeOut(Duration::from_secs_f32(
-                distance,
+                0.05 * distance,
             )));
-            note.animation_timer.reset();
+            note.animation_timer = 0.;
         }
     }
 }
@@ -420,7 +419,7 @@ fn animate_mistake(notes: &mut Query<&mut Note>, set_x: u8, set_y: u8, set_n: No
     for mut note in notes {
         if note.x == set_x && note.y == set_y && note.n == set_n {
             note.animation_kind = Some(NoteAnimationKind::Mistake);
-            note.animation_timer.reset();
+            note.animation_timer = 0.;
         }
     }
 }
