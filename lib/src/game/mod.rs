@@ -27,6 +27,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Selection::default())
+            .insert_resource(Highlights::default())
             .init_resource::<SliceHandles>()
             .add_state::<ModeState>()
             .add_systems(
@@ -50,7 +51,8 @@ impl Plugin for GamePlugin {
                     render_numbers,
                     render_notes,
                     render_wheel,
-                    render_highlights,
+                    calculate_highlights,
+                    render_highlights.after(calculate_highlights),
                 ),
             );
     }

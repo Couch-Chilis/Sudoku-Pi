@@ -9,6 +9,9 @@ use crate::{
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
+const NUMBER_FONT_SIZE: f32 = 70.;
+const NOTE_FONT_SIZE: f32 = 30.;
+
 #[derive(Component)]
 pub(super) struct HighlightedNumber(usize, HighlightKind);
 
@@ -55,7 +58,7 @@ fn spawn_cell(
         } else {
             fonts.bold.clone()
         },
-        font_size: 70.,
+        font_size: NUMBER_FONT_SIZE,
         color: if n.is_some() {
             get_number_color(game, settings, x, y)
         } else {
@@ -65,7 +68,7 @@ fn spawn_cell(
 
     let note_style = TextStyle {
         font: fonts.bold.clone(),
-        font_size: 30.,
+        font_size: NOTE_FONT_SIZE,
         color: Color::NONE,
     };
 
@@ -182,11 +185,6 @@ pub(super) fn render_notes(
             } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
                 Color::BLACK
             } else if let Some(NoteAnimationKind::FadeOut(duration)) = note.animation_kind {
-                println!(
-                    "fade out {} / {}",
-                    note.animation_timer,
-                    duration.as_secs_f32()
-                );
                 let a = 1. - note.animation_timer / duration.as_secs_f32();
                 if a <= 0. {
                     note.animation_kind = None;
@@ -205,24 +203,31 @@ pub(super) fn render_notes(
     }
 }
 
-pub(super) fn render_highlights(
-    mut cells: Query<(&Number, &mut Sprite), Without<Note>>,
-    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite), Without<Number>>,
-    screen: Res<State<ScreenState>>,
+#[derive(Resource)]
+pub(super) struct Highlights {
+    highlights: [Option<HighlightKind>; 81],
+    selected_number: Option<NonZeroU8>,
+}
+
+impl Default for Highlights {
+    fn default() -> Self {
+        Self {
+            highlights: [None; 81],
+            selected_number: None,
+        }
+    }
+}
+
+pub(super) fn calculate_highlights(
+    mut highlights_resource: ResMut<Highlights>,
     game: Res<Game>,
     settings: Res<Settings>,
     selection: Res<Selection>,
-    time: Res<Time>,
 ) {
     if !game.is_changed() && !selection.is_changed() && !settings.is_changed() {
         return;
     }
 
-    if screen.get() != &ScreenState::Game && screen.get() != &ScreenState::Highscores {
-        return;
-    }
-
-    // First determine the type of highlight each cell should receive:
     let mut highlights = [None; 81];
     if let Some((x, y)) = selection.selected_cell {
         let selected_pos = get_pos(x, y);
@@ -268,25 +273,49 @@ pub(super) fn render_highlights(
         highlights[get_pos(x, y)] = Some(HighlightKind::Hint);
     }
 
-    for (number, mut sprite) in &mut cells {
-        let pos = get_pos(number.0, number.1);
-        let highlight_kind = highlights[pos];
-        let color = match highlight_kind {
-            Some(HighlightKind::Selection) => Color::rgba(0.9, 0.8, 0.0, 0.7),
-            Some(HighlightKind::SameNumber) => Color::rgba(0.9, 0.8, 0.0, 0.5),
-            Some(HighlightKind::InRange) => Color::rgba(0.9, 0.8, 0.0, 0.2),
-            Some(HighlightKind::Hint) => COLOR_HINT,
-            None | Some(HighlightKind::Note) | Some(HighlightKind::Mistake) => Color::NONE,
-        };
-        *sprite = Sprite::from_color(color);
+    *highlights_resource = Highlights {
+        highlights,
+        selected_number: selection
+            .selected_cell
+            .and_then(|(x, y)| game.current.get(x, y)),
+    };
+}
+
+pub(super) fn render_highlights(
+    mut cells: Query<(&Number, &mut Sprite), Without<Note>>,
+    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite), Without<Number>>,
+    screen: Res<State<ScreenState>>,
+    highlights: Res<Highlights>,
+    time: Res<Time>,
+) {
+    if screen.get() != &ScreenState::Game && screen.get() != &ScreenState::Highscores {
+        return;
     }
 
-    for (mut note, mut flex_item_style, mut sprite) in &mut notes {
-        let selected_number = selection
-            .selected_cell
-            .and_then(|(x, y)| game.current.get(x, y));
-        let highlight_kind = if selected_number.map(|n| note.n == n).unwrap_or_default() {
-            highlights[get_pos(note.x, note.y)]
+    if highlights.is_changed() {
+        for (number, mut sprite) in &mut cells {
+            let pos = get_pos(number.0, number.1);
+            let highlight_kind = highlights.highlights[pos];
+            let color = match highlight_kind {
+                Some(HighlightKind::Selection) => Color::rgba(0.9, 0.8, 0.0, 0.7),
+                Some(HighlightKind::SameNumber) => Color::rgba(0.9, 0.8, 0.0, 0.5),
+                Some(HighlightKind::InRange) => Color::rgba(0.9, 0.8, 0.0, 0.2),
+                Some(HighlightKind::Hint) => COLOR_HINT,
+                None | Some(HighlightKind::Note) | Some(HighlightKind::Mistake) => Color::NONE,
+            };
+            if sprite.color != color {
+                *sprite = Sprite::from_color(color);
+            }
+        }
+    }
+
+    for (note, flex_item_style, mut sprite) in &mut notes {
+        let highlight_kind = if highlights
+            .selected_number
+            .map(|n| note.n == n)
+            .unwrap_or_default()
+        {
+            highlights.highlights[get_pos(note.x, note.y)]
         } else {
             None
         };
@@ -295,27 +324,64 @@ pub(super) fn render_highlights(
             Some(HighlightKind::Mistake) => COLOR_MAIN_POP_DARK.with_a(0.5),
             _ => Color::NONE,
         };
-        *sprite = Sprite::from_color(color);
+        if sprite.color != color {
+            *sprite = Sprite::from_color(color);
+        }
 
         if note.animation_kind == Some(NoteAnimationKind::Mistake) {
-            let elapsed_secs = note.animation_timer - 0.5; // delay
-            flex_item_style.transform = if elapsed_secs > 0.5 {
-                note.animation_kind = None;
-                Transform::default_2d()
-            } else {
-                note.animation_timer += time.delta().as_secs_f32();
-                let scale = if elapsed_secs < 0. {
-                    Vec3::new(3., 3., 1.)
-                } else {
-                    let zoom = 3. - elapsed_secs * 4.;
-                    Vec3::new(zoom, zoom, 1.)
-                };
-                Transform {
-                    translation: Vec3::new(0., 0., 0.),
-                    scale,
-                    ..default()
-                }
-            };
+            animate_mistake(note, flex_item_style, time.delta().as_secs_f32());
         }
+    }
+}
+
+fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, delta: f32) {
+    let ratio = get_mistake_animation_ratios(note.animation_timer);
+
+    style.transform = if ratio == 1. {
+        note.animation_kind = None;
+        Transform::default_2d()
+    } else {
+        note.animation_timer += delta;
+
+        let font_ratio = NUMBER_FONT_SIZE / NOTE_FONT_SIZE;
+        let zoom = 1. + (1. - ratio) * (font_ratio - 1.);
+        let scale = Vec3::new(zoom, zoom, 1.);
+
+        let (translate_x, translate_y) = match note.n.get() {
+            1 => (font_ratio, -0.6),
+            2 => (0., -0.6),
+            3 => (-font_ratio, -0.6),
+            4 => (font_ratio, 0.2),
+            5 => (0., 0.2),
+            6 => (-font_ratio, 0.2),
+            7 => (font_ratio, 0.9),
+            8 => (0., 0.9),
+            9 => (-font_ratio, 0.9),
+            _ => (0., 0.),
+        };
+
+        let translation =
+            Vec3::new(translate_x * (1. - ratio), translate_y * (1. - ratio), 0.) / scale;
+
+        Transform {
+            translation,
+            scale,
+            ..default()
+        }
+    };
+}
+
+/// Returns the animation's ratio as a number from 0.0 through 1.0, where 0.0
+/// means the animation hasn't started yet and 1.0 means it's done.
+fn get_mistake_animation_ratios(timer: f32) -> f32 {
+    const MISTAKE_ANIMATION_DELAY: f32 = 0.5;
+    const MISTAKE_ANIMATION_DURATION: f32 = 0.5;
+
+    if timer < MISTAKE_ANIMATION_DELAY {
+        0.
+    } else if timer > MISTAKE_ANIMATION_DELAY + MISTAKE_ANIMATION_DURATION {
+        1.
+    } else {
+        ((timer - MISTAKE_ANIMATION_DELAY) / MISTAKE_ANIMATION_DURATION).powi(2)
     }
 }
