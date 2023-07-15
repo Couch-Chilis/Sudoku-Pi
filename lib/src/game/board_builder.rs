@@ -75,9 +75,9 @@ fn draw_lines(board: &mut EntityCommands) {
 fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
     use Thickness::*;
     let (thickness, color, z) = match thickness {
-        Thin => (0.05 * CELL_SIZE, COLOR_BOARD_LINE_THIN, 5.),
-        Medium => (0.1 * CELL_SIZE, COLOR_BOARD_LINE_MEDIUM, 6.),
-        Thick => (0.15 * CELL_SIZE, COLOR_BOARD_LINE_THICK, 7.),
+        Thin => (0.03 * CELL_SIZE, COLOR_BOARD_LINE_THIN, 5.),
+        Medium => (0.03 * CELL_SIZE, COLOR_BOARD_LINE_MEDIUM, 6.),
+        Thick => (0.06 * CELL_SIZE, COLOR_BOARD_LINE_THICK, 7.),
     };
 
     use Orientation::*;
@@ -87,8 +87,8 @@ fn build_line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bun
     };
 
     let scale = match orientation {
-        Horizontal => Vec3::new(9.075 * CELL_SIZE, thickness, 1.),
-        Vertical => Vec3::new(thickness, 9.075 * CELL_SIZE, 1.),
+        Horizontal => Vec3::new(9.03 * CELL_SIZE, thickness, 1.),
+        Vertical => Vec3::new(thickness, 9.03 * CELL_SIZE, 1.),
     };
 
     SpriteBundle {

@@ -9,7 +9,7 @@ use crate::{
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
-const NUMBER_FONT_SIZE: f32 = 70.;
+const NUMBER_FONT_SIZE: f32 = 80.;
 const NOTE_FONT_SIZE: f32 = 30.;
 
 #[derive(Component)]
@@ -297,9 +297,9 @@ pub(super) fn render_highlights(
             let pos = get_pos(number.0, number.1);
             let highlight_kind = highlights.highlights[pos];
             let color = match highlight_kind {
-                Some(HighlightKind::Selection) => Color::rgba(0.9, 0.8, 0.0, 0.7),
-                Some(HighlightKind::SameNumber) => Color::rgba(0.9, 0.8, 0.0, 0.5),
-                Some(HighlightKind::InRange) => Color::rgba(0.9, 0.8, 0.0, 0.2),
+                Some(HighlightKind::Selection) => COLOR_CELL_SELECTION,
+                Some(HighlightKind::SameNumber) => COLOR_CELL_SAME_NUMBER,
+                Some(HighlightKind::InRange) => COLOR_CELL_HIGHLIGHT,
                 Some(HighlightKind::Hint) => COLOR_HINT,
                 None | Some(HighlightKind::Note) | Some(HighlightKind::Mistake) => Color::NONE,
             };
@@ -320,7 +320,7 @@ pub(super) fn render_highlights(
             None
         };
         let color = match highlight_kind {
-            Some(HighlightKind::Note) => Color::rgba(0.9, 0.8, 0.0, 0.5),
+            Some(HighlightKind::Note) => COLOR_CELL_HIGHLIGHT,
             Some(HighlightKind::Mistake) => COLOR_MAIN_POP_DARK.with_a(0.5),
             _ => Color::NONE,
         };

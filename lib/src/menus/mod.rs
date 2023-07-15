@@ -78,16 +78,17 @@ pub fn menu_setup(
             .with_children(|logo_section| {
                 // Workaround to keep the logo centered.
                 logo_section.spawn(FlexLeafBundle::from_style(
-                    FlexItemStyle::fixed_size(Val::Vmin(10.), Val::Vmin(10.))
+                    FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
                         .with_margin(Size::all(Val::Vmin(5.))),
                 ));
 
                 // Logo.
                 logo_section
                     .spawn(FlexLeafBundle::from_style(
-                        FlexItemStyle::preferred_size(Val::CrossPercent(42.), Val::Percent(90.))
-                            .with_margin(Size::all(Val::Vmin(5.)))
-                            .with_fixed_aspect_ratio(),
+                        FlexItemStyle::preferred_size(Val::CrossPercent(37.), Val::Percent(80.))
+                            .with_margin(Size::new(Val::Vmin(8.), Val::Vmin(0.)))
+                            .with_fixed_aspect_ratio()
+                            .with_alignment(Alignment::End),
                     ))
                     .with_children(|square| {
                         square.spawn(SpriteBundle {
@@ -152,7 +153,7 @@ fn build_button_section(
                 current_rotation: initial_rotation,
             },
             FlexBundle::new(
-                FlexContainerStyle::default().with_padding(Size::all(Val::Vmin(5.))),
+                FlexContainerStyle::default().with_padding(Size::all(Val::Vmin(10.))),
                 FlexItemStyle::available_size()
                     .without_occupying_space()
                     .with_transform(Transform {

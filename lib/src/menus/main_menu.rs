@@ -14,8 +14,9 @@ pub enum MainScreenButtonAction {
 pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, game: &Game) {
     use MainScreenButtonAction::*;
 
-    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
-    let buttons = ButtonBuilder::new(fonts, button_size);
+    let button_style = FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
+        .with_margin(Size::all(Val::Vmin(1.5)));
+    let buttons = ButtonBuilder::new(fonts, button_style);
     if cfg!(not(target_os = "ios")) {
         buttons.build_ternary_with_text_and_action(
             main_section,
@@ -23,7 +24,16 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
             MainScreenButtonAction::Quit,
         );
     }
-    buttons.build_secondary_with_text_and_action(main_section, "How to Play", GoToHowToPlay);
+    buttons.build_secondary_with_text_and_action_and_custom_margin(
+        main_section,
+        "How to Play",
+        GoToHowToPlay,
+        if cfg!(target_os = "ios") {
+            Size::new(Val::Vmin(1.5), Val::Vmin(5.))
+        } else {
+            Size::all(Val::Vmin(1.5))
+        },
+    );
     if game.may_continue() {
         buttons.build_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
         buttons.build_selected_with_text_and_action(main_section, "Continue", ContinueGame);

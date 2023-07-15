@@ -62,12 +62,12 @@ fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut 
 }
 
 fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
-    let width = Val::Vmin(30.0);
-    let height = Val::Vmin(12.0);
+    let width = Val::Vmin(26.0);
+    let height = Val::Vmin(11.0);
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 80.,
+        font_size: 90.,
         color: COLOR_TIMER_TEXT,
     };
 
@@ -75,7 +75,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
-        0.04 * height,
+        0.03 * height,
     )))
     .with_children(|top_border_leaf| {
         top_border_leaf.spawn(SpriteBundle {
@@ -87,18 +87,19 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
         width,
-        0.92 * height,
+        0.94 * height,
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((
             Timer,
-            FlexTextBundle::from_text(Text::from_section("0:00", text_style)),
+            FlexTextBundle::from_text(Text::from_section("0:00", text_style))
+                .with_translation(0., -3.),
         ));
     });
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
-        0.04 * height,
+        0.03 * height,
     )))
     .with_children(|bottom_border_leaf| {
         bottom_border_leaf.spawn(SpriteBundle {
@@ -118,7 +119,7 @@ pub fn build_button_row(
             .spawn(FlexBundle::new(
                 FlexContainerStyle::row().with_gap(Val::Auto),
                 FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
-                    .with_margin(Size::all(Val::Vmin(4.5))),
+                    .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
             ))
             .with_children(child_builder);
     });

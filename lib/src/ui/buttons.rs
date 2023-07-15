@@ -2,6 +2,8 @@ use super::{flex::*, Interaction};
 use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
+const BORDER_THICKNESS: Val = Val::Vmin(0.3);
+
 /// Marker for buttons.
 #[derive(Clone, Component, Default)]
 pub struct Button;
@@ -50,10 +52,7 @@ pub struct ButtonBuilder {
 }
 
 impl ButtonBuilder {
-    pub fn new(fonts: &Fonts, button_size: FlexItemStyle) -> Self {
-        // Shared button styling.
-        let button_style = button_size.with_margin(Size::all(Val::Vmin(1.5)));
-
+    pub fn new(fonts: &Fonts, button_style: FlexItemStyle) -> Self {
         // Text styling for primary buttons.
         let text_style = TextStyle {
             font: fonts.medium.clone(),
@@ -132,12 +131,42 @@ impl ButtonBuilder {
         text: &str,
         action: impl Component,
     ) {
+        self.build_secondary_with_text_and_action_and_button_style(
+            parent,
+            text,
+            action,
+            self.button_style.clone(),
+        );
+    }
+
+    pub fn build_secondary_with_text_and_action_and_custom_margin(
+        &self,
+        parent: &mut ChildBuilder,
+        text: &str,
+        action: impl Component,
+        margin: Size,
+    ) {
+        self.build_secondary_with_text_and_action_and_button_style(
+            parent,
+            text,
+            action,
+            self.button_style.clone().with_margin(margin),
+        );
+    }
+
+    fn build_secondary_with_text_and_action_and_button_style(
+        &self,
+        parent: &mut ChildBuilder,
+        text: &str,
+        action: impl Component,
+        button_style: FlexItemStyle,
+    ) {
         parent
             .spawn((
                 ButtonBundle {
                     flex: FlexBundle::new(
-                        FlexContainerStyle::row().with_padding(Size::all(Val::Vmin(0.5))),
-                        self.button_style.clone(),
+                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
+                        button_style,
                     )
                     .with_background_color(COLOR_SECONDARY_BUTTON_BORDER),
                     ..default()
@@ -174,7 +203,7 @@ impl ButtonBuilder {
             .spawn((
                 ButtonBundle {
                     flex: FlexBundle::new(
-                        FlexContainerStyle::row().with_padding(Size::all(Val::Vmin(0.5))),
+                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
                         self.button_style.clone(),
                     )
                     .with_background_color(COLOR_TERNARY_BUTTON_BORDER),
