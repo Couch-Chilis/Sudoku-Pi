@@ -1,12 +1,14 @@
-use super::game_ui::build_button_row;
-use crate::{constants::*, ui::*, utils::*};
+use crate::{constants::*, ui::*, utils::*, GameTimer, Images};
 use crate::{Fonts, Game, Highscores, ScreenState};
-use bevy::sprite::{Anchor, MaterialMesh2dBundle};
+use bevy::sprite::Anchor;
 use bevy::{ecs::system::EntityCommands, prelude::*};
+
+use super::Selection;
 
 #[derive(Component)]
 pub enum HighscoreButtonAction {
     Back,
+    NewGame,
 }
 
 #[derive(Component)]
@@ -14,76 +16,74 @@ pub struct ScoreContainer;
 
 pub fn highscore_screen_setup(
     highscore_screen: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     game: &Game,
     highscores: &Highscores,
+    images: &Images,
 ) {
-    // Take up the space of the two top rows to match the game screen.
     highscore_screen.with_children(|screen| {
-        screen.spawn(FlexLeafBundle::from_style(
-            FlexItemStyle::minimum_size(Val::Vmin(90.), Val::Vmin(18.))
-                .with_margin(Size::all(Val::Vmin(9.))),
+        screen.spawn(FlexBundle::new(
+            FlexContainerStyle::row(),
+            FlexItemStyle::available_size(),
         ));
-    });
 
-    build_highscores(highscore_screen, meshes, materials, fonts, game, highscores);
-
-    build_button_row(highscore_screen, |button_row| {
-        let buttons = ButtonBuilder::new(
-            fonts,
-            FlexItemStyle::fixed_size(Val::Vmin(90.), Val::Vmin(10.)),
-        );
-        buttons.build_selected_with_text_and_action(
-            button_row,
-            "Back",
-            HighscoreButtonAction::Back,
-        );
-    });
-}
-
-fn build_highscores(
-    screen: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
-    fonts: &Fonts,
-    game: &Game,
-    highscores: &Highscores,
-) {
-    screen.with_children(|screen| {
         screen
-            .spawn(FlexLeafBundle::from_style(
-                FlexItemStyle::preferred_and_minimum_size(
-                    Size::all(Val::Vmin(90.)),
-                    Size::all(Val::Vmin(50.)),
-                )
-                .with_fixed_aspect_ratio(),
+            .spawn(FlexBundle::new(
+                FlexContainerStyle::row(),
+                FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(102.5)),
             ))
-            .with_children(|leaf| {
-                leaf.spawn(MaterialMesh2dBundle {
-                    mesh: meshes.add(shape::Circle::new(0.5).into()).into(),
-                    material: materials.add(ColorMaterial::from(COLOR_BOARD_LINE_THICK)),
-                    transform: Transform::default_2d(),
-                    ..default()
-                });
+            .with_children(|wall_section| {
+                // Wall.
+                wall_section
+                    .spawn(FlexLeafBundle::from_style(
+                        FlexItemStyle::available_size().without_occupying_space(),
+                    ))
+                    .with_children(|square| {
+                        square.spawn(SpriteBundle {
+                            texture: images.wall.clone(),
+                            transform: Transform::from_2d_scale(1. / 390., 1. / 400.),
+                            ..default()
+                        });
+                    });
 
-                let mut score_container = leaf.spawn((
-                    ScoreContainer,
-                    MaterialMesh2dBundle {
-                        mesh: meshes.add(shape::Circle::new(0.45).into()).into(),
-                        material: materials.add(ColorMaterial::from(Color::WHITE)),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 2.)),
-                        ..default()
-                    },
+                let _spacer = wall_section.spawn(FlexItemBundle::from_style(
+                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8)),
                 ));
 
+                let mut score_container = wall_section.spawn((
+                    ScoreContainer,
+                    FlexLeafBundle::from_style(FlexItemStyle::available_size()),
+                ));
                 render_scores(&mut score_container, fonts, game, highscores);
+            });
+
+        screen
+            .spawn(FlexBundle::new(
+                FlexContainerStyle::column().with_padding(Size::new(Val::None, Val::Auto)),
+                FlexItemStyle::available_size(),
+            ))
+            .with_children(|button_section| {
+                let button_style = FlexItemStyle::fixed_size(Val::Percent(70.), Val::Vmin(10.))
+                    .with_margin(Size::all(Val::Vmin(1.5)));
+                let button_builder = ButtonBuilder::new(fonts, button_style);
+                button_builder.build_secondary_with_text_and_action(
+                    button_section,
+                    "Back to Menu",
+                    HighscoreButtonAction::Back,
+                );
+                button_builder.build_with_text_and_action(
+                    button_section,
+                    "Start a new Game",
+                    HighscoreButtonAction::NewGame,
+                );
             });
     });
 }
 
 pub fn highscore_button_actions(
+    mut game: ResMut<Game>,
+    mut game_timer: ResMut<GameTimer>,
+    mut selection: ResMut<Selection>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     query: Query<(&Interaction, &HighscoreButtonAction), (Changed<Interaction>, With<Button>)>,
 ) {
@@ -91,6 +91,12 @@ pub fn highscore_button_actions(
         if *interaction == Interaction::Pressed {
             match action {
                 HighscoreButtonAction::Back => screen_state.set(ScreenState::MainMenu),
+                HighscoreButtonAction::NewGame => {
+                    *game = Game::generate(game.difficulty).unwrap();
+                    *selection = Selection::new_for_game(&game);
+                    game_timer.stopwatch.reset();
+                    screen_state.set(ScreenState::Game);
+                }
             }
         }
     }
@@ -126,96 +132,79 @@ fn render_scores(
     let height = 1. / 7.;
 
     score_container.with_children(|container| {
-        {
-            render_left_score(container, fonts, 0., "Score".to_owned(), Color::BLACK);
+        let mut y = 0.;
+        render_left(container, &fonts.medium, y, "Score:".to_owned());
+        render_right(container, &fonts.medium, y, game.score.to_string());
 
-            let mut y = height;
-            for score in highscores.best_scores.iter() {
-                let color = if *score == game.score {
-                    COLOR_MAIN_POP_DARK
-                } else {
-                    Color::BLACK
-                };
-                render_left_score(container, fonts, y, score.to_string(), color);
-                y += height;
-            }
+        y += height;
+        render_left(container, &fonts.medium, y, "Time:".to_owned());
+        render_right(container, &fonts.medium, y, format_time(game.elapsed_secs));
 
-            if !highscores.best_scores.contains(&game.score) {
-                render_left_score(container, fonts, y, game.score.to_string(), COLOR_ORANGE);
-            }
-        }
-        {
-            render_right_score(container, fonts, 0., "Time".to_owned(), Color::BLACK);
+        y += height;
+        render_left(container, &fonts.medium, y, "Mistakes:".to_owned());
+        render_right(container, &fonts.medium, y, game.num_mistakes.to_string());
 
-            let mut y = height;
-            for time in highscores.best_times.iter() {
-                let color = if *time == game.elapsed_secs {
-                    COLOR_MAIN_POP_DARK
-                } else {
-                    Color::BLACK
-                };
-                render_right_score(container, fonts, y, format_time(*time), color);
-                y += height;
-            }
+        y += height;
+        render_left(container, &fonts.medium, y, "Hints:".to_owned());
+        render_right(container, &fonts.medium, y, game.num_hints.to_string());
 
-            if !highscores.best_times.contains(&game.elapsed_secs) {
-                render_right_score(
-                    container,
-                    fonts,
-                    y,
-                    format_time(game.elapsed_secs),
-                    COLOR_ORANGE,
-                );
-            }
-        }
+        y += 2. * height;
+        render_left(container, &fonts.bold, y, "Highest score:".to_owned());
+        render_right(
+            container,
+            &fonts.bold,
+            y,
+            highscores
+                .best_scores
+                .first()
+                .unwrap_or(&game.score)
+                .to_string(),
+        );
+
+        y += height;
+        render_left(container, &fonts.bold, y, "Best time:".to_owned());
+        render_right(
+            container,
+            &fonts.bold,
+            y,
+            format_time(*highscores.best_times.first().unwrap_or(&game.elapsed_secs)),
+        );
     });
 }
 
-fn render_left_score(
-    score_container: &mut ChildBuilder,
-    fonts: &Fonts,
-    y: f32,
-    text: String,
-    color: Color,
-) {
-    render_score(
+fn render_left(score_container: &mut ChildBuilder, font: &Handle<Font>, y: f32, text: String) {
+    render_score_text(
         score_container,
-        fonts,
+        font,
         Transform {
-            translation: Vec3::new(-0.05, 0.2 - y * 0.5, 1.),
-            scale: Vec3::new(0.002, 0.0015, 1.),
+            translation: Vec3::new(0., 0.105 - y * 0.5, 1.),
+            scale: Vec3::new(0.0015, 0.0016, 1.),
             ..default()
         },
         Anchor::CenterRight,
         text,
-        color,
+        COLOR_MAIN_DARKER,
     );
 }
 
-fn render_right_score(
-    score_container: &mut ChildBuilder,
-    fonts: &Fonts,
-    y: f32,
-    text: String,
-    color: Color,
-) {
-    render_score(
+fn render_right(score_container: &mut ChildBuilder, font: &Handle<Font>, y: f32, text: String) {
+    render_score_text(
         score_container,
-        fonts,
+        font,
         Transform {
-            translation: Vec3::new(0.05, 0.2 - y * 0.5, 1.),
-            scale: Vec3::new(0.002, 0.0015, 1.),
+            translation: Vec3::new(0.1, 0.105 - y * 0.5, 1.),
+            scale: Vec3::new(0.0015, 0.0016, 1.),
             ..default()
         },
         Anchor::CenterLeft,
         text,
-        color,
+        COLOR_POP_FOCUS,
     );
 }
 
-fn render_score(
+fn render_score_text(
     score_container: &mut ChildBuilder,
-    fonts: &Fonts,
+    font: &Handle<Font>,
     transform: Transform,
     text_anchor: Anchor,
     text: String,
@@ -223,7 +212,7 @@ fn render_score(
 ) {
     let text_style = TextStyle {
         color,
-        font: fonts.medium.clone(),
+        font: font.clone(),
         font_size: 40.,
     };
 
@@ -233,20 +222,4 @@ fn render_score(
         transform,
         ..default()
     });
-}
-
-fn _determine_num_entries(game: &Game, highscores: &Highscores) -> (usize, usize) {
-    let num_scores = if highscores.best_scores.contains(&game.score) {
-        highscores.best_scores.len().min(MAX_NUM_HIGHSCORES)
-    } else {
-        MAX_NUM_HIGHSCORES + 1
-    };
-
-    let num_times = if highscores.best_times.contains(&game.elapsed_secs) {
-        highscores.best_times.len().min(MAX_NUM_HIGHSCORES)
-    } else {
-        MAX_NUM_HIGHSCORES + 1
-    };
-
-    (num_scores, num_times)
 }

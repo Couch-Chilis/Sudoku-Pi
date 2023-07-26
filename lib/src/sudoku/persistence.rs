@@ -53,6 +53,8 @@ impl Game {
                     difficulty,
                     score,
                     elapsed_secs,
+                    num_mistakes,
+                    num_hints,
                 } = serialized_game;
                 match start.find_unique_solution() {
                     Some(solution) => Ok(Game {
@@ -64,6 +66,8 @@ impl Game {
                         difficulty,
                         score,
                         elapsed_secs,
+                        num_mistakes,
+                        num_hints,
                     }),
                     None => Err(anyhow!("Saved game didn't have a unique solution")),
                 }
@@ -81,6 +85,8 @@ pub struct SerializedGame {
     pub difficulty: Difficulty,
     pub score: u32,
     pub elapsed_secs: f32,
+    pub num_mistakes: u32,
+    pub num_hints: u32,
 }
 
 impl From<&Game> for SerializedGame {
@@ -93,6 +99,8 @@ impl From<&Game> for SerializedGame {
             difficulty: game.difficulty,
             score: game.score,
             elapsed_secs: game.elapsed_secs,
+            num_mistakes: game.num_mistakes,
+            num_hints: game.num_hints,
         }
     }
 }

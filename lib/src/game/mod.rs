@@ -378,6 +378,7 @@ fn fill_number(
 
     let new_elapsed_secs = game.set(x, y, n, options);
     if new_elapsed_secs != elapsed_secs {
+        game.num_mistakes += 1;
         animate_mistake(notes, x, y, n);
 
         timer
@@ -496,6 +497,8 @@ fn give_hint(
     notes: &mut Query<&mut Note>,
     settings: &Settings,
 ) {
+    game.num_hints += 1;
+
     if let Some((x, y)) = selection.hint {
         if let Some(n) = game.solution.get(x, y) {
             fill_number(game, timer, selection, notes, settings, true, x, y, n);

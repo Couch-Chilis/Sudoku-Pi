@@ -156,7 +156,7 @@ fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
         // If we show mistakes, there's no reason to visually differentiate
         // between starting numbers and numbers filled in correctly.
         if game.current.get(x, y) != game.solution.get(x, y) {
-            COLOR_MAIN_POP_DARK
+            COLOR_POP_DARK
         } else {
             Color::BLACK
         }
@@ -181,7 +181,7 @@ pub(super) fn render_notes(
         let current_color = text.sections[0].style.color;
         let new_color =
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
-                COLOR_MAIN_POP_DARK
+                COLOR_POP_DARK
             } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
                 Color::BLACK
             } else if let Some(NoteAnimationKind::FadeOut(duration)) = note.animation_kind {
@@ -321,7 +321,7 @@ pub(super) fn render_highlights(
         };
         let color = match highlight_kind {
             Some(HighlightKind::Note) => COLOR_CELL_HIGHLIGHT,
-            Some(HighlightKind::Mistake) => COLOR_MAIN_POP_DARK.with_a(0.5),
+            Some(HighlightKind::Mistake) => COLOR_POP_DARK.with_a(0.5),
             _ => Color::NONE,
         };
         if sprite.color != color {
@@ -374,7 +374,7 @@ fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, d
 /// Returns the animation's ratio as a number from 0.0 through 1.0, where 0.0
 /// means the animation hasn't started yet and 1.0 means it's done.
 fn get_mistake_animation_ratios(timer: f32) -> f32 {
-    const MISTAKE_ANIMATION_DELAY: f32 = 0.5;
+    const MISTAKE_ANIMATION_DELAY: f32 = 0.8;
     const MISTAKE_ANIMATION_DURATION: f32 = 0.5;
 
     if timer < MISTAKE_ANIMATION_DELAY {

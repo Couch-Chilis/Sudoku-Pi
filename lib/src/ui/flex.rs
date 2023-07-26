@@ -100,6 +100,10 @@ pub struct FlexContainerStyle {
 }
 
 impl FlexContainerStyle {
+    pub fn column() -> Self {
+        Self::default()
+    }
+
     pub fn row() -> Self {
         Self {
             direction: FlexDirection::Row,
@@ -413,7 +417,7 @@ impl Size {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum Val {
     /// Nada.
     #[default]

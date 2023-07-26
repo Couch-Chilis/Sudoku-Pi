@@ -142,10 +142,8 @@ impl<'a> LayoutInfo<'a> {
         let cross = direction.cross();
         let cross_scaling = vminmax_scales.scaling_for_direction(cross);
 
-        let padding = container_style
-            .padding
-            .for_direction(direction)
-            .evaluate(&scaling);
+        let padding_for_direction = container_style.padding.for_direction(direction);
+        let padding = padding_for_direction.evaluate(&scaling);
         let cross_padding = container_style
             .padding
             .for_direction(cross)
@@ -166,6 +164,9 @@ impl<'a> LayoutInfo<'a> {
         let initial_size = 2. * padding + num_gaps * container_style.gap.evaluate(&scaling);
         let base_grow = match container_style.gap {
             Val::Auto => num_gaps,
+            _ => 0.,
+        } + match padding_for_direction {
+            Val::Auto => 2.,
             _ => 0.,
         };
         let (total_size, total_grow, total_shrink) = children
@@ -193,6 +194,11 @@ impl<'a> LayoutInfo<'a> {
 
         // We keep track of the offset for positioning children along the axis.
         let mut offset = padding;
+
+        let spare_size = 1. - total_size;
+        if spare_size > 0. && padding_for_direction == Val::Auto {
+            offset += spare_size / total_grow;
+        }
 
         for item_entity in children {
             // Special handling for text items:
@@ -246,7 +252,6 @@ impl<'a> LayoutInfo<'a> {
                 .evaluate(&cross_scaling);
 
             // Grow or shrink as needed and if allowed.
-            let spare_size = 1. - total_size;
             if spare_size > 0. {
                 if item_style.flex_grow > 0. {
                     let base_size = flex_base.for_direction(direction).evaluate(&scaling);

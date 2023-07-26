@@ -45,6 +45,8 @@ pub struct Game {
     pub difficulty: Difficulty,
     pub score: u32,
     pub elapsed_secs: f32,
+    pub num_mistakes: u32,
+    pub num_hints: u32,
 }
 
 impl Game {

@@ -25,7 +25,7 @@ impl super::Game {
             );
 
             num_tries += 1;
-            if rated_difficulty == difficulty || num_tries == 3 {
+            if rated_difficulty == difficulty || num_tries == 4 {
                 return Ok(Self {
                     solution,
                     start: start.clone(),
@@ -35,6 +35,8 @@ impl super::Game {
                     difficulty,
                     score: 0,
                     elapsed_secs: 0.,
+                    num_mistakes: 0,
+                    num_hints: 0,
                 });
             }
         }
@@ -108,17 +110,22 @@ fn generate_sudoku(difficulty: Difficulty) -> anyhow::Result<Sudoku> {
         }
 
         let new_start = start.unset(x, y);
-        if difficulty < Difficulty::Expert {
-            let rated_difficulty = rate_difficulty(new_start.clone())
-                .context("Yikes, I could not even rate my own starting position...")?;
-            if rated_difficulty > difficulty {
-                continue 'dig; // It would become too difficult otherwise.
-            }
+
+        let rated_difficulty = rate_difficulty(new_start.clone())
+            .context("Yikes, I could not even rate my own starting position...")?;
+        if rated_difficulty > difficulty {
+            continue 'dig; // It would become too difficult otherwise.
         }
 
         start = new_start;
         num_cells_dug += 1;
-        if num_cells_dug >= num_cells_to_dig {
+
+        // If we reach the desired amount of cells to dig, we're done as soon as
+        // we reach the desired difficulty. If we haven't reached the desired
+        // difficulty yet, we allow up to 3 additional cells to be dug.
+        if num_cells_dug >= num_cells_to_dig
+            && (rated_difficulty == difficulty || num_cells_dug >= num_cells_to_dig + 3)
+        {
             break;
         }
     }

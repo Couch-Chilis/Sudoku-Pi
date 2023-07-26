@@ -46,6 +46,7 @@ const SLICE_7: &[u8] = include_bytes!("../../assets/slice_7.png");
 const SLICE_8: &[u8] = include_bytes!("../../assets/slice_8.png");
 const SLICE_9: &[u8] = include_bytes!("../../assets/slice_9.png");
 const TOP_LABEL: &[u8] = include_bytes!("../../assets/top-label.png");
+const WALL: &[u8] = include_bytes!("../../assets/wall.png");
 const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 
 #[derive(Clone, Default, Resource)]
@@ -70,6 +71,7 @@ pub struct Images {
     slice_8: Handle<Image>,
     slice_9: Handle<Image>,
     top_label: Handle<Image>,
+    wall: Handle<Image>,
     wheel: Handle<Image>,
 }
 
@@ -233,6 +235,7 @@ fn setup(
         slice_8: images.add(load_png(SLICE_8)),
         slice_9: images.add(load_png(SLICE_9)),
         top_label: images.add(load_png(TOP_LABEL)),
+        wall: images.add(load_png(WALL)),
         wheel: images.add(load_png(WHEEL)),
     };
 
@@ -259,14 +262,7 @@ fn setup(
     );
 
     let mut highscore_screen = spawn_screen(&mut commands, ScreenState::Highscores);
-    highscore_screen_setup(
-        &mut highscore_screen,
-        &mut meshes,
-        &mut materials,
-        &fonts,
-        &game,
-        &highscores,
-    );
+    highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
 
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.
