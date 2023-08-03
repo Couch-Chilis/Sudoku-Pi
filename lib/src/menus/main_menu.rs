@@ -45,9 +45,9 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
 
     main_section
         .spawn(FlexBundle::new(
-            FlexContainerStyle::row(),
             FlexItemStyle::fixed_size(Val::Percent(50.), Val::Vmin(6.))
                 .with_alignment(Alignment::End),
+            FlexContainerStyle::row(),
         ))
         .with_children(|parent| {
             parent.spawn(

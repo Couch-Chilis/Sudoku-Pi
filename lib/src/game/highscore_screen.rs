@@ -1,9 +1,9 @@
-use crate::{constants::*, ui::*, utils::*, GameTimer, Images};
+use super::Selection;
+use crate::{constants::*, ui::*, utils::*, Fortune, GameTimer, Images};
 use crate::{Fonts, Game, Highscores, ScreenState};
 use bevy::sprite::Anchor;
+use bevy::text::Text2dBounds;
 use bevy::{ecs::system::EntityCommands, prelude::*};
-
-use super::Selection;
 
 #[derive(Component)]
 pub enum HighscoreButtonAction {
@@ -14,6 +14,9 @@ pub enum HighscoreButtonAction {
 #[derive(Component)]
 pub struct ScoreContainer;
 
+#[derive(Component)]
+pub struct ScrollQuoteText;
+
 pub fn highscore_screen_setup(
     highscore_screen: &mut EntityCommands,
     fonts: &Fonts,
@@ -22,15 +25,47 @@ pub fn highscore_screen_setup(
     images: &Images,
 ) {
     highscore_screen.with_children(|screen| {
-        screen.spawn(FlexBundle::new(
-            FlexContainerStyle::row(),
-            FlexItemStyle::available_size(),
-        ));
+        screen
+            .spawn(FlexBundle::new(
+                FlexItemStyle::available_size(),
+                FlexContainerStyle::row().with_padding(Size::all(Val::Vmin(5.))),
+            ))
+            .with_children(|scroll_section| {
+                // Scroll.
+                scroll_section
+                    .spawn(FlexLeafBundle::from_style(
+                        FlexItemStyle::available_size().without_occupying_space(),
+                    ))
+                    .with_children(|square| {
+                        square.spawn(SpriteBundle {
+                            texture: images.scroll.clone(),
+                            transform: Transform::from_2d_scale(1. / 354., 1. / 135.),
+                            ..default()
+                        });
+                    });
+
+                scroll_section
+                    .spawn(FlexBundle::new(
+                        FlexItemStyle::available_size()
+                            .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
+                        FlexContainerStyle::column().with_padding(Size::all(Val::Vmin(10.))),
+                    ))
+                    .with_children(|scroll_text_container| {
+                        scroll_text_container.spawn((
+                            ScrollQuoteText,
+                            FlexTextBundle::from_text(Text::default())
+                                .with_bounds(Text2dBounds {
+                                    size: Vec2::new(550., 200.),
+                                })
+                                .with_translation(0., 4.),
+                        ));
+                    });
+            });
 
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::row(),
                 FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(102.5)),
+                FlexContainerStyle::row(),
             ))
             .with_children(|wall_section| {
                 // Wall.
@@ -59,8 +94,8 @@ pub fn highscore_screen_setup(
 
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::column().with_padding(Size::new(Val::None, Val::Auto)),
                 FlexItemStyle::available_size(),
+                FlexContainerStyle::column().with_padding(Size::new(Val::None, Val::Auto)),
             ))
             .with_children(|button_section| {
                 let button_style = FlexItemStyle::fixed_size(Val::Percent(70.), Val::Vmin(10.))
@@ -222,4 +257,32 @@ fn render_score_text(
         transform,
         ..default()
     });
+}
+
+pub fn on_fortune(
+    mut scroll_quote: Query<(&mut Text, With<ScrollQuoteText>)>,
+    fonts: Res<Fonts>,
+    fortune: Res<Fortune>,
+    screen_state: Res<State<ScreenState>>,
+) {
+    if !screen_state.is_changed() || screen_state.get() != &ScreenState::Highscores {
+        return;
+    }
+
+    let line_index = rand::random::<usize>() % fortune.lines.len();
+    let line = fortune.lines[line_index];
+
+    let Ok((mut quote_text, _)) = scroll_quote.get_single_mut() else {
+        return;
+    };
+
+    *quote_text = Text::from_section(
+        line,
+        TextStyle {
+            font: fonts.scroll.clone(),
+            font_size: 40.,
+            color: Color::BLACK,
+        },
+    )
+    .with_alignment(TextAlignment::Center);
 }

@@ -26,9 +26,9 @@ pub fn build_mode_slider(
     parent.with_children(|parent| {
         parent
             .spawn(FlexBundle::new(
-                FlexContainerStyle::row().with_padding(Size::new(Val::None, Val::Percent(25.))),
                 FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
                     .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                FlexContainerStyle::row().with_padding(Size::new(Val::None, Val::Percent(25.))),
             ))
             .with_children(|row| build_items(row, meshes, materials, fonts));
     });
@@ -50,9 +50,9 @@ fn build_items(
     row.spawn((
         ModeSlider,
         FlexBundle::new(
-            FlexContainerStyle::row(),
             FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.))
                 .without_occupying_space(),
+            FlexContainerStyle::row(),
         ),
     ))
     .with_children(|slider| {

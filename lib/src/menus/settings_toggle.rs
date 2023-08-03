@@ -61,10 +61,10 @@ impl<'a> SettingsToggleBuilder<'a> {
                 ToggleContainer,
                 Interaction::None,
                 FlexBundle::new(
+                    self.container_style.clone(),
                     FlexContainerStyle::row()
                         .with_gap(Val::Vmin(2.))
                         .with_padding(Size::all(Val::Vmin(2.))),
-                    self.container_style.clone(),
                 ),
                 toggle,
             ))

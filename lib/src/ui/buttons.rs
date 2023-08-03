@@ -36,7 +36,7 @@ pub struct ButtonBundle {
 impl ButtonBundle {
     pub fn from_style(style: FlexItemStyle) -> Self {
         Self {
-            flex: FlexBundle::new(FlexContainerStyle::row(), style)
+            flex: FlexBundle::new(style, FlexContainerStyle::row())
                 .with_background_color(COLOR_BUTTON_BACKGROUND),
             ..default()
         }
@@ -165,8 +165,8 @@ impl ButtonBuilder {
             .spawn((
                 ButtonBundle {
                     flex: FlexBundle::new(
-                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
                         button_style,
+                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
                     )
                     .with_background_color(COLOR_SECONDARY_BUTTON_BORDER),
                     ..default()
@@ -179,8 +179,8 @@ impl ButtonBuilder {
                     .spawn((
                         ButtonBackground,
                         FlexBundle::new(
-                            FlexContainerStyle::row(),
                             self.alternative_background_style.clone(),
+                            FlexContainerStyle::row(),
                         )
                         .with_background_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
                     ))
@@ -203,8 +203,8 @@ impl ButtonBuilder {
             .spawn((
                 ButtonBundle {
                     flex: FlexBundle::new(
-                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
                         self.button_style.clone(),
+                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
                     )
                     .with_background_color(COLOR_TERNARY_BUTTON_BORDER),
                     ..default()
@@ -217,8 +217,8 @@ impl ButtonBuilder {
                     .spawn((
                         ButtonBackground,
                         FlexBundle::new(
-                            FlexContainerStyle::row(),
                             self.alternative_background_style.clone(),
+                            FlexContainerStyle::row(),
                         )
                         .with_background_color(COLOR_TERNARY_BUTTON_BACKGROUND),
                     ))

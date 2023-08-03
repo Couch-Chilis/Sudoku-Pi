@@ -1,5 +1,5 @@
 use crate::{utils::*, ScreenInteraction, ScreenState};
-use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor};
+use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;
 use std::ops::Mul;
 
@@ -17,10 +17,10 @@ pub struct FlexBundle {
 
 impl FlexBundle {
     pub fn from_item_style(item_style: FlexItemStyle) -> Self {
-        Self::new(FlexContainerStyle::default(), item_style)
+        Self::new(item_style, FlexContainerStyle::default())
     }
 
-    pub fn new(container_style: FlexContainerStyle, item_style: FlexItemStyle) -> Self {
+    pub fn new(item_style: FlexItemStyle, container_style: FlexContainerStyle) -> Self {
         Self {
             container: FlexContainerBundle {
                 style: container_style,
@@ -369,6 +369,11 @@ impl FlexTextBundle {
 
     pub fn with_anchor(mut self, anchor: Anchor) -> Self {
         self.text.text_anchor = anchor;
+        self
+    }
+
+    pub fn with_bounds(mut self, bounds: Text2dBounds) -> Self {
+        self.text.text_2d_bounds = bounds;
         self
     }
 

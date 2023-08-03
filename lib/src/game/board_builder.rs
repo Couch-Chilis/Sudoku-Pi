@@ -16,12 +16,12 @@ pub fn build_board(
         let mut board = screen.spawn((
             Board,
             FlexBundle::new(
-                FlexContainerStyle::row(),
                 FlexItemStyle::preferred_and_minimum_size(
                     Size::all(Val::Vmin(90.)),
                     Size::all(Val::Vmin(50.)),
                 )
                 .with_fixed_aspect_ratio(),
+                FlexContainerStyle::row(),
             ),
         ));
 

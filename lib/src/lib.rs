@@ -33,9 +33,12 @@ const BOLD_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Bold.ttf")
 const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Medium.ttf");
 const LIGHT_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Light.ttf");
 
+const XIAOWEI_REGULAR_FONT: &[u8] = include_bytes!("../../assets/XiaoWei/ZCOOLXiaoWei-Regular.ttf");
+
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
 const LOGO: &[u8] = include_bytes!("../../assets/logo.png");
+const SCROLL: &[u8] = include_bytes!("../../assets/scroll.png");
 const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
 const SLICE_2: &[u8] = include_bytes!("../../assets/slice_2.png");
 const SLICE_3: &[u8] = include_bytes!("../../assets/slice_3.png");
@@ -49,11 +52,20 @@ const TOP_LABEL: &[u8] = include_bytes!("../../assets/top-label.png");
 const WALL: &[u8] = include_bytes!("../../assets/wall.png");
 const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 
+const FORTUNE: &[u8] = include_bytes!("../../assets/fortune.txt");
+
 #[derive(Clone, Default, Resource)]
 pub struct Fonts {
     bold: Handle<Font>,
     medium: Handle<Font>,
     light: Handle<Font>,
+
+    scroll: Handle<Font>,
+}
+
+#[derive(Clone, Default, Resource)]
+pub struct Fortune {
+    lines: Vec<&'static str>,
 }
 
 #[derive(Clone, Default, Resource)]
@@ -61,6 +73,7 @@ pub struct Images {
     cog: Handle<Image>,
     cog_pressed: Handle<Image>,
     logo: Handle<Image>,
+    scroll: Handle<Image>,
     slice_1: Handle<Image>,
     slice_2: Handle<Image>,
     slice_3: Handle<Image>,
@@ -219,12 +232,21 @@ fn setup(
         bold: fonts.add(Font::try_from_bytes(Vec::from(BOLD_FONT)).unwrap()),
         medium: fonts.add(Font::try_from_bytes(Vec::from(MEDIUM_FONT)).unwrap()),
         light: fonts.add(Font::try_from_bytes(Vec::from(LIGHT_FONT)).unwrap()),
+        scroll: fonts.add(Font::try_from_bytes(Vec::from(XIAOWEI_REGULAR_FONT)).unwrap()),
+    };
+
+    let fortune = Fortune {
+        lines: FORTUNE
+            .split(|&c| c == b'\n')
+            .map(|slice| std::str::from_utf8(slice).unwrap())
+            .collect(),
     };
 
     let images = Images {
         cog: images.add(load_png(COG)),
         cog_pressed: images.add(load_png(COG_PRESSED)),
         logo: images.add(load_png(LOGO)),
+        scroll: images.add(load_png(SCROLL)),
         slice_1: images.add(load_png(SLICE_1)),
         slice_2: images.add(load_png(SLICE_2)),
         slice_3: images.add(load_png(SLICE_3)),
@@ -276,6 +298,7 @@ fn setup(
 
     commands.insert_resource(SliceHandles::load(&images));
     commands.insert_resource(fonts);
+    commands.insert_resource(fortune);
     commands.insert_resource(images);
 }
 

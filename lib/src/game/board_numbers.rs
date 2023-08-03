@@ -30,8 +30,8 @@ pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, sett
         for x in 0..9 {
             board
                 .spawn(FlexBundle::new(
-                    FlexContainerStyle::default(),
                     FlexItemStyle::available_size(),
+                    FlexContainerStyle::default(),
                 ))
                 .with_children(|column| {
                     for y in 0..9 {
@@ -76,15 +76,15 @@ fn spawn_cell(
         .spawn((
             Number(x, y),
             Interaction::None,
-            FlexBundle::new(FlexContainerStyle::row(), FlexItemStyle::available_size()),
+            FlexBundle::new(FlexItemStyle::available_size(), FlexContainerStyle::row()),
         ))
         .with_children(|cell| {
             cell.spawn(build_number(x, y, n, number_style));
 
             for note_x in 1..=3 {
                 cell.spawn(FlexBundle::new(
-                    FlexContainerStyle::default(),
                     FlexItemStyle::available_size(),
+                    FlexContainerStyle::default(),
                 ))
                 .with_children(|note_column| {
                     for note_y in 0..3 {
@@ -93,8 +93,8 @@ fn spawn_cell(
                             .spawn((
                                 Note::new(x, y, n),
                                 FlexBundle::new(
-                                    FlexContainerStyle::default(),
                                     FlexItemStyle::available_size(),
+                                    FlexContainerStyle::default(),
                                 ),
                             ))
                             .with_children(|note_cell| {

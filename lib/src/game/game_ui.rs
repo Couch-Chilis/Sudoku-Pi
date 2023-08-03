@@ -117,9 +117,9 @@ pub fn build_button_row(
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
-                FlexContainerStyle::row().with_gap(Val::Auto),
                 FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
                     .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                FlexContainerStyle::row().with_gap(Val::Auto),
             ))
             .with_children(child_builder);
     });

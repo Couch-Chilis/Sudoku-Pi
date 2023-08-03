@@ -22,6 +22,8 @@ use wheel::{on_wheel_input, on_wheel_timer, render_wheel};
 pub use highscore_screen::highscore_screen_setup;
 pub use wheel::{SliceHandles, Wheel};
 
+use self::highscore_screen::on_fortune;
+
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
@@ -36,6 +38,7 @@ impl Plugin for GamePlugin {
                     on_keyboard_input.run_if(in_state(ScreenState::Game)),
                     on_pointer_input.run_if(in_state(ScreenState::Game)),
                     on_score_changed.run_if(in_state(ScreenState::Game)),
+                    on_fortune,
                     on_highscores_changed,
                     on_time_changed,
                     on_timer,
