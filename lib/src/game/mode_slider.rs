@@ -12,7 +12,9 @@ pub enum ModeState {
 }
 
 #[derive(Component)]
-pub struct ModeSlider;
+pub struct ModeSlider {
+    active: bool,
+}
 
 #[derive(Component)]
 pub struct ModeSliderKnob;
@@ -48,7 +50,7 @@ fn build_items(
 
     // This is the "knob" of the slider and the container in which it slides.
     row.spawn((
-        ModeSlider,
+        ModeSlider { active: false },
         FlexBundle::new(
             FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.))
                 .without_occupying_space(),
@@ -107,27 +109,32 @@ fn build_items(
 
 pub fn slider_interaction(
     mut commands: Commands,
-    slider_query: Query<&ComputedPosition, With<ModeSlider>>,
+    mut slider_query: Query<(&ComputedPosition, &mut ModeSlider)>,
     mut next_state: ResMut<NextState<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
     pointer_query: PointerQuery,
     wheel_query: Query<&Wheel>,
 ) {
-    if wheel_query
-        .get_single()
-        .map(Wheel::is_open)
-        .unwrap_or_default()
-    {
+    if wheel_query.get_single().ok().is_some_and(Wheel::is_open) {
         return;
     }
 
-    let Some((_, position)) = pointer_query.get_changed_input_with_position() else {
+    let Some((input, position)) = pointer_query.get_changed_input_with_position() else {
         return;
     };
 
-    let Ok(slider_position) = slider_query.get_single() else {
+    let Ok((slider_position, mut mode_slider)) = slider_query.get_single_mut() else {
         return;
     };
+
+    if input == InputKind::Press {
+        mode_slider.active = true;
+    } else if input == InputKind::Release {
+        mode_slider.active = false;
+        return;
+    } else if !mode_slider.active {
+        return;
+    }
 
     if !slider_position.contains(position) {
         return;

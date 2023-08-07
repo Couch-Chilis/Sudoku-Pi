@@ -88,7 +88,7 @@ impl Game {
     /// number was incorrect.
     pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8, options: SetNumberOptions) -> f32 {
         let SetNumberOptions {
-            elapsed_secs,
+            mut elapsed_secs,
             is_hint,
             show_mistakes,
         } = options;
@@ -98,6 +98,9 @@ impl Game {
         }
 
         let is_correct = self.solution.get(x, y) == Some(n);
+        if is_correct {
+            self.current = self.current.set(x, y, n);
+        }
 
         if is_correct && !is_hint {
             // We need an updated time spent to calculate the score increase.
@@ -113,14 +116,17 @@ impl Game {
             self.mistakes.set(x, y, n);
             self.notes.unset(x, y, n);
 
-            elapsed_secs + TIME_FOR_MULTIPLIER as f32
+            elapsed_secs += TIME_FOR_MULTIPLIER as f32
         } else {
-            self.current = self.current.set(x, y, n);
             self.notes.remove_all_notes_affected_by_set(x, y, n);
             self.mistakes.clear(x, y);
-
-            elapsed_secs
         }
+
+        if cfg!(target_os = "ios") {
+            self.save(); // Auto-save seems too unreliable otherwise.
+        }
+
+        elapsed_secs
     }
 
     /// Calculates the score increase for setting the given number (without
