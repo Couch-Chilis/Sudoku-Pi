@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 // Base colors.
+pub const COLOR_BAMBOO_SHOOT: Color = Color::rgb(204. / 255., 188. / 255., 42. / 255.);
 pub const COLOR_CREAM: Color = Color::rgb(1., 254. / 255., 248. / 255.);
 pub const COLOR_MUSTARD: Color = Color::rgb(229. / 255., 216. / 255., 97. / 255.);
 pub const COLOR_EGGSHELL: Color = Color::rgb(251. / 255., 249. / 255., 230. / 255.);
@@ -60,7 +61,7 @@ pub const COLOR_BOARD_LINE_MEDIUM: Color = Color::rgb(185. / 255., 178. / 255., 
 pub const COLOR_BOARD_LINE_THIN: Color = Color::rgb(238. / 255., 235. / 255., 215. / 255.);
 
 // Cell colors
-pub const COLOR_CELL_SELECTION: Color = COLOR_MAIN;
+pub const COLOR_CELL_SELECTION: Color = COLOR_BAMBOO_SHOOT;
 pub const COLOR_CELL_SAME_NUMBER: Color = COLOR_MUSTARD;
 pub const COLOR_CELL_HIGHLIGHT: Color = COLOR_EGGSHELL;
 

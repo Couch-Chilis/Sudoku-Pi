@@ -310,17 +310,13 @@ pub(super) fn render_highlights(
     }
 
     for (note, flex_item_style, mut sprite) in &mut notes {
-        let highlight_kind = if highlights
-            .selected_number
-            .map(|n| note.n == n)
-            .unwrap_or_default()
-        {
+        let highlight_kind = if highlights.selected_number == Some(note.n) {
             highlights.highlights[get_pos(note.x, note.y)]
         } else {
             None
         };
         let color = match highlight_kind {
-            Some(HighlightKind::Note) => COLOR_CELL_HIGHLIGHT,
+            Some(HighlightKind::Note) => COLOR_CELL_SAME_NUMBER,
             Some(HighlightKind::Mistake) => COLOR_POP_DARK.with_a(0.5),
             _ => Color::NONE,
         };

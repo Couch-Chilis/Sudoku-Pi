@@ -8,6 +8,7 @@ use bevy::prelude::Resource;
 use solver::solve;
 use std::fmt::{self, Write};
 use std::num::NonZeroU8;
+use std::ops::Sub;
 
 pub use math::*;
 pub use solver::Difficulty;
@@ -102,11 +103,8 @@ impl Game {
             // We need an updated time spent to calculate the score increase.
             self.elapsed_secs = elapsed_secs;
 
-            let multiplier = (START_MULTIPLIERS_BY_DIFFICULTY
-                .get(self.difficulty as usize)
-                .cloned()
-                .unwrap_or_default()
-                - elapsed_secs as i32 / TIME_FOR_MULTIPLIER)
+            let multiplier = START_MULTIPLIERS_BY_DIFFICULTY[self.difficulty as usize]
+                .sub(elapsed_secs as i32 / TIME_FOR_MULTIPLIER)
                 .max(1);
             self.score += self.calculate_score(x, y, n) * multiplier as u32;
         }
@@ -130,8 +128,8 @@ impl Game {
     fn calculate_score(&self, x: u8, y: u8, n: NonZeroU8) -> u32 {
         let mut block_completed = true;
         let mut column_completed = true;
-        let mut number_completed = true;
         let mut row_completed = true;
+        let mut num_correct_positions_for_n = 0;
 
         let block_offset_x = get_block_offset(x);
         let block_offset_y = get_block_offset(y);
@@ -148,22 +146,20 @@ impl Game {
                 column_completed = false;
             }
 
-            // Check the number.
-            let mut n_found = false;
-            for j in 0..9 {
-                if self.current.get(i, j) == Some(n) && self.solution.get(i, j) == Some(n) {
-                    n_found = true;
-                }
-            }
-            if !n_found {
-                number_completed = false;
-            }
-
             // Check the row.
             if self.current.get(i, y) != self.solution.get(i, y) {
                 row_completed = false;
             }
+
+            // Check the number.
+            for j in 0..9 {
+                if self.current.get(i, j) == Some(n) && self.solution.get(i, j) == Some(n) {
+                    num_correct_positions_for_n += 1;
+                }
+            }
         }
+
+        let number_completed = num_correct_positions_for_n == 9;
 
         1 + if block_completed { 9 } else { 0 }
             + if column_completed { 9 } else { 0 }
