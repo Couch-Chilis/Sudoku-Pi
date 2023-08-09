@@ -73,7 +73,7 @@ pub fn menu_setup(
                 FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.)),
                 FlexContainerStyle::row()
                     .with_gap(Val::Auto)
-                    .with_padding(Size::all(Val::Vmin(5.))),
+                    .with_padding(Sides::all(Val::Vmin(5.))),
             ))
             .with_children(|logo_section| {
                 // Workaround to keep the logo centered.
@@ -160,7 +160,7 @@ fn build_button_section(
                         translation: Vec3::new(0., -1., 1.),
                         ..default()
                     }),
-                FlexContainerStyle::default().with_padding(Size::all(Val::Vmin(10.))),
+                FlexContainerStyle::default().with_padding(Sides::all(Val::Vmin(10.))),
             ),
         ))
         .with_children(|main_section_rotation_axis| {

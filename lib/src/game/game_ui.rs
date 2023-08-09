@@ -32,7 +32,12 @@ pub fn init_game_ui(
     });
 
     build_button_row(game_screen, |button_row| {
-        let button_size = FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(10.));
+        let button_size = if cfg!(target_os = "ios") {
+            FlexItemStyle::fixed_size(Val::Pixel(80.), Val::Pixel(35.))
+        } else {
+            FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(10.))
+        };
+
         let buttons = ButtonBuilder::new(fonts, button_size);
         buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
 
@@ -75,7 +80,11 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
-        0.03 * height,
+        if cfg!(target_os = "ios") {
+            Val::Pixel(2.)
+        } else {
+            0.03 * height
+        },
     )))
     .with_children(|top_border_leaf| {
         top_border_leaf.spawn(SpriteBundle {
@@ -85,9 +94,9 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
         });
     });
 
-    row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
+    row.spawn(FlexBundle::from_item_style(FlexItemStyle::minimum_size(
         width,
-        0.94 * height,
+        0.9 * height,
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((
@@ -99,7 +108,11 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
-        0.03 * height,
+        if cfg!(target_os = "ios") {
+            Val::Pixel(2.)
+        } else {
+            0.03 * height
+        },
     )))
     .with_children(|bottom_border_leaf| {
         bottom_border_leaf.spawn(SpriteBundle {

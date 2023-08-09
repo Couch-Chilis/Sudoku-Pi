@@ -28,7 +28,7 @@ pub fn highscore_screen_setup(
         screen
             .spawn(FlexBundle::new(
                 FlexItemStyle::available_size(),
-                FlexContainerStyle::row().with_padding(Size::all(Val::Vmin(5.))),
+                FlexContainerStyle::row().with_padding(Sides::all(Val::Vmin(5.))),
             ))
             .with_children(|scroll_section| {
                 // Scroll.
@@ -50,7 +50,7 @@ pub fn highscore_screen_setup(
                     .spawn(FlexBundle::new(
                         FlexItemStyle::available_size()
                             .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-                        FlexContainerStyle::column().with_padding(Size::all(Val::Vmin(10.))),
+                        FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(10.))),
                     ))
                     .with_children(|scroll_text_container| {
                         scroll_text_container.spawn((
@@ -97,7 +97,7 @@ pub fn highscore_screen_setup(
         screen
             .spawn(FlexBundle::new(
                 FlexItemStyle::available_size(),
-                FlexContainerStyle::column().with_padding(Size::new(Val::None, Val::Auto)),
+                FlexContainerStyle::column().with_padding(Sides::new(Val::None, Val::Auto)),
             ))
             .with_children(|button_section| {
                 let button_style = FlexItemStyle::fixed_size(Val::Percent(70.), Val::Vmin(10.))

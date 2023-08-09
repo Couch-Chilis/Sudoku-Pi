@@ -30,7 +30,7 @@ pub fn build_mode_slider(
             .spawn(FlexBundle::new(
                 FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
                     .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
-                FlexContainerStyle::row().with_padding(Size::new(Val::None, Val::Percent(25.))),
+                FlexContainerStyle::row().with_padding(Sides::vertical(Val::Percent(25.))),
             ))
             .with_children(|row| build_items(row, meshes, materials, fonts));
     });

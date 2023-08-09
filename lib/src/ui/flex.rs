@@ -96,7 +96,7 @@ pub struct FlexContainerStyle {
     pub gap: Val,
 
     /// Padding to keep within the container and around the items.
-    pub padding: Size,
+    pub padding: Sides,
 }
 
 impl FlexContainerStyle {
@@ -115,7 +115,7 @@ impl FlexContainerStyle {
         Self { gap, ..self }
     }
 
-    pub fn with_padding(self, padding: Size) -> Self {
+    pub fn with_padding(self, padding: Sides) -> Self {
         Self { padding, ..self }
     }
 }
@@ -422,6 +422,87 @@ impl Size {
     }
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Sides {
+    pub top: Val,
+    pub right: Val,
+    pub bottom: Val,
+    pub left: Val,
+}
+
+impl Sides {
+    pub fn all(val: Val) -> Self {
+        Self::new(val, val)
+    }
+
+    pub fn bottom(bottom: Val) -> Self {
+        Self {
+            top: Val::None,
+            right: Val::None,
+            bottom,
+            left: Val::None,
+        }
+    }
+
+    pub fn horizontal(horizontal: Val) -> Self {
+        Self::new(horizontal, Val::None)
+    }
+
+    pub fn left(left: Val) -> Self {
+        Self {
+            top: Val::None,
+            right: Val::None,
+            bottom: Val::None,
+            left,
+        }
+    }
+
+    pub fn new(horizontal: Val, vertical: Val) -> Self {
+        Self {
+            top: vertical,
+            right: horizontal,
+            bottom: vertical,
+            left: horizontal,
+        }
+    }
+
+    pub fn right(right: Val) -> Self {
+        Self {
+            top: Val::None,
+            right,
+            bottom: Val::None,
+            left: Val::None,
+        }
+    }
+
+    pub fn top(top: Val) -> Self {
+        Self {
+            top,
+            right: Val::None,
+            bottom: Val::None,
+            left: Val::None,
+        }
+    }
+
+    pub fn vertical(vertical: Val) -> Self {
+        Self::new(Val::None, vertical)
+    }
+
+    pub fn before_for_direction(&self, direction: FlexDirection) -> Val {
+        match direction {
+            FlexDirection::Column => self.top,
+            FlexDirection::Row => self.left,
+        }
+    }
+
+    pub fn after_for_direction(&self, direction: FlexDirection) -> Val {
+        match direction {
+            FlexDirection::Column => self.bottom,
+            FlexDirection::Row => self.right,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub enum Val {
     /// Nada.
@@ -430,6 +511,8 @@ pub enum Val {
     /// Context-dependent "automatic" value. Will act as `None` in most cases,
     /// unless otherwise specified.
     Auto,
+    /// An exact pixel value, measured in logical pixels.
+    Pixel(f32),
     /// Percentage along the relevant axis. This is a percentage of the width or
     /// height of the parent entity, not the entire window.
     Percent(f32),
@@ -457,8 +540,9 @@ impl Val {
     pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
         match self {
             Self::Auto | Self::None => 0.,
+            Self::Pixel(value) => axis_scaling.pixel_scale * value,
             Self::Percent(value) => value * 0.01,
-            Self::CrossPercent(value) => axis_scaling.ratio * value * 0.01,
+            Self::CrossPercent(value) => axis_scaling.axis_ratio * value * 0.01,
             Self::Vmax(value) => axis_scaling.vmax_scale * value,
             Self::Vmin(value) => axis_scaling.vmin_scale * value,
         }
@@ -472,6 +556,7 @@ impl Mul<Val> for f32 {
         match rhs {
             Val::None => Val::None,
             Val::Auto => Val::Auto,
+            Val::Pixel(value) => Val::Pixel(self * value),
             Val::Percent(percentage) => Val::Percent(self * percentage),
             Val::CrossPercent(percentage) => Val::CrossPercent(self * percentage),
             Val::Vmax(percentage) => Val::Vmax(self * percentage),
@@ -540,30 +625,34 @@ impl ComputedPosition {
         }
     }
 
-    pub fn vminmax_scales(&self, screen_width: f32, screen_height: f32) -> VminmaxScales {
+    pub fn axis_scales(&self, screen_width: f32, screen_height: f32) -> AxesScaling {
         let horizontal_scaling = screen_width / self.width * 0.01;
         let vertical_scaling = screen_height / self.height * 0.01;
         match screen_width > screen_height {
-            true => VminmaxScales {
+            true => AxesScaling {
                 horizontal: AxisScaling {
-                    ratio: self.height / self.width,
+                    axis_ratio: self.height / self.width,
+                    pixel_scale: 1. / self.width,
                     vmin_scale: horizontal_scaling * screen_height / screen_width,
                     vmax_scale: horizontal_scaling,
                 },
                 vertical: AxisScaling {
-                    ratio: self.width / self.height,
+                    axis_ratio: self.width / self.height,
+                    pixel_scale: 1. / self.height,
                     vmin_scale: vertical_scaling,
                     vmax_scale: vertical_scaling * screen_width / screen_height,
                 },
             },
-            false => VminmaxScales {
+            false => AxesScaling {
                 horizontal: AxisScaling {
-                    ratio: self.height / self.width,
+                    axis_ratio: self.height / self.width,
+                    pixel_scale: 1. / self.width,
                     vmin_scale: horizontal_scaling,
                     vmax_scale: horizontal_scaling * screen_height / screen_width,
                 },
                 vertical: AxisScaling {
-                    ratio: self.width / self.height,
+                    axis_ratio: self.width / self.height,
+                    pixel_scale: 1. / self.height,
                     vmin_scale: vertical_scaling * screen_width / screen_height,
                     vmax_scale: vertical_scaling,
                 },
@@ -576,12 +665,12 @@ impl ComputedPosition {
 ///
 /// Tracks the scales for both axes.
 #[derive(Clone, Debug, Default)]
-pub struct VminmaxScales {
+pub struct AxesScaling {
     pub horizontal: AxisScaling,
     pub vertical: AxisScaling,
 }
 
-impl VminmaxScales {
+impl AxesScaling {
     pub fn scaling_for_direction(&self, direction: FlexDirection) -> AxisScaling {
         match direction {
             FlexDirection::Row => self.horizontal,
@@ -590,19 +679,28 @@ impl VminmaxScales {
     }
 }
 
-/// Scales for evaluating the `CrossPercent`, `Vmin`, and `Vmax` values for a
-/// single axis.
+/// Scales for evaluating various `Val` values for a single axis.
 #[derive(Clone, Copy, Debug)]
 pub struct AxisScaling {
-    pub ratio: f32,
+    /// Ratio for converting a value along one axis to a value on the cross
+    /// axis.
+    pub axis_ratio: f32,
+
+    /// Scale for converting a pixel value.
+    pub pixel_scale: f32,
+
+    /// Scale for converting a `Vmin` value.
     pub vmin_scale: f32,
+
+    /// Scale for converting a `Vmax` value.
     pub vmax_scale: f32,
 }
 
 impl Default for AxisScaling {
     fn default() -> Self {
         Self {
-            ratio: 1.,
+            axis_ratio: 1.,
+            pixel_scale: 0.01,
             vmin_scale: 0.01,
             vmax_scale: 0.01,
         }

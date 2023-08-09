@@ -2,7 +2,11 @@ use super::{flex::*, InitialSelection, Interaction};
 use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
-const BORDER_THICKNESS: Val = Val::Vmin(0.3);
+const BORDER_THICKNESS: Val = if cfg!(target_os = "ios") {
+    Val::Pixel(2.)
+} else {
+    Val::Vmin(0.3)
+};
 
 /// Marker for buttons.
 #[derive(Clone, Component, Default)]
@@ -167,7 +171,7 @@ impl ButtonBuilder {
                 ButtonBundle {
                     flex: FlexBundle::new(
                         button_style,
-                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
+                        FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
                     )
                     .with_background_color(COLOR_SECONDARY_BUTTON_BORDER),
                     ..default()
@@ -205,7 +209,7 @@ impl ButtonBuilder {
                 ButtonBundle {
                     flex: FlexBundle::new(
                         self.button_style.clone(),
-                        FlexContainerStyle::row().with_padding(Size::all(BORDER_THICKNESS)),
+                        FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
                     )
                     .with_background_color(COLOR_TERNARY_BUTTON_BORDER),
                     ..default()

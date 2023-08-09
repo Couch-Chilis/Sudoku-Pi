@@ -134,7 +134,7 @@ impl<'a> LayoutInfo<'a> {
             return;
         };
 
-        let vminmax_scales = position.vminmax_scales(screen_size.0, screen_size.1);
+        let vminmax_scales = position.axis_scales(screen_size.0, screen_size.1);
 
         let direction = container_style.direction;
         let scaling = vminmax_scales.scaling_for_direction(direction);
@@ -142,12 +142,19 @@ impl<'a> LayoutInfo<'a> {
         let cross = direction.cross();
         let cross_scaling = vminmax_scales.scaling_for_direction(cross);
 
-        let padding_for_direction = container_style.padding.for_direction(direction);
-        let padding = padding_for_direction.evaluate(&scaling);
+        let padding_before_for_direction = container_style.padding.before_for_direction(direction);
+        let padding_before = padding_before_for_direction.evaluate(&scaling);
+        let padding_after_for_direction = container_style.padding.after_for_direction(direction);
+        let padding_after = padding_after_for_direction.evaluate(&scaling);
+        let padding = padding_before + padding_after;
         let cross_padding = container_style
             .padding
-            .for_direction(cross)
-            .evaluate(&cross_scaling);
+            .before_for_direction(cross)
+            .evaluate(&cross_scaling)
+            + container_style
+                .padding
+                .after_for_direction(cross)
+                .evaluate(&cross_scaling);
 
         let num_gaps = match container_style.gap {
             Val::None => 0.,
@@ -161,12 +168,15 @@ impl<'a> LayoutInfo<'a> {
                     - 1) as f32
             }
         };
-        let initial_size = 2. * padding + num_gaps * container_style.gap.evaluate(&scaling);
+        let initial_size = padding + num_gaps * container_style.gap.evaluate(&scaling);
         let base_grow = match container_style.gap {
             Val::Auto => num_gaps,
             _ => 0.,
-        } + match padding_for_direction {
-            Val::Auto => 2.,
+        } + match padding_before_for_direction {
+            Val::Auto => 1.,
+            _ => 0.,
+        } + match padding_after_for_direction {
+            Val::Auto => 1.,
             _ => 0.,
         };
         let (total_size, total_grow, total_shrink) = children
@@ -193,10 +203,10 @@ impl<'a> LayoutInfo<'a> {
             );
 
         // We keep track of the offset for positioning children along the axis.
-        let mut offset = padding;
+        let mut offset = padding_before;
 
         let spare_size = 1. - total_size;
-        if spare_size > 0. && padding_for_direction == Val::Auto {
+        if spare_size > 0. && padding_before_for_direction == Val::Auto {
             offset += spare_size / total_grow;
         }
 
@@ -332,11 +342,13 @@ impl<'a> LayoutInfo<'a> {
                 if direction == FlexDirection::Column {
                     scale.x = 1.
                         - 2. * item_style.margin.width.evaluate(&cross_scaling)
-                        - 2. * container_style.padding.width.evaluate(&cross_scaling);
+                        - container_style.padding.left.evaluate(&cross_scaling)
+                        - container_style.padding.right.evaluate(&cross_scaling);
                 } else {
                     scale.y = 1.
                         - 2. * item_style.margin.height.evaluate(&cross_scaling)
-                        - 2. * container_style.padding.height.evaluate(&cross_scaling);
+                        - container_style.padding.top.evaluate(&cross_scaling)
+                        - container_style.padding.bottom.evaluate(&cross_scaling);
                 }
             }
 
