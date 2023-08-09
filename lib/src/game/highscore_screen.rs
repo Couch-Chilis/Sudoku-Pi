@@ -34,7 +34,9 @@ pub fn highscore_screen_setup(
                 // Scroll.
                 scroll_section
                     .spawn(FlexLeafBundle::from_style(
-                        FlexItemStyle::available_size().without_occupying_space(),
+                        FlexItemStyle::fixed_size(Val::Percent(90.), Val::CrossPercent(34.3))
+                            .with_fixed_aspect_ratio()
+                            .without_occupying_space(),
                     ))
                     .with_children(|square| {
                         square.spawn(SpriteBundle {
