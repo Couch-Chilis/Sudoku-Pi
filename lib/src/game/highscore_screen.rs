@@ -106,7 +106,7 @@ pub fn highscore_screen_setup(
                     "Back to Menu",
                     HighscoreButtonAction::Back,
                 );
-                button_builder.build_with_text_and_action(
+                button_builder.build_selected_with_text_and_action(
                     button_section,
                     "Start a new Game",
                     HighscoreButtonAction::NewGame,

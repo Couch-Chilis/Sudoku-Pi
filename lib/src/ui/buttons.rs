@@ -1,4 +1,4 @@
-use super::{flex::*, Interaction};
+use super::{flex::*, InitialSelection, Interaction};
 use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
@@ -110,6 +110,7 @@ impl ButtonBuilder {
     ) {
         parent
             .spawn((
+                InitialSelection,
                 ButtonBundle {
                     flex: FlexBundle::from_item_style(self.button_style.clone()),
                     interaction: Interaction::Selected,

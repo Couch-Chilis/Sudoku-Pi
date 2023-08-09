@@ -1,6 +1,7 @@
 use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
-use crate::{constants::*, game::Wheel, pointer_query::*, utils::SpriteExt, ScreenState};
+use crate::{constants::*, game::Wheel, pointer_query::*, utils::SpriteExt, Screen, ScreenState};
 use bevy::prelude::*;
+use std::collections::BTreeMap;
 
 pub type InteractionEntity<'a> = (
     Entity,
@@ -9,6 +10,9 @@ pub type InteractionEntity<'a> = (
     &'a ComputedVisibility,
 );
 pub type InteractionQuery<'w, 's, 'a> = Query<'w, 's, InteractionEntity<'a>>;
+
+#[derive(Clone, Component, Debug, Default)]
+pub struct InitialSelection;
 
 #[derive(Clone, Component, Debug, Default, Eq, PartialEq)]
 pub enum Interaction {
@@ -177,7 +181,7 @@ pub fn pointer_interaction(
     }
 }
 
-// Handles changing button color based on mouse interaction.
+// Handles changing button color based on pointer interaction.
 pub fn button_interaction(
     mut interaction_query: Query<
         (&Interaction, &Children, &mut Sprite, Option<&ButtonType>),
@@ -274,5 +278,60 @@ pub fn button_interaction(
                 }
             }
         }
+    }
+}
+
+/// When navigating to a new screen, only the component that is marked with
+/// `InitialSelection` should be initially selected.
+pub(crate) fn reset_initial_selection_on_screen_change(
+    mut interaction_query: Query<(Entity, &mut Interaction, Option<&InitialSelection>)>,
+    screen_query: Query<(Entity, Option<&Screen>, Option<&Children>)>,
+    screen_state: Res<State<ScreenState>>,
+) {
+    if !screen_state.is_changed() {
+        return;
+    }
+
+    let mut screen_entity = None;
+    let mut children_map = BTreeMap::new();
+
+    for (entity, screen, children) in &screen_query {
+        if let Some(children) = children {
+            children_map.insert(entity, children);
+
+            if screen.is_some_and(|screen| &screen.state == screen_state.get()) {
+                screen_entity = Some(entity);
+            }
+        }
+    }
+
+    let Some(screen_entity) = screen_entity else {
+        return;
+    };
+
+    for (entity, mut interaction, initial_selection) in &mut interaction_query {
+        if !is_child_of(entity, screen_entity, &children_map) {
+            continue;
+        }
+
+        let new_interaction = match initial_selection {
+            Some(_) => Interaction::Selected,
+            None => Interaction::None,
+        };
+
+        if *interaction != new_interaction {
+            *interaction = new_interaction;
+        }
+    }
+}
+
+fn is_child_of(entity: Entity, parent: Entity, children_map: &BTreeMap<Entity, &Children>) -> bool {
+    if let Some(children) = children_map.get(&parent) {
+        children.contains(&entity)
+            || children
+                .iter()
+                .any(|child| is_child_of(entity, *child, children_map))
+    } else {
+        false
     }
 }

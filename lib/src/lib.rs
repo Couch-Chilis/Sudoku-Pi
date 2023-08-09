@@ -148,7 +148,6 @@ pub fn main() {
 #[no_mangle]
 #[cfg(target_os = "ios")]
 extern "C" fn run_with_scales(scale: f64, native_scale: f64) {
-    println!("Running with scales {scale} / {native_scale}");
     let scale = (scale / native_scale) as f32;
     run_with_zoom_factor(ZoomFactor { x: scale, y: scale })
 }
@@ -239,6 +238,7 @@ fn setup(
         lines: FORTUNE
             .split(|&c| c == b'\n')
             .map(|slice| std::str::from_utf8(slice).unwrap())
+            .filter(|string| !string.is_empty())
             .collect(),
     };
 

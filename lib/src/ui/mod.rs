@@ -34,9 +34,14 @@ impl Plugin for UiPlugin {
         .add_systems(
             Update,
             (
-                interaction::keyboard_interaction,
-                interaction::pointer_interaction,
-                interaction::button_interaction,
+                interaction::reset_initial_selection_on_screen_change,
+                interaction::keyboard_interaction
+                    .after(interaction::reset_initial_selection_on_screen_change),
+                interaction::pointer_interaction
+                    .after(interaction::reset_initial_selection_on_screen_change),
+                interaction::button_interaction
+                    .after(interaction::keyboard_interaction)
+                    .after(interaction::pointer_interaction),
             ),
         );
     }
