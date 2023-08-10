@@ -1,6 +1,6 @@
 @import UIKit;
 
-void run_with_scales(double, double);
+void run_with_scales_and_padding(double, double, double);
 
 int main(int argc, char *argv[]) {
     UIWindow *window = UIApplication.sharedApplication.windows.firstObject;

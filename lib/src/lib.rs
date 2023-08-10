@@ -155,7 +155,7 @@ pub fn main() {
 extern "C" fn run_with_scales_and_padding(scale: f64, native_scale: f64, top_padding: f64) {
     let scale = (scale / native_scale) as f32;
     run(
-        Sides::top(Val::Pixel(top_padding)),
+        Sides::top(Val::Pixel(top_padding as f32)),
         ZoomFactor { x: scale, y: scale },
     )
 }
