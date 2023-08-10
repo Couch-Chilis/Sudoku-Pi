@@ -13,11 +13,11 @@ mod sudoku;
 mod ui;
 mod utils;
 
+use bevy::app::AppExit;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
-use bevy::{app::AppExit, time::Stopwatch};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup, SliceHandles};
 use highscores::Highscores;
@@ -90,7 +90,7 @@ pub struct Images {
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
-    stopwatch: Stopwatch,
+    elapsed_secs: f32,
 }
 
 /// Screens are laid out in tiles next to one another.
@@ -165,9 +165,7 @@ fn run(screen_padding: Sides, zoom_factor: ZoomFactor) {
 
     let mut timer = GameTimer::default();
     if game.elapsed_secs != 0. {
-        timer
-            .stopwatch
-            .set_elapsed(Duration::from_secs_f32(game.elapsed_secs));
+        timer.elapsed_secs = game.elapsed_secs;
     }
 
     let mut app = App::new();
@@ -324,7 +322,7 @@ fn on_exit(
 ) {
     if !app_exit_events.is_empty() || !destroyed_events.is_empty() {
         println!("Saving before exit");
-        game.elapsed_secs = game_timer.stopwatch.elapsed_secs();
+        game.elapsed_secs = game_timer.elapsed_secs;
         game.save();
     }
 }

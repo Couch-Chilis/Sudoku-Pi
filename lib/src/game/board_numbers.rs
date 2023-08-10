@@ -228,12 +228,16 @@ pub(super) fn calculate_highlights(
         return;
     }
 
+    let selected_number = selection
+        .selected_cell
+        .and_then(|(x, y)| game.current.get(x, y))
+        .or(selection.selected_note);
+
     let mut highlights = [None; 81];
     if let Some((x, y)) = selection.selected_cell {
         let selected_pos = get_pos(x, y);
 
-        let selected_cell = game.current.get_by_pos(selected_pos);
-        if let Some(n) = selected_cell {
+        if let Some(n) = selected_number {
             // Find all the cells with notes or mistakes containing the same number.
             for (pos, highlight) in highlights.iter_mut().enumerate() {
                 let (x, y) = get_x_and_y_from_pos(pos);
@@ -244,7 +248,8 @@ pub(super) fn calculate_highlights(
                 }
             }
 
-            if settings.highlight_selection_lines {
+            let selected_cell = game.current.get_by_pos(selected_pos);
+            if settings.highlight_selection_lines && selected_cell.is_some() {
                 // Find all the cells within range.
                 for pos in 0..81 {
                     if game.current.get_by_pos(pos) == selected_cell {
@@ -259,13 +264,13 @@ pub(super) fn calculate_highlights(
 
             // Find all the cells with the same number.
             for (pos, highlight) in highlights.iter_mut().enumerate() {
-                if game.current.get_by_pos(pos) == selected_cell {
+                if game.current.get_by_pos(pos) == selected_number {
                     *highlight = Some(HighlightKind::SameNumber);
                 }
             }
         }
 
-        if !game.is_solved() {
+        if !game.is_solved() && selection.selected_note.is_none() {
             highlights[selected_pos] = Some(HighlightKind::Selection);
         }
     }
@@ -275,9 +280,7 @@ pub(super) fn calculate_highlights(
 
     *highlights_resource = Highlights {
         highlights,
-        selected_number: selection
-            .selected_cell
-            .and_then(|(x, y)| game.current.get(x, y)),
+        selected_number,
     };
 }
 

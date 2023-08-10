@@ -47,7 +47,7 @@ pub fn difficulty_screen_button_actions(
                 StartGameAtDifficulty(difficulty) => {
                     *game = Game::generate(*difficulty).unwrap();
                     *selection = Selection::new_for_game(&game);
-                    game_timer.stopwatch.reset();
+                    game_timer.elapsed_secs = 0.;
                     screen_state.set(ScreenState::Game);
                 }
             }

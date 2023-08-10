@@ -1,13 +1,21 @@
-use super::{fill_number, get_board_x_and_y, Board, InputKind, Note, Selection};
-use crate::{
-    constants::*, settings::Settings, utils::*, ComputedPosition, Fonts, Game, GameTimer, Images,
+use super::{
+    fill_number, get_board_x_and_y, mode_slider::ModeState, toggle_note, Board, InputKind, Note,
+    Selection,
 };
-use bevy::{ecs::system::EntityCommands, prelude::*, time::Stopwatch, window::PrimaryWindow};
+use crate::{
+    constants::*,
+    pointer_query::{PointerQuery, PointerQueryExt},
+    settings::Settings,
+    utils::*,
+    ComputedPosition, Fonts, Game, GameTimer, Images,
+};
+use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
 const WHEEL_SIZE: f32 = 400.;
 const WHEEL_Z: f32 = 10.;
+const NOTES_MODE_OPEN_DELAY: f32 = 0.8;
 
 #[derive(Component, Default)]
 pub struct Wheel {
@@ -16,9 +24,10 @@ pub struct Wheel {
     start_position: Vec2,
     current_position: Vec2,
     is_open: bool,
-    spawn_timer: Stopwatch,
+    mode: ModeState,
+    spawn_timer: f32,
     selected_number: Option<NonZeroU8>,
-    slice_timer: Stopwatch,
+    slice_timer: f32,
 }
 
 impl Wheel {
@@ -116,11 +125,15 @@ pub fn on_wheel_input(
     mut selection: ResMut<Selection>,
     mut notes: Query<&mut Note>,
     mut timer: ResMut<GameTimer>,
-    input_kind: InputKind,
-    position: Vec2,
+    mode: Res<State<ModeState>>,
+    pointer_query: PointerQuery,
     board: Query<&ComputedPosition, With<Board>>,
     settings: Res<Settings>,
 ) {
+    let Some((input_kind, position)) = pointer_query.get_changed_input_with_position() else {
+        return;
+    };
+
     let Ok(board_position) = board.get_single() else {
         return;
     };
@@ -139,7 +152,7 @@ pub fn on_wheel_input(
         InputKind::Press => {
             if let Some((x, y)) = get_board_x_and_y(board_position, position) {
                 let should_open = if settings.show_mistakes {
-                    !game.current.has(x, y) || game.current.get(x, y) != game.solution.get(x, y)
+                    !game.current.has(x, y)
                 } else {
                     !game.start.has(x, y)
                 };
@@ -148,14 +161,24 @@ pub fn on_wheel_input(
                     wheel.center_position = translation;
                     wheel.start_position = translation;
                     wheel.cell = (x, y);
-                    wheel.spawn_timer.reset();
+                    wheel.spawn_timer = 0.;
                     wheel.is_open = true;
                     wheel.selected_number = None;
+                    wheel.mode = *mode.get();
                 }
             }
         }
         InputKind::PressedMovement => {
             if wheel.is_open {
+                // In notes mode, the wheel only opens after a long press,
+                // so we cancel opening if there's movement during the delay.
+                if wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY {
+                    if wheel.start_position.distance(wheel.current_position) > 0.01 {
+                        wheel.is_open = false;
+                    }
+                    return;
+                }
+
                 let selected_number = get_selected_number(&wheel);
                 let may_select_number = settings.allow_invalid_wheel_numbers
                     || match selected_number {
@@ -164,7 +187,7 @@ pub fn on_wheel_input(
                     };
                 if may_select_number && selected_number != wheel.selected_number {
                     wheel.selected_number = selected_number;
-                    wheel.slice_timer.reset();
+                    wheel.slice_timer = 0.;
                 }
             }
         }
@@ -174,17 +197,28 @@ pub fn on_wheel_input(
 
                 if let Some(n) = wheel.selected_number {
                     let (x, y) = wheel.cell;
-                    fill_number(
-                        &mut game,
-                        &mut timer,
-                        &mut selection,
-                        &mut notes,
-                        &settings,
-                        false,
-                        x,
-                        y,
-                        n,
-                    );
+                    match wheel.mode {
+                        ModeState::Normal => {
+                            fill_number(
+                                &mut game,
+                                &mut timer,
+                                &mut selection,
+                                &mut notes,
+                                &settings,
+                                false,
+                                x,
+                                y,
+                                n,
+                            );
+                        }
+                        ModeState::Notes => {
+                            if selection.selected_cell != Some((x, y)) {
+                                selection.selected_cell = Some((x, y));
+                            }
+
+                            toggle_note(&mut game, &mut selection, n);
+                        }
+                    }
                 }
             }
         }
@@ -194,10 +228,10 @@ pub fn on_wheel_input(
 pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
     for mut wheel in &mut wheel {
         if wheel.is_open {
-            wheel.spawn_timer.tick(time.delta());
+            wheel.spawn_timer += time.delta().as_secs_f32();
 
-            if wheel.selected_number.is_some() && wheel.slice_timer.elapsed_secs() < 0.25 {
-                wheel.slice_timer.tick(time.delta());
+            if wheel.selected_number.is_some() && wheel.slice_timer < 0.25 {
+                wheel.slice_timer += time.delta().as_secs_f32();
             }
         }
     }
@@ -230,7 +264,9 @@ pub fn render_wheel(
         return;
     };
 
-    if !wheel.is_open {
+    if !wheel.is_open
+        || (wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY)
+    {
         *wheel_transform = Transform::from_2d_scale(0., 0.);
         *slice_transform = Transform::from_2d_scale(0., 0.);
         *top_label_transform = Transform::from_2d_scale(0., 0.);
@@ -251,7 +287,7 @@ pub fn render_wheel(
     if let Some(n) = wheel.selected_number {
         let bounce = 1.
             + 0.1
-                * ((wheel.slice_timer.elapsed_secs() * 100.).powi(2) * 0.0016 * PI)
+                * ((wheel.slice_timer * 100.).powi(2) * 0.0016 * PI)
                     .sin()
                     .max(0.);
         let scale = bounce * radius / WHEEL_SIZE;
@@ -281,8 +317,13 @@ fn get_board_translation(board_position: &ComputedPosition, cursor_position: Vec
 }
 
 fn get_radius(wheel: &Wheel) -> f32 {
+    let mut spawn_timer = wheel.spawn_timer;
+    if wheel.mode == ModeState::Notes {
+        spawn_timer = (spawn_timer - NOTES_MODE_OPEN_DELAY).max(0.);
+    }
+
     let finger_radius = 2.5 * wheel.start_position.distance(wheel.current_position);
-    let time_radius = (wheel.spawn_timer.elapsed_secs() * 40.).powi(2) / 10.;
+    let time_radius = (spawn_timer * 40.).powi(2) / 10.;
     finger_radius.max(time_radius).min(MAX_RADIUS)
 }
 

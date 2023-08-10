@@ -131,7 +131,7 @@ pub fn highscore_button_actions(
                 HighscoreButtonAction::NewGame => {
                     *game = Game::generate(game.difficulty).unwrap();
                     *selection = Selection::new_for_game(&game);
-                    game_timer.stopwatch.reset();
+                    game_timer.elapsed_secs = 0.;
                     screen_state.set(ScreenState::Game);
                 }
             }

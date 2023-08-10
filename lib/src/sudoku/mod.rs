@@ -98,7 +98,7 @@ impl Game {
         }
 
         let is_correct = self.solution.get(x, y) == Some(n);
-        if is_correct {
+        if is_correct || !show_mistakes {
             self.current = self.current.set(x, y, n);
         }
 

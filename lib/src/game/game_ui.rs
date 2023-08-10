@@ -178,7 +178,7 @@ pub fn on_score_changed(
 pub fn on_time_changed(mut timer: Query<&mut Text, With<Timer>>, game_timer: Res<GameTimer>) {
     if game_timer.is_changed() {
         for mut timer_text in &mut timer {
-            timer_text.sections[0].value = format_time(game_timer.stopwatch.elapsed_secs());
+            timer_text.sections[0].value = format_time(game_timer.elapsed_secs);
         }
     }
 }

@@ -6,7 +6,7 @@ mod mode_slider;
 mod wheel;
 
 use crate::pointer_query::*;
-use crate::sudoku::{self, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
+use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
 use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -37,6 +37,7 @@ impl Plugin for GamePlugin {
                 (
                     on_keyboard_input.run_if(in_state(ScreenState::Game)),
                     on_pointer_input.run_if(in_state(ScreenState::Game)),
+                    on_wheel_input.run_if(in_state(ScreenState::Game)),
                     on_score_changed.run_if(in_state(ScreenState::Game)),
                     on_fortune,
                     on_highscores_changed,
@@ -94,8 +95,9 @@ struct Number(u8, u8);
 #[derive(Default, Resource)]
 pub struct Selection {
     pub selected_cell: Option<(u8, u8)>,
+    pub selected_note: Option<NonZeroU8>,
     pub hint: Option<(u8, u8)>,
-    pub note_toggle: NoteToggleMode,
+    pub note_toggle: Option<NoteToggleMode>,
 }
 
 impl Selection {
@@ -114,6 +116,28 @@ impl Selection {
         Self {
             selected_cell: get_selected_cell(),
             ..default()
+        }
+    }
+
+    /// Clears the selection, but leaves any visible hint intact.
+    pub fn clear(&mut self) {
+        self.selected_cell = None;
+        self.selected_note = None;
+    }
+
+    /// Moves the selection to the cell with the given coordinates.
+    pub fn set(&mut self, x: u8, y: u8) {
+        self.selected_cell = Some((x, y));
+        self.selected_note = None;
+    }
+
+    /// Moves the selection to the cell with the given coordinates, unless the
+    /// selection is already there, in which case the selection is cleared.
+    pub fn toggle(&mut self, x: u8, y: u8) {
+        if self.selected_cell == Some((x, y)) {
+            self.clear();
+        } else {
+            self.set(x, y);
         }
     }
 }
@@ -246,13 +270,9 @@ fn on_keyboard_input(
 }
 
 fn move_selection_relative(selection: &mut Selection, dx: i8, dy: i8) {
-    let (x, y) = selection
-        .selected_cell
-        .map(|number| (number.0, number.1))
-        .unwrap_or_default();
+    let (x, y) = selection.selected_cell.unwrap_or_default();
 
-    move_selection(
-        selection,
+    selection.toggle(
         ((x as i8 + 9 + dx) % 9) as u8,
         ((y as i8 + 9 + dy) % 9) as u8,
     );
@@ -279,13 +299,9 @@ fn handle_number_key(
 fn on_pointer_input(
     mut game: ResMut<Game>,
     mut selection: ResMut<Selection>,
-    notes: Query<&mut Note>,
-    timer: ResMut<GameTimer>,
-    wheel: Query<&mut Wheel>,
     board: Query<&ComputedPosition, With<Board>>,
     mode: Res<State<ModeState>>,
     pointer_query: PointerQuery,
-    settings: Res<Settings>,
 ) {
     let Some((input_kind, position)) = pointer_query.get_changed_input_with_position() else {
         return;
@@ -301,13 +317,9 @@ fn on_pointer_input(
         ModeState::Normal => {
             if input_kind == InputKind::Press {
                 if let Some((x, y)) = board_x_and_y {
-                    move_selection(&mut selection, x, y);
+                    selection.toggle(x, y);
                 }
             }
-
-            on_wheel_input(
-                wheel, game, selection, notes, timer, input_kind, position, board, settings,
-            );
         }
         ModeState::Notes => {
             let Some((x, y)) = board_x_and_y else {
@@ -317,16 +329,17 @@ fn on_pointer_input(
             match input_kind {
                 InputKind::Press => {
                     if game.current.has(x, y) {
-                        move_selection(&mut selection, x, y);
+                        selection.toggle(x, y);
                     } else if let Some(n) = selection
                         .selected_cell
                         .and_then(|(x, y)| game.current.get(x, y))
+                        .or(selection.selected_note)
                     {
                         game.notes.toggle(x, y, n);
                         selection.note_toggle = if game.notes.has(x, y, n) {
-                            NoteToggleMode::Set
+                            Some(NoteToggleMode::Set)
                         } else {
-                            NoteToggleMode::Unset
+                            Some(NoteToggleMode::Unset)
                         };
                     }
                 }
@@ -335,27 +348,32 @@ fn on_pointer_input(
                         if let Some(n) = selection
                             .selected_cell
                             .and_then(|(x, y)| game.current.get(x, y))
+                            .or(selection.selected_note)
                         {
                             match selection.note_toggle {
-                                NoteToggleMode::Set => game.notes.set(x, y, n),
-                                NoteToggleMode::Unset => game.notes.unset(x, y, n),
+                                Some(NoteToggleMode::Set) => game.notes.set(x, y, n),
+                                Some(NoteToggleMode::Unset) => game.notes.unset(x, y, n),
+                                None => {}
                             }
                         }
                     }
                 }
-                InputKind::Release => {}
+                InputKind::Release => {
+                    selection.note_toggle = None;
+                }
             }
         }
     }
 }
 
 fn clear_selection(game: &mut Game, selection: &Selection) {
-    let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) else {
+    let Some((x, y)) = selection.selected_cell else {
         return;
     };
 
     if !game.start.has(x, y) {
         game.current = game.current.unset(x, y);
+        game.notes.clear(x, y);
     }
 }
 
@@ -370,7 +388,7 @@ fn fill_number(
     y: u8,
     n: NonZeroU8,
 ) {
-    let elapsed_secs = timer.stopwatch.elapsed_secs();
+    let elapsed_secs = timer.elapsed_secs;
     let options = SetNumberOptions {
         elapsed_secs,
         is_hint,
@@ -384,13 +402,15 @@ fn fill_number(
         game.num_mistakes += 1;
         animate_mistake(notes, x, y, n);
 
-        timer
-            .stopwatch
-            .set_elapsed(Duration::from_secs_f32(new_elapsed_secs));
+        timer.elapsed_secs = new_elapsed_secs;
     }
 
     if selection.hint == Some((x, y)) {
         selection.hint = None;
+    }
+
+    if selection.selected_cell != Some((x, y)) {
+        selection.set(x, y);
     }
 
     animate_cleared_notes(notes, &game.notes, &previous_notes, x, y);
@@ -438,26 +458,23 @@ fn fill_selected_number(
     settings: &Settings,
     n: NonZeroU8,
 ) {
-    if let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) {
+    if let Some((x, y)) = selection.selected_cell {
         fill_number(game, timer, selection, notes, settings, false, x, y, n);
     }
 }
 
-fn toggle_note(game: &mut Game, selection: &Selection, n: NonZeroU8) {
-    let Some((x, y)) = selection.selected_cell.map(|number| (number.0, number.1)) else {
+fn toggle_note(game: &mut Game, selection: &mut Selection, n: NonZeroU8) {
+    let Some((x, y)) = selection.selected_cell else {
         return;
     };
 
     game.notes.toggle(x, y, n);
-}
 
-fn move_selection(selection: &mut Selection, x: u8, y: u8) {
-    let selected_cell = (x, y);
-    selection.selected_cell = if selection.selected_cell == Some(selected_cell) {
-        None
-    } else {
-        Some(selected_cell)
-    };
+    if game.notes.has(x, y, n) {
+        selection.selected_note = Some(n);
+    } else if let Some(remaining_n) = game.notes.get_only_number(get_pos(x, y)) {
+        selection.selected_note = Some(remaining_n);
+    }
 }
 
 fn get_board_x_and_y(board_position: &ComputedPosition, cursor_position: Vec2) -> Option<(u8, u8)> {
@@ -522,9 +539,9 @@ fn on_timer(
         if screen.get() == &ScreenState::Game || screen.get() == &ScreenState::Highscores {
             // Show a little animation for the solved state.
             let (x, y) = get_x_and_y_from_pos(((time.elapsed().as_millis() / 200) % 81) as usize);
-            selection.selected_cell = Some((x, y));
+            selection.set(x, y);
         }
     } else if !game.is_default() && screen.get() == &ScreenState::Game {
-        game_timer.stopwatch.tick(time.delta());
+        game_timer.elapsed_secs += time.delta().as_secs_f32();
     }
 }
