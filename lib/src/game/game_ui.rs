@@ -72,7 +72,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 90.,
+        font_size: 70.,
         color: COLOR_TIMER_TEXT,
     };
 
@@ -81,7 +81,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
         if cfg!(target_os = "ios") {
-            Val::Pixel(2.)
+            Val::Pixel(1.)
         } else {
             0.03 * height
         },
@@ -141,7 +141,7 @@ pub fn build_button_row(
 fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
     let text_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 70.,
+        font_size: 58.,
         color: COLOR_SCORE_TEXT,
     };
 

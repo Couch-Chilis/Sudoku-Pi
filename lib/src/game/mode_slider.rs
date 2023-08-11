@@ -44,7 +44,7 @@ fn build_items(
 ) {
     let text_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 60.,
+        font_size: 48.,
         color: COLOR_SECONDARY_BUTTON_TEXT,
     };
 

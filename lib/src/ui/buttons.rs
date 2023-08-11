@@ -3,7 +3,7 @@ use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
 const BORDER_THICKNESS: Val = if cfg!(target_os = "ios") {
-    Val::Pixel(2.)
+    Val::Pixel(1.)
 } else {
     Val::Vmin(0.3)
 };
@@ -60,7 +60,7 @@ impl ButtonBuilder {
         // Text styling for primary buttons.
         let text_style = TextStyle {
             font: fonts.medium.clone(),
-            font_size: 60.,
+            font_size: 44.,
             color: COLOR_BUTTON_TEXT,
         };
 

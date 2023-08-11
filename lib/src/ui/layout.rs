@@ -223,7 +223,7 @@ impl<'a> LayoutInfo<'a> {
                         Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
                         _ => 0.,
                     },
-                    -4. / height,
+                    -3. / height,
                     1.,
                 );
 
