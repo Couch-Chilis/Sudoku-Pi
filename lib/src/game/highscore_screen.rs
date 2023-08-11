@@ -41,7 +41,7 @@ pub fn highscore_screen_setup(
                     .with_children(|square| {
                         square.spawn(SpriteBundle {
                             texture: images.scroll.clone(),
-                            transform: Transform::from_2d_scale(1. / 354., 1. / 135.),
+                            transform: Transform::from_2d_scale(1. / 1416., 1. / 537.),
                             ..default()
                         });
                     });
@@ -78,7 +78,7 @@ pub fn highscore_screen_setup(
                     .with_children(|square| {
                         square.spawn(SpriteBundle {
                             texture: images.wall.clone(),
-                            transform: Transform::from_2d_scale(1. / 390., 1. / 400.),
+                            transform: Transform::from_2d_scale(1. / 780., 1. / 797.),
                             ..default()
                         });
                     });
@@ -110,7 +110,7 @@ pub fn highscore_screen_setup(
                 );
                 button_builder.build_selected_with_text_and_action(
                     button_section,
-                    "Start a new Game",
+                    "Start a New Game",
                     HighscoreButtonAction::NewGame,
                 );
             });
