@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*};
+use crate::{constants::*, ui::*, utils::*, Images};
 use crate::{Fonts, Game, GameTimer, Highscores, ScreenState};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
@@ -21,6 +21,7 @@ pub fn init_game_ui(
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
+    images: &Images,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
     game_screen.with_children(|screen| {
@@ -48,11 +49,7 @@ pub fn init_game_ui(
 
     board_builder(game_screen);
 
-    build_mode_slider(game_screen, meshes, materials, fonts);
-
-    game_screen.with_children(|screen| {
-        screen.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()));
-    });
+    build_mode_slider(game_screen, meshes, materials, fonts, images);
 }
 
 fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut ChildBuilder)) {

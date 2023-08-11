@@ -38,6 +38,7 @@ const XIAOWEI_REGULAR_FONT: &[u8] = include_bytes!("../../assets/XiaoWei/ZCOOLXi
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
 const LOGO: &[u8] = include_bytes!("../../assets/logo.png");
+const MODE_SLIDER: &[u8] = include_bytes!("../../assets/mode_slider.png");
 const SCROLL: &[u8] = include_bytes!("../../assets/scroll.png");
 const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
 const SLICE_2: &[u8] = include_bytes!("../../assets/slice_2.png");
@@ -48,7 +49,7 @@ const SLICE_6: &[u8] = include_bytes!("../../assets/slice_6.png");
 const SLICE_7: &[u8] = include_bytes!("../../assets/slice_7.png");
 const SLICE_8: &[u8] = include_bytes!("../../assets/slice_8.png");
 const SLICE_9: &[u8] = include_bytes!("../../assets/slice_9.png");
-const TOP_LABEL: &[u8] = include_bytes!("../../assets/top-label.png");
+const TOP_LABEL: &[u8] = include_bytes!("../../assets/top_label.png");
 const WALL: &[u8] = include_bytes!("../../assets/wall.png");
 const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 
@@ -73,6 +74,7 @@ pub struct Images {
     cog: Handle<Image>,
     cog_pressed: Handle<Image>,
     logo: Handle<Image>,
+    mode_slider: Handle<Image>,
     scroll: Handle<Image>,
     slice_1: Handle<Image>,
     slice_2: Handle<Image>,
@@ -254,6 +256,7 @@ fn setup(
         cog: images.add(load_png(COG)),
         cog_pressed: images.add(load_png(COG_PRESSED)),
         logo: images.add(load_png(LOGO)),
+        mode_slider: images.add(load_png(MODE_SLIDER)),
         scroll: images.add(load_png(SCROLL)),
         slice_1: images.add(load_png(SLICE_1)),
         slice_2: images.add(load_png(SLICE_2)),

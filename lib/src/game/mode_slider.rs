@@ -1,5 +1,4 @@
-use super::Wheel;
-use crate::{constants::*, pointer_query::*, ui::*, Fonts};
+use crate::{constants::*, pointer_query::*, ui::*, utils::TransformExt, Fonts, Images};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
@@ -19,106 +18,165 @@ pub struct ModeSlider {
 #[derive(Component)]
 pub struct ModeSliderKnob;
 
+#[derive(Component)]
+pub struct OppositeSliderKnob;
+
 pub fn build_mode_slider(
     parent: &mut EntityCommands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
+    images: &Images,
 ) {
     parent.with_children(|parent| {
         parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
-                    .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
-                FlexContainerStyle::row().with_padding(Sides::vertical(Val::Percent(25.))),
+            .spawn((
+                ModeSlider { active: false },
+                FlexBundle::new(
+                    FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(30.))
+                        .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                    FlexContainerStyle::column(),
+                ),
             ))
-            .with_children(|row| build_items(row, meshes, materials, fonts));
+            .with_children(|column| {
+                column
+                    .spawn(FlexBundle::new(
+                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.)),
+                        FlexContainerStyle::row(),
+                    ))
+                    .with_children(|row| {
+                        build_background(row, images);
+                        build_knobs(row, meshes, materials);
+                    });
+
+                column
+                    .spawn(FlexBundle::new(
+                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(21.)),
+                        FlexContainerStyle::row(),
+                    ))
+                    .with_children(|row| {
+                        build_labels(row, fonts);
+                    });
+            });
     });
 }
 
-fn build_items(
+fn build_background(row: &mut ChildBuilder, images: &Images) {
+    row.spawn(FlexLeafBundle::from_style(
+        FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
+            .with_fixed_aspect_ratio()
+            .without_occupying_space()
+            .with_margin(Size::new(Val::None, Val::CrossPercent(1.5))),
+    ))
+    .with_children(|background_container| {
+        background_container.spawn(SpriteBundle {
+            texture: images.mode_slider.clone(),
+            transform: Transform::from_2d_scale(1. / 1282., 1. / 118.),
+            ..default()
+        });
+    });
+}
+
+fn build_knobs(
     row: &mut ChildBuilder,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
-    fonts: &Fonts,
 ) {
+    build_knob(
+        row,
+        meshes,
+        materials,
+        ModeSliderKnob,
+        COLOR_TOGGLE_ON,
+        0.,
+        4.,
+    );
+    build_knob(
+        row,
+        meshes,
+        materials,
+        OppositeSliderKnob,
+        COLOR_BOARD_LINE_THIN,
+        9.,
+        2.,
+    );
+}
+
+fn build_knob(
+    row: &mut ChildBuilder,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
+    knob: impl Component,
+    color: Color,
+    x: f32,
+    z_index: f32,
+) {
+    row.spawn((FlexBundle::new(
+        FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.)).without_occupying_space(),
+        FlexContainerStyle::row(),
+    ),))
+        .with_children(|slider| {
+            slider
+                .spawn((
+                    knob,
+                    FlexLeafBundle::from_style(
+                        FlexItemStyle::fixed_size(Val::CrossPercent(100.), Val::Percent(100.))
+                            .with_transform(Transform::from_translation(Vec3::new(x, 0., z_index))),
+                    ),
+                ))
+                .with_children(|knob_container| {
+                    knob_container.spawn((
+                        Toggle,
+                        MaterialMesh2dBundle {
+                            mesh: meshes.add(shape::Circle::new(0.6).into()).into(),
+                            material: materials.add(ColorMaterial::from(color)),
+                            transform: Transform::from_translation(Vec3::new(0., 0., z_index + 1.)),
+                            ..default()
+                        },
+                    ));
+                });
+        });
+}
+
+fn build_labels(row: &mut ChildBuilder, fonts: &Fonts) {
     let text_style = TextStyle {
         font: fonts.medium.clone(),
         font_size: 48.,
-        color: COLOR_SECONDARY_BUTTON_TEXT,
+        color: COLOR_MAIN_DARKER,
     };
 
-    // This is the "knob" of the slider and the container in which it slides.
-    row.spawn((
-        ModeSlider { active: false },
-        FlexBundle::new(
-            FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.))
-                .without_occupying_space(),
-            FlexContainerStyle::row(),
-        ),
-    ))
-    .with_children(|slider| {
-        slider
-            .spawn((
-                ModeSliderKnob,
-                FlexLeafBundle::from_style(
-                    FlexItemStyle::fixed_size(Val::CrossPercent(100.), Val::Percent(100.))
-                        .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-                ),
-            ))
-            .with_children(|knob_container| {
-                knob_container.spawn((
-                    Toggle,
-                    MaterialMesh2dBundle {
-                        mesh: meshes.add(shape::Circle::new(0.21).into()).into(),
-                        material: materials.add(ColorMaterial::from(COLOR_TOGGLE_ON)),
-                        transform: Transform::from_translation(Vec3::new(0., 0., 3.)),
-                        ..default()
-                    },
-                ));
-            });
-    });
-
-    let mut toggle_builder = ToggleBuilder::new(meshes, materials);
-    toggle_builder.build_with_marker(row, (), false);
-
-    row.spawn(FlexBundle::from_item_style(
-        FlexItemStyle::minimum_size(Val::Vmin(25.), Val::Percent(100.))
-            .with_transform(Transform::from_translation(Vec3::new(0., 0., 3.))),
+    row.spawn(FlexBundle::new(
+        FlexItemStyle::available_size(),
+        FlexContainerStyle::default(),
     ))
     .with_children(|label_container| {
         label_container.spawn(
-            FlexTextBundle::from_text(Text::from_section("Normal", text_style.clone()))
+            FlexTextBundle::from_text(Text::from_section("Normal\nmode", text_style.clone()))
                 .with_anchor(Anchor::CenterLeft),
         );
     });
 
-    row.spawn(FlexBundle::from_item_style(
-        FlexItemStyle::minimum_size(Val::Vmin(25.), Val::Percent(100.))
-            .with_transform(Transform::from_translation(Vec3::new(0., 0., 3.))),
+    row.spawn(FlexBundle::new(
+        FlexItemStyle::available_size(),
+        FlexContainerStyle::default(),
     ))
     .with_children(|label_container| {
         label_container.spawn(
-            FlexTextBundle::from_text(Text::from_section("Notes", text_style))
+            FlexTextBundle::from_text(Text::from_section("Notes\nmode", text_style))
                 .with_anchor(Anchor::CenterRight),
         );
     });
-
-    toggle_builder.build_with_marker(row, (), false);
 }
 
 pub fn slider_interaction(
     mut commands: Commands,
     mut slider_query: Query<(&ComputedPosition, &mut ModeSlider)>,
     mut next_state: ResMut<NextState<ModeState>>,
+    state: Res<State<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
+    opposite_query: Query<Entity, (With<OppositeSliderKnob>, Without<ModeSlider>)>,
     pointer_query: PointerQuery,
-    wheel_query: Query<&Wheel>,
 ) {
-    if wheel_query.get_single().ok().is_some_and(Wheel::is_open) {
-        return;
-    }
-
     let Some((input, position)) = pointer_query.get_changed_input_with_position() else {
         return;
     };
@@ -127,16 +185,12 @@ pub fn slider_interaction(
         return;
     };
 
-    if input == InputKind::Press {
+    if input == InputKind::Press && slider_position.contains(position) {
         mode_slider.active = true;
     } else if input == InputKind::Release {
         mode_slider.active = false;
         return;
     } else if !mode_slider.active {
-        return;
-    }
-
-    if !slider_position.contains(position) {
         return;
     }
 
@@ -149,35 +203,59 @@ pub fn slider_interaction(
     } else {
         ModeState::Normal
     };
-    next_state.set(mode);
+    if state.get() != &mode {
+        next_state.set(mode);
+    }
 
+    let knob_width = knob_position.width / slider_position.width;
+    let width = 1. - knob_width;
+    let knob_end = match mode {
+        ModeState::Normal => 0.,
+        ModeState::Notes => width,
+    };
     let animator = Animator::new(Tween::new(
         EaseFunction::QuadraticInOut,
-        Duration::from_millis(100),
+        Duration::from_millis(150),
         TransformTranslateKnobLens {
             start: (position.x - slider_position.x - 0.5 * knob_position.width)
                 / slider_position.width,
-            end: match mode {
-                ModeState::Normal => 0.,
-                ModeState::Notes => {
-                    (slider_position.width - knob_position.width) / slider_position.width
-                }
-            },
+            end: knob_end,
+            center: 0.5 * width,
         },
     ));
 
     commands.entity(knob).insert(animator);
+
+    if state.get() != &mode {
+        if let Ok(opposite) = opposite_query.get_single() {
+            let animator = Animator::new(Tween::new(
+                EaseFunction::QuadraticInOut,
+                Duration::from_millis(150),
+                TransformTranslateKnobLens {
+                    start: knob_end,
+                    end: width - knob_end,
+                    center: 0.5 * width,
+                },
+            ));
+
+            commands.entity(opposite).insert(animator);
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
 struct TransformTranslateKnobLens {
     pub start: f32,
     pub end: f32,
+    pub center: f32,
 }
 
 impl Lens<FlexItemStyle> for TransformTranslateKnobLens {
     fn lerp(&mut self, target: &mut FlexItemStyle, ratio: f32) {
         let x = self.start + (self.end - self.start) * ratio;
+        let distance_from_center = ((x - self.center) / self.center).abs();
+        let scale = 0.25 + 0.75 * distance_from_center;
+        target.transform.scale = Vec3::new(scale, scale, 1.);
         target.transform.translation.x = x;
     }
 }

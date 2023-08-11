@@ -158,7 +158,7 @@ pub fn board_setup(
     images: &Images,
     settings: &Settings,
 ) {
-    init_game_ui(game_screen, meshes, materials, fonts, |parent| {
+    init_game_ui(game_screen, meshes, materials, fonts, images, |parent| {
         build_board(parent, fonts, game, images, settings)
     });
 }
