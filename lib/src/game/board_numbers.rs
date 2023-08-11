@@ -113,7 +113,7 @@ fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundl
             cell.map(|n| n.to_string()).unwrap_or_default(),
             number_style,
         ))
-        .with_translation(0., -1.),
+        .with_translation(0., -3.),
     )
 }
 
