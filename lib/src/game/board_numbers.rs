@@ -32,7 +32,7 @@ pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, sett
             board
                 .spawn(FlexBundle::new(
                     FlexItemStyle::available_size(),
-                    FlexContainerStyle::default(),
+                    FlexContainerStyle::column(),
                 ))
                 .with_children(|column| {
                     for y in 0..9 {
@@ -183,6 +183,15 @@ pub(super) fn render_notes(
         let new_color =
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
                 COLOR_POP_DARK
+            } else if note.animation_kind == Some(NoteAnimationKind::MistakeInCell) {
+                let ratio = get_mistake_animation_ratio(note.animation_timer);
+                if ratio < 1. {
+                    note.animation_timer += time.delta().as_secs_f32();
+                    Color::rgba(0., 0., 0., ratio.powi(2))
+                } else {
+                    note.animation_kind = None;
+                    Color::BLACK
+                }
             } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
                 Color::BLACK
             } else if let Some(NoteAnimationKind::FadeOut(duration)) = note.animation_kind {
@@ -350,7 +359,7 @@ pub(super) fn render_note_highlights(
 }
 
 fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, delta: f32) {
-    let ratio = get_mistake_animation_ratios(note.animation_timer);
+    let ratio = get_mistake_animation_ratio(note.animation_timer);
 
     style.transform = if ratio == 1. {
         note.animation_kind = None;
@@ -363,15 +372,15 @@ fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, d
         let scale = Vec3::new(zoom, zoom, 1.);
 
         let (translate_x, translate_y) = match note.n.get() {
-            1 => (font_ratio, -0.6),
-            2 => (0., -0.6),
-            3 => (-font_ratio, -0.6),
-            4 => (font_ratio, 0.2),
-            5 => (0., 0.2),
-            6 => (-font_ratio, 0.2),
-            7 => (font_ratio, 0.9),
-            8 => (0., 0.9),
-            9 => (-font_ratio, 0.9),
+            1 => (font_ratio, -0.9),
+            2 => (0., -0.9),
+            3 => (-font_ratio, -0.9),
+            4 => (font_ratio, -0.05),
+            5 => (0., -0.05),
+            6 => (-font_ratio, -0.05),
+            7 => (font_ratio, 0.85),
+            8 => (0., 0.85),
+            9 => (-font_ratio, 0.85),
             _ => (0., 0.),
         };
 
@@ -388,7 +397,7 @@ fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, d
 
 /// Returns the animation's ratio as a number from 0.0 through 1.0, where 0.0
 /// means the animation hasn't started yet and 1.0 means it's done.
-fn get_mistake_animation_ratios(timer: f32) -> f32 {
+fn get_mistake_animation_ratio(timer: f32) -> f32 {
     const MISTAKE_ANIMATION_DELAY: f32 = 0.8;
     const MISTAKE_ANIMATION_DURATION: f32 = 0.5;
 

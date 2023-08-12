@@ -54,7 +54,7 @@ impl Plugin for GamePlugin {
                     highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
                     slider_interaction.run_if(in_state(ScreenState::Game)),
                     render_numbers,
-                    render_notes,
+                    render_notes.run_if(in_state(ScreenState::Game)),
                     render_wheel,
                     calculate_highlights,
                     render_cell_highlights.after(calculate_highlights),
@@ -88,6 +88,7 @@ impl Note {
 #[derive(Clone, Copy, Eq, PartialEq)]
 enum NoteAnimationKind {
     Mistake,
+    MistakeInCell,
     FadeOut(Duration),
 }
 
@@ -415,7 +416,7 @@ fn fill_number(
 
     let is_correct = game.set(x, y, n, options);
     if !is_correct {
-        animate_mistake(notes, x, y, n);
+        animate_mistake(notes, game, x, y, n);
     }
 
     if selection.hint == Some((x, y)) {
@@ -454,10 +455,22 @@ fn animate_cleared_notes(
     }
 }
 
-fn animate_mistake(notes: &mut Query<&mut Note>, set_x: u8, set_y: u8, set_n: NonZeroU8) {
+fn animate_mistake(
+    notes: &mut Query<&mut Note>,
+    game: &Game,
+    set_x: u8,
+    set_y: u8,
+    set_n: NonZeroU8,
+) {
     for mut note in notes {
-        if note.x == set_x && note.y == set_y && note.n == set_n {
-            note.animation_kind = Some(NoteAnimationKind::Mistake);
+        if note.x == set_x && note.y == set_y {
+            if game.notes.has(set_x, set_y, note.n) || game.mistakes.has(set_x, set_y, note.n) {
+                note.animation_kind = Some(if note.n == set_n {
+                    NoteAnimationKind::Mistake
+                } else {
+                    NoteAnimationKind::MistakeInCell
+                });
+            }
             note.animation_timer = 0.;
         }
     }
