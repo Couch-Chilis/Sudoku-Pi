@@ -10,20 +10,17 @@ use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game, Notes, SetNumberO
 use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use board_builder::{build_board, Board};
+use board_builder::{build_board, Board, MistakeCellBorders};
 use board_numbers::*;
 use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
-use highscore_screen::{highscore_button_actions, on_highscores_changed};
+use highscore_screen::{highscore_button_actions, on_fortune, on_highscores_changed};
 use mode_slider::{slider_interaction, ModeState};
 use std::num::NonZeroU8;
 use std::time::Duration;
-use wheel::{on_wheel_input, on_wheel_timer, render_wheel};
+use wheel::{on_wheel_input, on_wheel_timer, render_wheel, NOTES_MODE_OPEN_DELAY};
 
 pub use highscore_screen::highscore_screen_setup;
 pub use wheel::{SliceHandles, Wheel};
-
-use self::highscore_screen::on_fortune;
-use self::wheel::NOTES_MODE_OPEN_DELAY;
 
 pub struct GamePlugin;
 
@@ -415,16 +412,18 @@ fn fill_number(
     let previous_notes = game.notes.clone();
 
     let is_correct = game.set(x, y, n, options);
-    if !is_correct {
+
+    if is_correct {
+        if selection.selected_cell != Some((x, y)) {
+            selection.set(x, y);
+        }
+    } else {
         animate_mistake(notes, game, x, y, n);
+        selection.clear();
     }
 
     if selection.hint == Some((x, y)) {
         selection.hint = None;
-    }
-
-    if selection.selected_cell != Some((x, y)) {
-        selection.set(x, y);
     }
 
     animate_cleared_notes(notes, &game.notes, &previous_notes, x, y);

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;

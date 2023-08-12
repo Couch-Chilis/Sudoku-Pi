@@ -1,4 +1,4 @@
-use super::{Note, NoteAnimationKind, Number, ScreenState, Selection};
+use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, ScreenState, Selection};
 use crate::{
     constants::*,
     sudoku::*,
@@ -184,7 +184,7 @@ pub(super) fn render_notes(
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
                 COLOR_POP_DARK
             } else if note.animation_kind == Some(NoteAnimationKind::MistakeInCell) {
-                let ratio = get_mistake_animation_ratio(note.animation_timer);
+                let (ratio, _) = get_mistake_animation_ratio(note.animation_timer);
                 if ratio < 1. {
                     note.animation_timer += time.delta().as_secs_f32();
                     Color::rgba(0., 0., 0., ratio.powi(2))
@@ -299,7 +299,7 @@ pub(super) fn calculate_highlights(
 }
 
 pub(super) fn render_cell_highlights(
-    mut cells: Query<(&Number, &mut Sprite), Without<Note>>,
+    mut cells: Query<(&Number, &mut Sprite)>,
     screen: Res<State<ScreenState>>,
     highlights: Res<Highlights>,
 ) {
@@ -328,7 +328,8 @@ pub(super) fn render_cell_highlights(
 }
 
 pub(super) fn render_note_highlights(
-    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite), Without<Number>>,
+    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite)>,
+    mut mistake_borders: Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
     screen: Res<State<ScreenState>>,
     highlights: Res<Highlights>,
     time: Res<Time>,
@@ -353,13 +354,35 @@ pub(super) fn render_note_highlights(
         }
 
         if note.animation_kind == Some(NoteAnimationKind::Mistake) {
-            animate_mistake(note, flex_item_style, time.delta().as_secs_f32());
+            animate_mistake(
+                note,
+                &mut mistake_borders,
+                flex_item_style,
+                time.delta().as_secs_f32(),
+            );
         }
     }
 }
 
-fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, delta: f32) {
-    let ratio = get_mistake_animation_ratio(note.animation_timer);
+fn animate_mistake(
+    mut note: Mut<'_, Note>,
+    mistake_borders: &mut Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
+    mut style: Mut<'_, FlexItemStyle>,
+    delta: f32,
+) {
+    let (ratio, show_borders) = get_mistake_animation_ratio(note.animation_timer);
+
+    if let Ok((mut mistake_borders_transform, mut mistake_borders_visibility)) =
+        mistake_borders.get_single_mut()
+    {
+        if show_borders {
+            mistake_borders_transform.translation.x = (note.x as f32 - 4.) * CELL_SIZE;
+            mistake_borders_transform.translation.y = -(note.y as f32 - 4.) * CELL_SIZE;
+            *mistake_borders_visibility = Visibility::Visible;
+        } else {
+            *mistake_borders_visibility = Visibility::Hidden;
+        }
+    }
 
     style.transform = if ratio == 1. {
         note.animation_kind = None;
@@ -395,17 +418,28 @@ fn animate_mistake(mut note: Mut<'_, Note>, mut style: Mut<'_, FlexItemStyle>, d
     };
 }
 
-/// Returns the animation's ratio as a number from 0.0 through 1.0, where 0.0
-/// means the animation hasn't started yet and 1.0 means it's done.
-fn get_mistake_animation_ratio(timer: f32) -> f32 {
+/// Returns a tuple with the animation's ratio as a number from 0.0 through 1.0,
+/// where 0.0 means the animation hasn't started yet and 1.0 means it's done.
+///
+/// The second value in the tuple determines whether the mistake borders should
+/// be shown or not.
+fn get_mistake_animation_ratio(timer: f32) -> (f32, bool) {
     const MISTAKE_ANIMATION_DELAY: f32 = 0.8;
     const MISTAKE_ANIMATION_DURATION: f32 = 0.5;
 
     if timer < MISTAKE_ANIMATION_DELAY {
-        0.
+        (
+            0.,
+            (0.0..0.2).contains(&timer)
+                || (0.3..0.5).contains(&timer)
+                || (0.6..0.8).contains(&timer),
+        )
     } else if timer > MISTAKE_ANIMATION_DELAY + MISTAKE_ANIMATION_DURATION {
-        1.
+        (1., false)
     } else {
-        ((timer - MISTAKE_ANIMATION_DELAY) / MISTAKE_ANIMATION_DURATION).powi(2)
+        (
+            ((timer - MISTAKE_ANIMATION_DELAY) / MISTAKE_ANIMATION_DURATION).powi(2),
+            false,
+        )
     }
 }
