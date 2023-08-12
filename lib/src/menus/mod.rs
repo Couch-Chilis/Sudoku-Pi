@@ -4,7 +4,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenState, Settings};
+use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenState};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -16,19 +16,13 @@ use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
-#[derive(Component)]
-enum MenuButtonAction {
-    Settings,
-}
+pub use settings_menu::settings_screen_setup;
 
 #[derive(Component, Default)]
 struct ButtonSection {
     initial_rotation: f32,
     current_rotation: f32,
 }
-
-#[derive(Component)]
-struct SettingsIcon;
 
 pub struct MenuPlugin;
 
@@ -41,8 +35,6 @@ impl Plugin for MenuPlugin {
                 main_menu_button_actions.run_if(in_state(ScreenState::MainMenu)),
                 settings_screen_button_actions.run_if(in_state(ScreenState::Settings)),
                 settings_toggle_actions.run_if(in_state(ScreenState::Settings)),
-                settings_icon_interaction.run_if(in_main_menu),
-                menu_button_actions.run_if(in_main_menu),
                 on_setting_change,
                 on_screen_change.before(LayoutSystem::ApplyLayout),
             ),
@@ -50,74 +42,24 @@ impl Plugin for MenuPlugin {
     }
 }
 
-fn in_main_menu(state: Res<State<ScreenState>>) -> bool {
-    matches!(
-        state.get(),
-        ScreenState::MainMenu | ScreenState::SelectDifficulty | ScreenState::Settings
-    )
-}
-
-pub fn menu_setup(
-    main_screen: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
-    fonts: &Fonts,
-    game: &Game,
-    images: &Images,
-    settings: &Settings,
-) {
+pub fn menu_setup(main_screen: &mut EntityCommands, fonts: &Fonts, game: &Game, images: &Images) {
     main_screen.with_children(|screen| {
         // Logo.
         screen
             .spawn(FlexBundle::new(
                 FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.)),
-                FlexContainerStyle::row()
-                    .with_gap(Val::Auto)
-                    .with_padding(Sides::all(Val::Vmin(5.))),
+                FlexContainerStyle::row().with_padding(Sides::new(Val::Auto, Val::Vmin(5.))),
             ))
             .with_children(|logo_section| {
-                // Workaround to keep the logo centered.
-                logo_section.spawn(FlexLeafBundle::from_style(
-                    FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
-                        .with_margin(Size::all(Val::Vmin(5.))),
-                ));
-
                 // Logo.
-                logo_section
-                    .spawn(FlexLeafBundle::from_style(
-                        FlexItemStyle::preferred_size(Val::CrossPercent(37.), Val::Percent(80.))
-                            .with_margin(Size::new(Val::Vmin(8.), Val::Vmin(0.)))
-                            .with_fixed_aspect_ratio()
-                            .with_alignment(Alignment::End),
-                    ))
-                    .with_children(|square| {
-                        square.spawn(SpriteBundle {
-                            texture: images.logo.clone(),
-                            transform: Transform::from_2d_scale(1. / 241., 1. / 513.),
-                            ..default()
-                        });
-                    });
-
-                // Cog.
                 logo_section.spawn((
-                    SettingsIcon,
-                    Interaction::None,
-                    ScreenInteraction {
-                        screens: smallvec![
-                            ScreenState::MainMenu,
-                            ScreenState::SelectDifficulty,
-                            ScreenState::Settings,
-                        ],
-                    },
-                    MenuButtonAction::Settings,
                     FlexItemBundle::from_style(
-                        FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
-                            .with_alignment(Alignment::Start)
-                            .with_margin(Size::all(Val::Vmin(5.)))
-                            .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
+                        FlexItemStyle::preferred_size(Val::CrossPercent(37.), Val::Percent(80.))
+                            .with_fixed_aspect_ratio()
+                            .with_transform(Transform::from_2d_scale(1. / 241., 1. / 513.)),
                     ),
                     SpriteBundle {
-                        texture: images.cog.clone(),
+                        texture: images.logo.clone(),
                         ..default()
                     },
                 ));
@@ -131,11 +73,6 @@ pub fn menu_setup(
         // Difficulty buttons.
         build_button_section(screen, ScreenState::SelectDifficulty, -0.5 * PI, |parent| {
             spawn_difficulty_menu_buttons(parent, fonts);
-        });
-
-        // Settings buttons and toggles.
-        build_button_section(screen, ScreenState::Settings, 0.5 * PI, |parent| {
-            spawn_settings(parent, meshes, materials, fonts, settings);
         });
     });
 }
@@ -211,7 +148,6 @@ fn on_screen_change(
     let new_rotation = match screen_state.get() {
         MainMenu | Game => 0.,
         SelectDifficulty => 0.5 * PI,
-        Settings => -0.5 * PI,
         _ => return,
     };
 
@@ -254,40 +190,5 @@ impl Lens<FlexItemStyle> for TransformRotationZLens {
     fn lerp(&mut self, target: &mut FlexItemStyle, ratio: f32) {
         let value = self.start + (self.end - self.start) * ratio;
         target.transform.rotation = Quat::from_rotation_z(value);
-    }
-}
-
-fn settings_icon_interaction(
-    images: Res<Images>,
-    mut interaction_query: Query<
-        (&Interaction, &mut Handle<Image>),
-        (Changed<Interaction>, With<SettingsIcon>),
-    >,
-) {
-    for (interaction, mut image) in &mut interaction_query {
-        *image = match *interaction {
-            Interaction::Selected => images.cog_pressed.clone(),
-            Interaction::Pressed | Interaction::None => images.cog.clone(),
-        };
-    }
-}
-
-// Handles screen navigation based on button actions that persist across menus.
-fn menu_button_actions(
-    query: Query<(&Interaction, &MenuButtonAction), Changed<Interaction>>,
-    current_state: Res<State<ScreenState>>,
-    mut screen_state: ResMut<NextState<ScreenState>>,
-) {
-    for (interaction, action) in &query {
-        if *interaction == Interaction::Pressed {
-            use MenuButtonAction::*;
-            match action {
-                Settings => screen_state.set(if current_state.get() == &ScreenState::Settings {
-                    ScreenState::MainMenu
-                } else {
-                    ScreenState::Settings
-                }),
-            }
-        }
     }
 }

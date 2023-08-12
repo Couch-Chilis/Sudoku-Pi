@@ -12,7 +12,9 @@ use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use board_builder::{build_board, Board, MistakeCellBorders};
 use board_numbers::*;
-use game_ui::{init_game_ui, on_score_changed, on_time_changed, UiButtonAction};
+use game_ui::{
+    init_game_ui, on_score_changed, on_time_changed, settings_icon_interaction, UiButtonAction,
+};
 use highscore_screen::{highscore_button_actions, on_fortune, on_highscores_changed};
 use mode_slider::{slider_interaction, ModeState};
 use std::num::NonZeroU8;
@@ -53,6 +55,7 @@ impl Plugin for GamePlugin {
                     render_numbers,
                     render_notes.run_if(in_state(ScreenState::Game)),
                     render_wheel,
+                    settings_icon_interaction.run_if(in_state(ScreenState::Game)),
                     calculate_highlights,
                     render_cell_highlights.after(calculate_highlights),
                     render_note_highlights.after(calculate_highlights),
@@ -521,12 +524,13 @@ fn button_actions(
     mut selection: ResMut<Selection>,
     mut notes: Query<&mut Note>,
     settings: Res<Settings>,
-    query: Query<(&Interaction, &UiButtonAction), (Changed<Interaction>, With<Button>)>,
+    query: Query<(&Interaction, &UiButtonAction), Changed<Interaction>>,
 ) {
     for (interaction, action) in &query {
         if *interaction == Interaction::Pressed {
             match action {
                 UiButtonAction::BackToMain => screen_state.set(ScreenState::MainMenu),
+                UiButtonAction::GoToSettings => screen_state.set(ScreenState::Settings),
                 UiButtonAction::Hint => {
                     give_hint(&mut game, &mut timer, &mut selection, &mut notes, &settings)
                 }

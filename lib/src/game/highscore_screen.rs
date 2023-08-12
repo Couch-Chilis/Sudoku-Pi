@@ -32,19 +32,18 @@ pub fn highscore_screen_setup(
             ))
             .with_children(|scroll_section| {
                 // Scroll.
-                scroll_section
-                    .spawn(FlexLeafBundle::from_style(
+                scroll_section.spawn((
+                    FlexItemBundle::from_style(
                         FlexItemStyle::fixed_size(Val::Percent(90.), Val::CrossPercent(34.3))
                             .with_fixed_aspect_ratio()
-                            .without_occupying_space(),
-                    ))
-                    .with_children(|square| {
-                        square.spawn(SpriteBundle {
-                            texture: images.scroll.clone(),
-                            transform: Transform::from_2d_scale(1. / 1416., 1. / 537.),
-                            ..default()
-                        });
-                    });
+                            .without_occupying_space()
+                            .with_transform(Transform::from_2d_scale(1. / 1416., 1. / 537.)),
+                    ),
+                    SpriteBundle {
+                        texture: images.scroll.clone(),
+                        ..default()
+                    },
+                ));
 
                 scroll_section
                     .spawn(FlexBundle::new(
@@ -71,17 +70,17 @@ pub fn highscore_screen_setup(
             ))
             .with_children(|wall_section| {
                 // Wall.
-                wall_section
-                    .spawn(FlexLeafBundle::from_style(
-                        FlexItemStyle::available_size().without_occupying_space(),
-                    ))
-                    .with_children(|square| {
-                        square.spawn(SpriteBundle {
-                            texture: images.wall.clone(),
-                            transform: Transform::from_2d_scale(1. / 780., 1. / 797.),
-                            ..default()
-                        });
-                    });
+                wall_section.spawn((
+                    FlexItemBundle::from_style(
+                        FlexItemStyle::available_size()
+                            .without_occupying_space()
+                            .with_transform(Transform::from_2d_scale(1. / 780., 1. / 797.)),
+                    ),
+                    SpriteBundle {
+                        texture: images.wall.clone(),
+                        ..default()
+                    },
+                ));
 
                 let _spacer = wall_section.spawn(FlexItemBundle::from_style(
                     FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8)),

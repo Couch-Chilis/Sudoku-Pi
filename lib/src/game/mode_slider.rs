@@ -66,19 +66,19 @@ pub fn build_mode_slider(
 }
 
 fn build_background(row: &mut ChildBuilder, images: &Images) {
-    row.spawn(FlexLeafBundle::from_style(
-        FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
-            .with_fixed_aspect_ratio()
-            .without_occupying_space()
-            .with_margin(Size::new(Val::None, Val::CrossPercent(1.5))),
-    ))
-    .with_children(|background_container| {
-        background_container.spawn(SpriteBundle {
+    row.spawn((
+        FlexItemBundle::from_style(
+            FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
+                .with_fixed_aspect_ratio()
+                .without_occupying_space()
+                .with_margin(Size::new(Val::None, Val::CrossPercent(1.5)))
+                .with_transform(Transform::from_2d_scale(1. / 1282., 1. / 118.)),
+        ),
+        SpriteBundle {
             texture: images.mode_slider.clone(),
-            transform: Transform::from_2d_scale(1. / 1282., 1. / 118.),
             ..default()
-        });
-    });
+        },
+    ));
 }
 
 fn build_knobs(

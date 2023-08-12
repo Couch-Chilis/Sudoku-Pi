@@ -1,10 +1,22 @@
 use super::{ButtonBuilder, SettingsToggle, SettingsToggleBuilder};
 use crate::{constants::*, ui::*, Fonts, ScreenState, Settings};
-use bevy::prelude::*;
+use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
 pub enum SettingsButtonAction {
     Back,
+}
+
+pub fn settings_screen_setup(
+    settings_screen: &mut EntityCommands,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
+    fonts: &Fonts,
+    settings: &Settings,
+) {
+    settings_screen.with_children(|screen| {
+        spawn_settings(screen, meshes, materials, fonts, settings);
+    });
 }
 
 pub fn spawn_settings(
@@ -16,10 +28,6 @@ pub fn spawn_settings(
 ) {
     use SettingsButtonAction::*;
     use SettingsToggle::*;
-
-    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
-    let buttons = ButtonBuilder::new(fonts, button_size);
-    buttons.build_ternary_with_text_and_action(parent, "Back", Back);
 
     parent.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         Val::Auto,
@@ -42,16 +50,20 @@ pub fn spawn_settings(
     );
 
     toggles.build_settings_toggle(parent, settings, "Show mistakes", ShowMistakes);
+
+    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
+    let buttons = ButtonBuilder::new(fonts, button_size);
+    buttons.build_selected_with_text_and_action(parent, "Back", Back);
 }
 
 pub fn settings_screen_button_actions(
-    query: Query<(&Interaction, &SettingsButtonAction), (Changed<Interaction>, With<Button>)>,
+    query: Query<(&Interaction, &SettingsButtonAction), Changed<Interaction>>,
     mut screen_state: ResMut<NextState<ScreenState>>,
 ) {
     for (interaction, action) in &query {
         if *interaction == Interaction::Pressed {
             match action {
-                SettingsButtonAction::Back => screen_state.set(ScreenState::MainMenu),
+                SettingsButtonAction::Back => screen_state.set(ScreenState::Game),
             }
         }
     }

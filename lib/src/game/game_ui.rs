@@ -7,11 +7,15 @@ use super::mode_slider::build_mode_slider;
 #[derive(Component)]
 pub enum UiButtonAction {
     BackToMain,
+    GoToSettings,
     Hint,
 }
 
 #[derive(Component)]
 pub struct Score;
+
+#[derive(Component)]
+pub struct SettingsIcon;
 
 #[derive(Component)]
 pub struct Timer;
@@ -24,8 +28,10 @@ pub fn init_game_ui(
     images: &Images,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
-    game_screen.with_children(|screen| {
-        screen.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()));
+    build_button_row(game_screen, |icon_row| {
+        icon_row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
+
+        build_settings_icon(icon_row, images);
     });
 
     build_timer_row(game_screen, |timer_row| {
@@ -50,6 +56,25 @@ pub fn init_game_ui(
     board_builder(game_screen);
 
     build_mode_slider(game_screen, meshes, materials, fonts, images);
+}
+
+fn build_settings_icon(screen: &mut ChildBuilder, images: &Images) {
+    // Cog.
+    screen.spawn((
+        SettingsIcon,
+        Interaction::None,
+        UiButtonAction::GoToSettings,
+        FlexItemBundle::from_style(
+            FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
+                .with_alignment(Alignment::Start)
+                .with_margin(Size::all(Val::Vmin(5.)))
+                .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
+        ),
+        SpriteBundle {
+            texture: images.cog.clone(),
+            ..default()
+        },
+    ));
 }
 
 fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut ChildBuilder)) {
@@ -80,17 +105,13 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
-    row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
-        width,
-        line_height,
-    )))
-    .with_children(|top_border_leaf| {
-        top_border_leaf.spawn(SpriteBundle {
+    row.spawn((
+        FlexItemBundle::from_style(FlexItemStyle::fixed_size(width, line_height)),
+        SpriteBundle {
             sprite: Sprite::from_color(COLOR_TIMER_BORDER),
-            transform: Transform::default_2d(),
             ..default()
-        });
-    });
+        },
+    ));
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::minimum_size(
         width,
@@ -104,17 +125,13 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
         ));
     });
 
-    row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
-        width,
-        line_height,
-    )))
-    .with_children(|bottom_border_leaf| {
-        bottom_border_leaf.spawn(SpriteBundle {
+    row.spawn((
+        FlexItemBundle::from_style(FlexItemStyle::fixed_size(width, line_height)),
+        SpriteBundle {
             sprite: Sprite::from_color(COLOR_TIMER_BORDER),
-            transform: Transform::default_2d(),
             ..default()
-        });
-    });
+        },
+    ));
 }
 
 pub fn build_button_row(
@@ -182,5 +199,20 @@ fn format_score(score: u32) -> String {
         "1 pt.".to_owned()
     } else {
         format!("{score} pts.")
+    }
+}
+
+pub fn settings_icon_interaction(
+    images: Res<Images>,
+    mut interaction_query: Query<
+        (&Interaction, &mut Handle<Image>),
+        (Changed<Interaction>, With<SettingsIcon>),
+    >,
+) {
+    for (interaction, mut image) in &mut interaction_query {
+        *image = match *interaction {
+            Interaction::Selected => images.cog_pressed.clone(),
+            Interaction::Pressed | Interaction::None => images.cog.clone(),
+        };
     }
 }

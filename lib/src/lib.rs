@@ -21,7 +21,7 @@ use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResi
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup, SliceHandles};
 use highscores::Highscores;
-use menus::menu_setup;
+use menus::{menu_setup, settings_screen_setup};
 use settings::Settings;
 use smallvec::SmallVec;
 use std::time::Duration;
@@ -273,15 +273,7 @@ fn setup(
     };
 
     let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu, screen_padding.0);
-    menu_setup(
-        &mut main_screen,
-        &mut meshes,
-        &mut materials,
-        &fonts,
-        &game,
-        &images,
-        &settings,
-    );
+    menu_setup(&mut main_screen, &fonts, &game, &images);
 
     let mut game_screen = spawn_screen(&mut commands, ScreenState::Game, screen_padding.0);
     board_setup(
@@ -297,6 +289,15 @@ fn setup(
     let mut highscore_screen =
         spawn_screen(&mut commands, ScreenState::Highscores, screen_padding.0);
     highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
+
+    let mut settings_screen = spawn_screen(&mut commands, ScreenState::Settings, screen_padding.0);
+    settings_screen_setup(
+        &mut settings_screen,
+        &mut meshes,
+        &mut materials,
+        &fonts,
+        &settings,
+    );
 
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.
@@ -427,10 +428,11 @@ fn get_initial_window_mode() -> WindowMode {
 fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
     use ScreenState::*;
     match screen {
-        MainMenu | SelectDifficulty | Settings => (0., 0.),
+        MainMenu | SelectDifficulty => (0., 0.),
         Game => (1., 0.),
         Highscores => (1., 1.),
         HowToPlay => (-1., 0.),
+        Settings => (2., 0.),
         Upper => (0., 1.),
     }
 }
