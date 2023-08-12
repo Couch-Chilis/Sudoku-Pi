@@ -3,6 +3,10 @@ use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
 
+const ACTIVE_KNOB_Z: f32 = INACTIVE_KNOB_Z + 2.;
+const INACTIVE_KNOB_Z: f32 = 2.;
+const ANIMATION_DURATION: Duration = Duration::from_millis(300);
+
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
 pub enum ModeState {
     #[default]
@@ -89,7 +93,7 @@ fn build_knobs(
         ModeSliderKnob,
         COLOR_TOGGLE_ON,
         0.,
-        4.,
+        ACTIVE_KNOB_Z,
     );
     build_knob(
         row,
@@ -97,8 +101,8 @@ fn build_knobs(
         materials,
         OppositeSliderKnob,
         COLOR_BOARD_LINE_THIN,
-        9.,
-        2.,
+        0.9,
+        INACTIVE_KNOB_Z,
     );
 }
 
@@ -111,31 +115,21 @@ fn build_knob(
     x: f32,
     z_index: f32,
 ) {
-    row.spawn((FlexBundle::new(
-        FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.)).without_occupying_space(),
-        FlexContainerStyle::row(),
-    ),))
-        .with_children(|slider| {
-            slider
-                .spawn((
-                    knob,
-                    FlexLeafBundle::from_style(
-                        FlexItemStyle::fixed_size(Val::CrossPercent(100.), Val::Percent(100.))
-                            .with_transform(Transform::from_translation(Vec3::new(x, 0., z_index))),
-                    ),
-                ))
-                .with_children(|knob_container| {
-                    knob_container.spawn((
-                        Toggle,
-                        MaterialMesh2dBundle {
-                            mesh: meshes.add(shape::Circle::new(0.6).into()).into(),
-                            material: materials.add(ColorMaterial::from(color)),
-                            transform: Transform::from_translation(Vec3::new(0., 0., z_index + 1.)),
-                            ..default()
-                        },
-                    ));
-                });
-        });
+    row.spawn((
+        knob,
+        FlexLeafBundle::from_style(
+            FlexItemStyle::fixed_size(Val::CrossPercent(100.), Val::Percent(100.))
+                .without_occupying_space()
+                .with_transform(Transform::from_translation(Vec3::new(x, 0., z_index))),
+        ),
+    ))
+    .with_children(|knob_container| {
+        knob_container.spawn((MaterialMesh2dBundle {
+            mesh: meshes.add(shape::Circle::new(0.6).into()).into(),
+            material: materials.add(ColorMaterial::from(color)),
+            ..default()
+        },));
+    });
 }
 
 fn build_labels(row: &mut ChildBuilder, fonts: &Fonts) {
@@ -209,16 +203,17 @@ pub fn slider_interaction(
 
     let knob_width = knob_position.width / slider_position.width;
     let width = 1. - knob_width;
+    let knob_start =
+        (position.x - slider_position.x - 0.5 * knob_position.width) / slider_position.width;
     let knob_end = match mode {
         ModeState::Normal => 0.,
         ModeState::Notes => width,
     };
     let animator = Animator::new(Tween::new(
         EaseFunction::QuadraticInOut,
-        Duration::from_millis(150),
+        ANIMATION_DURATION,
         TransformTranslateKnobLens {
-            start: (position.x - slider_position.x - 0.5 * knob_position.width)
-                / slider_position.width,
+            start: knob_start.clamp(0., 0.9),
             end: knob_end,
             center: 0.5 * width,
         },
@@ -230,7 +225,7 @@ pub fn slider_interaction(
         if let Ok(opposite) = opposite_query.get_single() {
             let animator = Animator::new(Tween::new(
                 EaseFunction::QuadraticInOut,
-                Duration::from_millis(150),
+                ANIMATION_DURATION,
                 TransformTranslateKnobLens {
                     start: knob_end,
                     end: width - knob_end,

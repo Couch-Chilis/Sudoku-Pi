@@ -66,6 +66,11 @@ fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut 
 fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     let width = Val::Vmin(26.0);
     let height = Val::Vmin(11.0);
+    let line_height = if cfg!(target_os = "ios") {
+        Val::Pixel(1.)
+    } else {
+        0.03 * height
+    };
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
@@ -77,11 +82,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
-        if cfg!(target_os = "ios") {
-            Val::Pixel(1.)
-        } else {
-            0.03 * height
-        },
+        line_height,
     )))
     .with_children(|top_border_leaf| {
         top_border_leaf.spawn(SpriteBundle {
@@ -105,11 +106,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
         width,
-        if cfg!(target_os = "ios") {
-            Val::Pixel(2.)
-        } else {
-            0.03 * height
-        },
+        line_height,
     )))
     .with_children(|bottom_border_leaf| {
         bottom_border_leaf.spawn(SpriteBundle {
