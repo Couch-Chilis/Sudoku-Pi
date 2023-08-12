@@ -12,15 +12,16 @@ use std::num::NonZeroU8;
 const NUMBER_FONT_SIZE: f32 = 80.;
 const NOTE_FONT_SIZE: f32 = 30.;
 
-#[derive(Component)]
-pub(super) struct HighlightedNumber(usize, HighlightKind);
-
 #[derive(Clone, Copy)]
-pub(super) enum HighlightKind {
+pub(super) enum CellHighlightKind {
     Selection,
     SameNumber,
     InRange,
     Hint,
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum NoteHighlightKind {
     Note,
     Mistake,
 }
@@ -205,14 +206,16 @@ pub(super) fn render_notes(
 
 #[derive(Resource)]
 pub(super) struct Highlights {
-    highlights: [Option<HighlightKind>; 81],
+    cell_highlights: [Option<CellHighlightKind>; 81],
+    note_highlights: [Option<NoteHighlightKind>; 81],
     selected_number: Option<NonZeroU8>,
 }
 
 impl Default for Highlights {
     fn default() -> Self {
         Self {
-            highlights: [None; 81],
+            cell_highlights: [None; 81],
+            note_highlights: [None; 81],
             selected_number: None,
         }
     }
@@ -233,18 +236,19 @@ pub(super) fn calculate_highlights(
         .and_then(|(x, y)| game.current.get(x, y))
         .or(selection.selected_note);
 
-    let mut highlights = [None; 81];
+    let mut cell_highlights = [None; 81];
+    let mut note_highlights = [None; 81];
     if let Some((x, y)) = selection.selected_cell {
         let selected_pos = get_pos(x, y);
 
         if let Some(n) = selected_number {
             // Find all the cells with notes or mistakes containing the same number.
-            for (pos, highlight) in highlights.iter_mut().enumerate() {
+            for (pos, highlight) in note_highlights.iter_mut().enumerate() {
                 let (x, y) = get_x_and_y_from_pos(pos);
                 if settings.show_mistakes && game.mistakes.has(x, y, n) {
-                    *highlight = Some(HighlightKind::Mistake);
+                    *highlight = Some(NoteHighlightKind::Mistake);
                 } else if game.notes.has(x, y, n) {
-                    *highlight = Some(HighlightKind::Note);
+                    *highlight = Some(NoteHighlightKind::Note);
                 }
             }
 
@@ -255,73 +259,85 @@ pub(super) fn calculate_highlights(
                     if game.current.get_by_pos(pos) == selected_cell {
                         let (x, y) = get_x_and_y_from_pos(pos);
                         for i in 0..9 {
-                            highlights[get_pos(x, i)] = Some(HighlightKind::InRange);
-                            highlights[get_pos(i, y)] = Some(HighlightKind::InRange);
+                            cell_highlights[get_pos(x, i)] = Some(CellHighlightKind::InRange);
+                            cell_highlights[get_pos(i, y)] = Some(CellHighlightKind::InRange);
                         }
                     }
                 }
             }
 
             // Find all the cells with the same number.
-            for (pos, highlight) in highlights.iter_mut().enumerate() {
+            for (pos, highlight) in cell_highlights.iter_mut().enumerate() {
                 if game.current.get_by_pos(pos) == selected_number {
-                    *highlight = Some(HighlightKind::SameNumber);
+                    *highlight = Some(CellHighlightKind::SameNumber);
                 }
             }
         }
 
         if !game.is_solved() && selection.selected_note.is_none() {
-            highlights[selected_pos] = Some(HighlightKind::Selection);
+            cell_highlights[selected_pos] = Some(CellHighlightKind::Selection);
         }
     }
     if let Some((x, y)) = selection.hint {
-        highlights[get_pos(x, y)] = Some(HighlightKind::Hint);
+        cell_highlights[get_pos(x, y)] = Some(CellHighlightKind::Hint);
     }
 
     *highlights_resource = Highlights {
-        highlights,
+        cell_highlights,
+        note_highlights,
         selected_number,
     };
 }
 
-pub(super) fn render_highlights(
+pub(super) fn render_cell_highlights(
     mut cells: Query<(&Number, &mut Sprite), Without<Note>>,
-    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite), Without<Number>>,
     screen: Res<State<ScreenState>>,
     highlights: Res<Highlights>,
-    time: Res<Time>,
 ) {
     if screen.get() != &ScreenState::Game && screen.get() != &ScreenState::Highscores {
         return;
     }
 
-    if highlights.is_changed() {
-        for (number, mut sprite) in &mut cells {
-            let pos = get_pos(number.0, number.1);
-            let highlight_kind = highlights.highlights[pos];
-            let color = match highlight_kind {
-                Some(HighlightKind::Selection) => COLOR_CELL_SELECTION,
-                Some(HighlightKind::SameNumber) => COLOR_CELL_SAME_NUMBER,
-                Some(HighlightKind::InRange) => COLOR_CELL_HIGHLIGHT,
-                Some(HighlightKind::Hint) => COLOR_HINT,
-                None | Some(HighlightKind::Note) | Some(HighlightKind::Mistake) => Color::NONE,
-            };
-            if sprite.color != color {
-                *sprite = Sprite::from_color(color);
-            }
+    if !highlights.is_changed() {
+        return;
+    }
+
+    for (number, mut sprite) in &mut cells {
+        let pos = get_pos(number.0, number.1);
+        let highlight_kind = highlights.cell_highlights[pos];
+        let color = match highlight_kind {
+            Some(CellHighlightKind::Selection) => COLOR_CELL_SELECTION,
+            Some(CellHighlightKind::SameNumber) => COLOR_CELL_SAME_NUMBER,
+            Some(CellHighlightKind::InRange) => COLOR_CELL_HIGHLIGHT,
+            Some(CellHighlightKind::Hint) => COLOR_HINT,
+            None => Color::NONE,
+        };
+        if sprite.color != color {
+            *sprite = Sprite::from_color(color);
         }
+    }
+}
+
+pub(super) fn render_note_highlights(
+    mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite), Without<Number>>,
+    screen: Res<State<ScreenState>>,
+    highlights: Res<Highlights>,
+    time: Res<Time>,
+) {
+    if screen.get() != &ScreenState::Game {
+        return;
     }
 
     for (note, flex_item_style, mut sprite) in &mut notes {
         let highlight_kind = if highlights.selected_number == Some(note.n) {
-            highlights.highlights[get_pos(note.x, note.y)]
+            highlights.note_highlights[get_pos(note.x, note.y)]
         } else {
             None
         };
         let color = match highlight_kind {
-            Some(HighlightKind::Note) => COLOR_CELL_SAME_NUMBER,
-            Some(HighlightKind::Mistake) => COLOR_POP_DARK.with_a(0.5),
-            _ => Color::NONE,
+            Some(NoteHighlightKind::Note) => COLOR_CELL_SAME_NUMBER,
+            Some(NoteHighlightKind::Mistake) => COLOR_POP_DARK.with_a(0.5),
+            None => Color::NONE,
         };
         if sprite.color != color {
             *sprite = Sprite::from_color(color);

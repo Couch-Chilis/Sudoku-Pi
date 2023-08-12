@@ -57,7 +57,8 @@ impl Plugin for GamePlugin {
                     render_notes,
                     render_wheel,
                     calculate_highlights,
-                    render_highlights.after(calculate_highlights),
+                    render_cell_highlights.after(calculate_highlights),
+                    render_note_highlights.after(calculate_highlights),
                 ),
             );
     }
