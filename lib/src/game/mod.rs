@@ -23,6 +23,7 @@ pub use highscore_screen::highscore_screen_setup;
 pub use wheel::{SliceHandles, Wheel};
 
 use self::highscore_screen::on_fortune;
+use self::wheel::NOTES_MODE_OPEN_DELAY;
 
 pub struct GamePlugin;
 
@@ -142,7 +143,7 @@ impl Selection {
     }
 }
 
-#[derive(Default)]
+#[derive(Clone, Copy, Default)]
 pub enum NoteToggleMode {
     #[default]
     Set,
@@ -302,6 +303,7 @@ fn on_pointer_input(
     board: Query<&ComputedPosition, With<Board>>,
     mode: Res<State<ModeState>>,
     pointer_query: PointerQuery,
+    wheel: Query<&Wheel>,
 ) {
     let Some((input_kind, position)) = pointer_query.get_changed_input_with_position() else {
         return;
@@ -344,16 +346,30 @@ fn on_pointer_input(
                     }
                 }
                 InputKind::PressedMovement => {
+                    let Some(note_toggle) = selection.note_toggle else {
+                        return;
+                    };
+
                     if !game.current.has(x, y) {
                         if let Some(n) = selection
                             .selected_cell
                             .and_then(|(x, y)| game.current.get(x, y))
                             .or(selection.selected_note)
                         {
-                            match selection.note_toggle {
-                                Some(NoteToggleMode::Set) => game.notes.set(x, y, n),
-                                Some(NoteToggleMode::Unset) => game.notes.unset(x, y, n),
-                                None => {}
+                            let Ok(wheel) = wheel.get_single() else {
+                                return;
+                            };
+
+                            if wheel.is_open && wheel.spawn_timer >= NOTES_MODE_OPEN_DELAY {
+                                // Revert the initial toggle at the start of the long press.
+                                let (x, y) = wheel.cell;
+                                game.notes.toggle(x, y, n);
+                                selection.note_toggle = None;
+                            } else {
+                                match note_toggle {
+                                    NoteToggleMode::Set => game.notes.set(x, y, n),
+                                    NoteToggleMode::Unset => game.notes.unset(x, y, n),
+                                }
                             }
                         }
                     }

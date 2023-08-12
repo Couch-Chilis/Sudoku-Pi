@@ -15,19 +15,19 @@ use std::{f32::consts::PI, num::NonZeroU8};
 const MAX_RADIUS: f32 = 0.6;
 const WHEEL_SIZE: f32 = 400.;
 const WHEEL_Z: f32 = 10.;
-const NOTES_MODE_OPEN_DELAY: f32 = 0.8;
+pub const NOTES_MODE_OPEN_DELAY: f32 = 0.8;
 
 #[derive(Component, Default)]
 pub struct Wheel {
-    cell: (u8, u8),
-    center_position: Vec2,
-    start_position: Vec2,
-    current_position: Vec2,
-    is_open: bool,
-    mode: ModeState,
-    spawn_timer: f32,
-    selected_number: Option<NonZeroU8>,
-    slice_timer: f32,
+    pub cell: (u8, u8),
+    pub center_position: Vec2,
+    pub start_position: Vec2,
+    pub current_position: Vec2,
+    pub is_open: bool,
+    pub mode: ModeState,
+    pub spawn_timer: f32,
+    pub selected_number: Option<NonZeroU8>,
+    pub slice_timer: f32,
 }
 
 impl Wheel {
@@ -260,10 +260,6 @@ pub fn render_wheel(
         return;
     };
 
-    let Ok(window) = window_query.get_single() else {
-        return;
-    };
-
     if !wheel.is_open
         || (wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY)
     {
@@ -272,6 +268,10 @@ pub fn render_wheel(
         *top_label_transform = Transform::from_2d_scale(0., 0.);
         return;
     }
+
+    let Ok(window) = window_query.get_single() else {
+        return;
+    };
 
     let radius = get_radius(&wheel);
     let center_position = get_wheel_center(window, &wheel, radius);
