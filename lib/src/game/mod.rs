@@ -405,21 +405,17 @@ fn fill_number(
     y: u8,
     n: NonZeroU8,
 ) {
-    let elapsed_secs = timer.elapsed_secs;
     let options = SetNumberOptions {
-        elapsed_secs,
+        elapsed_secs: timer.elapsed_secs,
         is_hint,
         show_mistakes: settings.show_mistakes,
     };
 
     let previous_notes = game.notes.clone();
 
-    let new_elapsed_secs = game.set(x, y, n, options);
-    if new_elapsed_secs != elapsed_secs {
-        game.num_mistakes += 1;
+    let is_correct = game.set(x, y, n, options);
+    if !is_correct {
         animate_mistake(notes, x, y, n);
-
-        timer.elapsed_secs = new_elapsed_secs;
     }
 
     if selection.hint == Some((x, y)) {

@@ -18,9 +18,6 @@ const TIME_FOR_MULTIPLIER: i32 = 20;
 
 pub struct SetNumberOptions {
     /// The current timer, in seconds.
-    ///
-    /// [`Game::set()`] will return this timer, with an optional penalty applied
-    /// if the number was wrong.
     pub elapsed_secs: f32,
 
     /// Set to `true` if the number is being set as a hint.
@@ -81,20 +78,20 @@ impl Game {
 
     /// Sets the given number `n` at the given `x` and `y` coordinates.
     ///
-    /// The given `elapsed_secs` are used to calculate the increase in score if
-    /// the correct number is given.
+    /// Also increases the score or `num_mistakes`, depending on whether the
+    /// number was correct.
     ///
-    /// Returns the `elapsed_secs` with a possible penalty applied if the set
-    /// number was incorrect.
-    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8, options: SetNumberOptions) -> f32 {
+    /// Returns `true` if the given number was correct, `false` otherwise.
+    pub fn set(&mut self, x: u8, y: u8, n: NonZeroU8, options: SetNumberOptions) -> bool {
         let SetNumberOptions {
-            mut elapsed_secs,
+            elapsed_secs,
             is_hint,
             show_mistakes,
         } = options;
 
-        if self.start.has(x, y) {
-            return elapsed_secs; // Starting numbers may not be replaced.
+        if let Some(existing_n) = self.start.get(x, y) {
+            // Starting numbers may not be replaced, but we can tell if they're right.
+            return existing_n == n;
         }
 
         let is_correct = self.solution.get(x, y) == Some(n);
@@ -102,21 +99,19 @@ impl Game {
             self.current = self.current.set(x, y, n);
         }
 
-        if is_correct && !is_hint {
-            // We need an updated time spent to calculate the score increase.
-            self.elapsed_secs = elapsed_secs;
+        self.elapsed_secs = elapsed_secs;
 
-            let multiplier = START_MULTIPLIERS_BY_DIFFICULTY[self.difficulty as usize]
-                .sub(elapsed_secs as i32 / TIME_FOR_MULTIPLIER)
-                .max(1);
-            self.score += self.calculate_score(x, y, n) * multiplier as u32;
+        if !is_correct {
+            self.num_mistakes += 1;
+        }
+
+        if is_correct && !is_hint {
+            self.score += self.calculate_score(x, y, n) * self.calculate_multiplier();
         }
 
         if show_mistakes && !is_correct {
             self.mistakes.set(x, y, n);
             self.notes.unset(x, y, n);
-
-            elapsed_secs += TIME_FOR_MULTIPLIER as f32
         } else {
             self.notes.remove_all_notes_affected_by_set(x, y, n);
             self.mistakes.clear(x, y);
@@ -126,7 +121,25 @@ impl Game {
             self.save(); // Auto-save seems too unreliable otherwise.
         }
 
-        elapsed_secs
+        is_correct
+    }
+
+    fn calculate_multiplier(&self) -> u32 {
+        let mut multiplier_penalty = self.elapsed_secs as i32 / TIME_FOR_MULTIPLIER;
+
+        // 1 mistake drops the multiplier by 2, 2 mistakes by 6, 3 mistakes by 12, etc..
+        for i in 1..=self.num_mistakes {
+            multiplier_penalty += 2 * i as i32;
+        }
+
+        // Similar strategy for hints, but with a less hefty penalty.
+        for i in 1..=self.num_hints {
+            multiplier_penalty += i as i32;
+        }
+
+        START_MULTIPLIERS_BY_DIFFICULTY[self.difficulty as usize]
+            .sub(multiplier_penalty)
+            .max(1) as u32
     }
 
     /// Calculates the score increase for setting the given number (without
