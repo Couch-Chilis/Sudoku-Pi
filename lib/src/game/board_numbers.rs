@@ -262,7 +262,7 @@ pub(super) fn calculate_highlights(
             }
 
             let selected_cell = game.current.get_by_pos(selected_pos);
-            if settings.highlight_selection_lines && selected_cell.is_some() {
+            if settings.selected_cell_highlight && selected_cell.is_some() {
                 // Find all the cells within range.
                 for pos in 0..81 {
                     if game.current.get_by_pos(pos) == selected_cell {

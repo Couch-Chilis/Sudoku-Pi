@@ -1,5 +1,5 @@
 use super::{ButtonBuilder, SettingsToggle, SettingsToggleBuilder};
-use crate::{constants::*, ui::*, Fonts, ScreenState, Settings};
+use crate::{constants::*, ui::*, Fonts, Images, ScreenState, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
@@ -9,51 +9,55 @@ pub enum SettingsButtonAction {
 
 pub fn settings_screen_setup(
     settings_screen: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
+    images: &Images,
     settings: &Settings,
 ) {
     settings_screen.with_children(|screen| {
-        spawn_settings(screen, meshes, materials, fonts, settings);
+        spawn_settings(screen, fonts, images, settings);
     });
 }
 
 pub fn spawn_settings(
     parent: &mut ChildBuilder,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
+    images: &Images,
     settings: &Settings,
 ) {
     use SettingsButtonAction::*;
     use SettingsToggle::*;
 
-    parent.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
-        Val::Auto,
-        Val::Vmin(8.),
-    )));
+    parent.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
-    let mut toggles = SettingsToggleBuilder::new(fonts, meshes, materials);
-    toggles.build_settings_toggle(
-        parent,
-        settings,
-        "Allow numbers in range",
-        AllowInvalidWheelNumbers,
-    );
+    parent
+        .spawn(FlexBundle::new(
+            FlexItemStyle::available_size(),
+            FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
+        ))
+        .with_children(|parent| {
+            let mut toggles = SettingsToggleBuilder::new(fonts, images);
+            toggles.build_settings_toggle(parent, settings, "Wheel swipe aid", EnableWheelAid);
 
-    toggles.build_settings_toggle(
-        parent,
-        settings,
-        "Highlight cells in range",
-        HighlightSelectionLines,
-    );
+            toggles.build_settings_toggle(
+                parent,
+                settings,
+                "Selected cell highlight",
+                SelectedCellHighlight,
+            );
 
-    toggles.build_settings_toggle(parent, settings, "Show mistakes", ShowMistakes);
+            toggles.build_settings_toggle(parent, settings, "Show mistakes", ShowMistakes);
+        });
 
-    let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
-    let buttons = ButtonBuilder::new(fonts, button_size);
-    buttons.build_selected_with_text_and_action(parent, "Back", Back);
+    parent
+        .spawn(FlexBundle::new(
+            FlexItemStyle::available_size(),
+            FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
+        ))
+        .with_children(|parent| {
+            let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
+            let buttons = ButtonBuilder::new(fonts, button_size);
+            buttons.build_selected_with_text_and_action(parent, "Back", Back);
+        });
 }
 
 pub fn settings_screen_button_actions(
@@ -76,11 +80,11 @@ pub fn settings_toggle_actions(
     for (interaction, toggle) in &query {
         if *interaction == Interaction::Pressed {
             match toggle {
-                SettingsToggle::AllowInvalidWheelNumbers => {
-                    settings.allow_invalid_wheel_numbers = !settings.allow_invalid_wheel_numbers;
+                SettingsToggle::EnableWheelAid => {
+                    settings.enable_wheel_aid = !settings.enable_wheel_aid;
                 }
-                SettingsToggle::HighlightSelectionLines => {
-                    settings.highlight_selection_lines = !settings.highlight_selection_lines;
+                SettingsToggle::SelectedCellHighlight => {
+                    settings.selected_cell_highlight = !settings.selected_cell_highlight;
                 }
                 SettingsToggle::ShowMistakes => {
                     settings.show_mistakes = !settings.show_mistakes;

@@ -1,6 +1,6 @@
 use super::flex::*;
-use crate::{constants::*, utils::*};
-use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use crate::{constants::*, utils::*, Images};
+use bevy::prelude::*;
 
 /// Marker for toggle.
 #[derive(Clone, Component)]
@@ -16,13 +16,12 @@ pub struct ToggleContainer;
 pub struct Enabled;
 
 pub struct ToggleBuilder<'a> {
-    meshes: &'a mut Assets<Mesh>,
-    materials: &'a mut Assets<ColorMaterial>,
+    images: &'a Images,
 }
 
 impl<'a> ToggleBuilder<'a> {
-    pub fn new(meshes: &'a mut Assets<Mesh>, materials: &'a mut Assets<ColorMaterial>) -> Self {
-        Self { meshes, materials }
+    pub fn new(images: &'a Images) -> Self {
+        Self { images }
     }
 
     pub fn build_with_marker(
@@ -37,7 +36,7 @@ impl<'a> ToggleBuilder<'a> {
                 Val::Percent(100.),
             )))
             .with_children(|icon_container| {
-                icon_container.spawn(MaterialMesh2dBundle {
+                /*icon_container.spawn(MaterialMesh2dBundle {
                     mesh: self.meshes.add(shape::Circle::new(0.3).into()).into(),
                     material: self
                         .materials
@@ -66,7 +65,7 @@ impl<'a> ToggleBuilder<'a> {
                         transform: Transform::from_translation(Vec3::new(0., 0., 3.)),
                         ..default()
                     },
-                ));
+                ));*/
             });
     }
 }

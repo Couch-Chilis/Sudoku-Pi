@@ -49,6 +49,15 @@ const SLICE_6: &[u8] = include_bytes!("../../assets/slice_6.png");
 const SLICE_7: &[u8] = include_bytes!("../../assets/slice_7.png");
 const SLICE_8: &[u8] = include_bytes!("../../assets/slice_8.png");
 const SLICE_9: &[u8] = include_bytes!("../../assets/slice_9.png");
+//const SLICE_DISABLED_1: &[u8] = include_bytes!("../../assets/slice_disabled_1.png");
+//const SLICE_DISABLED_2: &[u8] = include_bytes!("../../assets/slice_disabled_2.png");
+//const SLICE_DISABLED_3: &[u8] = include_bytes!("../../assets/slice_disabled_3.png");
+//const SLICE_DISABLED_4: &[u8] = include_bytes!("../../assets/slice_disabled_4.png");
+//const SLICE_DISABLED_5: &[u8] = include_bytes!("../../assets/slice_disabled_5.png");
+//const SLICE_DISABLED_6: &[u8] = include_bytes!("../../assets/slice_disabled_6.png");
+//const SLICE_DISABLED_7: &[u8] = include_bytes!("../../assets/slice_disabled_7.png");
+//const SLICE_DISABLED_8: &[u8] = include_bytes!("../../assets/slice_disabled_8.png");
+//const SLICE_DISABLED_9: &[u8] = include_bytes!("../../assets/slice_disabled_9.png");
 const TOP_LABEL: &[u8] = include_bytes!("../../assets/top_label.png");
 const WALL: &[u8] = include_bytes!("../../assets/wall.png");
 const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
@@ -76,15 +85,24 @@ pub struct Images {
     logo: Handle<Image>,
     mode_slider: Handle<Image>,
     scroll: Handle<Image>,
-    slice_1: Handle<Image>,
-    slice_2: Handle<Image>,
-    slice_3: Handle<Image>,
-    slice_4: Handle<Image>,
-    slice_5: Handle<Image>,
-    slice_6: Handle<Image>,
-    slice_7: Handle<Image>,
-    slice_8: Handle<Image>,
-    slice_9: Handle<Image>,
+    slice_active_1: Handle<Image>,
+    slice_active_2: Handle<Image>,
+    slice_active_3: Handle<Image>,
+    slice_active_4: Handle<Image>,
+    slice_active_5: Handle<Image>,
+    slice_active_6: Handle<Image>,
+    slice_active_7: Handle<Image>,
+    slice_active_8: Handle<Image>,
+    slice_active_9: Handle<Image>,
+    //slice_disabled_1: Handle<Image>,
+    //slice_disabled_2: Handle<Image>,
+    //slice_disabled_3: Handle<Image>,
+    //slice_disabled_4: Handle<Image>,
+    //slice_disabled_5: Handle<Image>,
+    //slice_disabled_6: Handle<Image>,
+    //slice_disabled_7: Handle<Image>,
+    //slice_disabled_8: Handle<Image>,
+    //slice_disabled_9: Handle<Image>,
     top_label: Handle<Image>,
     wall: Handle<Image>,
     wheel: Handle<Image>,
@@ -267,15 +285,15 @@ fn setup(
         logo: images.add(load_png(LOGO)),
         mode_slider: images.add(load_png(MODE_SLIDER)),
         scroll: images.add(load_png(SCROLL)),
-        slice_1: images.add(load_png(SLICE_1)),
-        slice_2: images.add(load_png(SLICE_2)),
-        slice_3: images.add(load_png(SLICE_3)),
-        slice_4: images.add(load_png(SLICE_4)),
-        slice_5: images.add(load_png(SLICE_5)),
-        slice_6: images.add(load_png(SLICE_6)),
-        slice_7: images.add(load_png(SLICE_7)),
-        slice_8: images.add(load_png(SLICE_8)),
-        slice_9: images.add(load_png(SLICE_9)),
+        slice_active_1: images.add(load_png(SLICE_1)),
+        slice_active_2: images.add(load_png(SLICE_2)),
+        slice_active_3: images.add(load_png(SLICE_3)),
+        slice_active_4: images.add(load_png(SLICE_4)),
+        slice_active_5: images.add(load_png(SLICE_5)),
+        slice_active_6: images.add(load_png(SLICE_6)),
+        slice_active_7: images.add(load_png(SLICE_7)),
+        slice_active_8: images.add(load_png(SLICE_8)),
+        slice_active_9: images.add(load_png(SLICE_9)),
         top_label: images.add(load_png(TOP_LABEL)),
         wall: images.add(load_png(WALL)),
         wheel: images.add(load_png(WHEEL)),
@@ -299,13 +317,7 @@ fn setup(
     highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
 
     let mut settings_screen = spawn_screen(&mut commands, ScreenState::Settings);
-    settings_screen_setup(
-        &mut settings_screen,
-        &mut meshes,
-        &mut materials,
-        &fonts,
-        &settings,
-    );
+    settings_screen_setup(&mut settings_screen, &fonts, &images, &settings);
 
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.

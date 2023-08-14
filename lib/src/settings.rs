@@ -6,22 +6,34 @@ use std::fs;
 
 #[derive(Deserialize, Resource, Serialize)]
 pub struct Settings {
-    #[serde(default)]
-    pub allow_invalid_wheel_numbers: bool,
+    #[serde(default = "default_enable_wheel_aid")]
+    pub enable_wheel_aid: bool,
 
-    #[serde(default)]
-    pub highlight_selection_lines: bool,
+    #[serde(default = "default_selected_cell_highlight")]
+    pub selected_cell_highlight: bool,
 
-    #[serde(default)]
+    #[serde(default = "default_show_mistakes")]
     pub show_mistakes: bool,
+}
+
+fn default_enable_wheel_aid() -> bool {
+    true
+}
+
+fn default_selected_cell_highlight() -> bool {
+    true
+}
+
+fn default_show_mistakes() -> bool {
+    true
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            allow_invalid_wheel_numbers: true,
-            highlight_selection_lines: true,
-            show_mistakes: true,
+            enable_wheel_aid: default_enable_wheel_aid(),
+            selected_cell_highlight: default_selected_cell_highlight(),
+            show_mistakes: default_show_mistakes(),
         }
     }
 }
@@ -43,7 +55,8 @@ impl Settings {
     pub fn save(&self) {
         self.to_json()
             .and_then(|json| {
-                fs::write(ensure_sudoku_dir().join("settings.json"), json).map_err(anyhow::Error::from)
+                fs::write(ensure_sudoku_dir().join("settings.json"), json)
+                    .map_err(anyhow::Error::from)
             })
             .unwrap_or_else(|err| println!("Can't save settings: {err}"));
     }

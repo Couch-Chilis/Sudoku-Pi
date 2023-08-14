@@ -54,15 +54,15 @@ impl SliceHandles {
     pub fn load(images: &Images) -> Self {
         Self {
             slices: [
-                images.slice_1.clone(),
-                images.slice_2.clone(),
-                images.slice_3.clone(),
-                images.slice_4.clone(),
-                images.slice_5.clone(),
-                images.slice_6.clone(),
-                images.slice_7.clone(),
-                images.slice_8.clone(),
-                images.slice_9.clone(),
+                images.slice_active_1.clone(),
+                images.slice_active_2.clone(),
+                images.slice_active_3.clone(),
+                images.slice_active_4.clone(),
+                images.slice_active_5.clone(),
+                images.slice_active_6.clone(),
+                images.slice_active_7.clone(),
+                images.slice_active_8.clone(),
+                images.slice_active_9.clone(),
             ],
         }
     }
@@ -180,7 +180,7 @@ pub fn on_wheel_input(
                 }
 
                 let selected_number = get_selected_number(&wheel);
-                let may_select_number = settings.allow_invalid_wheel_numbers
+                let may_select_number = settings.enable_wheel_aid
                     || match selected_number {
                         Some(n) => game.current.may_set(wheel.cell.0, wheel.cell.1, n),
                         None => true, // It should always be allowed to deselect.
@@ -364,7 +364,7 @@ fn get_selected_number(wheel: &Wheel) -> Option<NonZeroU8> {
     let touch_radius = (diff_x * diff_x + diff_y * diff_y).sqrt();
 
     if touch_radius > 0.08 && touch_radius < 0.5 {
-        let n = (11.25 - ((angle + 1.047) / PI * 4.5)).round() as u8 % 9 + 1;
+        let n = (11.25 - (angle / PI * 4.5)).round() as u8 % 9 + 1;
         Some(NonZeroU8::new(n).unwrap())
     } else {
         None

@@ -1,18 +1,18 @@
-use crate::{constants::*, ui::*, Fonts, Settings};
+use crate::{constants::*, ui::*, Fonts, Images, Settings};
 use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
 pub enum SettingsToggle {
-    AllowInvalidWheelNumbers,
-    HighlightSelectionLines,
+    EnableWheelAid,
+    SelectedCellHighlight,
     ShowMistakes,
 }
 
 impl SettingsToggle {
     pub fn is_enabled(&self, settings: &Settings) -> bool {
         match self {
-            SettingsToggle::AllowInvalidWheelNumbers => settings.allow_invalid_wheel_numbers,
-            SettingsToggle::HighlightSelectionLines => settings.highlight_selection_lines,
+            SettingsToggle::EnableWheelAid => settings.enable_wheel_aid,
+            SettingsToggle::SelectedCellHighlight => settings.selected_cell_highlight,
             SettingsToggle::ShowMistakes => settings.show_mistakes,
         }
     }
@@ -25,11 +25,7 @@ pub struct SettingsToggleBuilder<'a> {
 }
 
 impl<'a> SettingsToggleBuilder<'a> {
-    pub fn new(
-        fonts: &Fonts,
-        meshes: &'a mut Assets<Mesh>,
-        materials: &'a mut Assets<ColorMaterial>,
-    ) -> Self {
+    pub fn new(fonts: &Fonts, images: &'a Images) -> Self {
         let container_style = FlexItemStyle {
             flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
             margin: Size::all(Val::Vmin(2.)),
@@ -38,14 +34,14 @@ impl<'a> SettingsToggleBuilder<'a> {
 
         let text_style = TextStyle {
             font: fonts.medium.clone(),
-            font_size: 60.,
+            font_size: 50.,
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };
 
         Self {
             container_style,
             text_style,
-            toggle_builder: ToggleBuilder::new(meshes, materials),
+            toggle_builder: ToggleBuilder::new(images),
         }
     }
 
