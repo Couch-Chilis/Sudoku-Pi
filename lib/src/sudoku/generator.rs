@@ -11,8 +11,10 @@ use std::num::NonZeroU8;
 impl super::Game {
     /// Generates a new game at the given difficulty level.
     pub fn generate(difficulty: Difficulty) -> anyhow::Result<Self> {
+        let mut result = Self::default();
+
         let mut num_tries = 0;
-        loop {
+        while num_tries < 10 {
             let start = generate_sudoku(difficulty)?;
 
             let SolverResult {
@@ -20,26 +22,28 @@ impl super::Game {
                 difficulty: rated_difficulty,
             } = solve(start.clone())
                 .context("Blimey, I could not even solve my own generated Sudoku...")?;
-            bevy::log::info!(
-                "Generated Sudoku of difficulty {rated_difficulty:?} (requested: {difficulty:?})"
-            );
+
+            if rated_difficulty > result.difficulty {
+                result.solution = solution;
+                result.start = start.clone();
+                result.current = start;
+                result.difficulty = rated_difficulty;
+            }
 
             num_tries += 1;
-            if rated_difficulty == difficulty || num_tries == 4 {
-                return Ok(Self {
-                    solution,
-                    start: start.clone(),
-                    current: start,
-                    notes: Default::default(),
-                    mistakes: Default::default(),
-                    difficulty,
-                    score: 0,
-                    elapsed_secs: 0.,
-                    num_mistakes: 0,
-                    num_hints: 0,
-                });
+
+            if rated_difficulty == difficulty {
+                break; // Reached the desired difficulty.
             }
         }
+
+        bevy::log::info!(
+            "Generated Sudoku with difficulty {actual_difficulty:?} \
+            within {num_tries} attempts (requested difficulty: {difficulty:?})",
+            actual_difficulty = result.difficulty
+        );
+
+        Ok(result)
     }
 }
 
@@ -120,12 +124,8 @@ fn generate_sudoku(difficulty: Difficulty) -> anyhow::Result<Sudoku> {
         start = new_start;
         num_cells_dug += 1;
 
-        // If we reach the desired amount of cells to dig, we're done as soon as
-        // we reach the desired difficulty. If we haven't reached the desired
-        // difficulty yet, we allow up to 3 additional cells to be dug.
-        if num_cells_dug >= num_cells_to_dig
-            && (rated_difficulty == difficulty || num_cells_dug >= num_cells_to_dig + 3)
-        {
+        // If we reach the desired amount of cells to dig, we're done.
+        if num_cells_dug >= num_cells_to_dig {
             break;
         }
     }
