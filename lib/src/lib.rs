@@ -138,8 +138,13 @@ pub struct ScreenInteraction {
 
 /// Padding to reserve space on the screen edges, for things like status bars
 /// on mobile.
-#[derive(Default, Resource)]
-pub struct ScreenPadding(Sides);
+#[derive(Clone, Default, Resource)]
+pub struct ScreenPadding {
+    top: f32,
+    right: f32,
+    bottom: f32,
+    left: f32,
+}
 
 /// Helps compensate zooming that occurs on iPhone Mini.
 #[derive(Default, Resource)]
@@ -149,7 +154,7 @@ pub struct ZoomFactor {
 }
 
 pub fn main() {
-    run(Sides::all(Val::None), ZoomFactor::default())
+    run(ScreenPadding::default(), ZoomFactor::default())
 }
 
 #[no_mangle]
@@ -157,12 +162,17 @@ pub fn main() {
 extern "C" fn run_with_scales_and_padding(scale: f64, native_scale: f64, top_padding: f64) {
     let scale = (scale / native_scale) as f32;
     run(
-        Sides::top(Val::Pixel(top_padding as f32)),
+        ScreenPadding {
+            top: top_padding as f32,
+            right: 0.,
+            bottom: 0.,
+            left: 0.,
+        },
         ZoomFactor { x: scale, y: scale },
     )
 }
 
-fn run(screen_padding: Sides, zoom_factor: ZoomFactor) {
+fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
     let game = Game::load();
 
     let mut timer = GameTimer::default();
@@ -178,7 +188,7 @@ fn run(screen_padding: Sides, zoom_factor: ZoomFactor) {
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
-        .insert_resource(ScreenPadding(screen_padding))
+        .insert_resource(screen_padding)
         .insert_resource(zoom_factor)
         .add_event::<WindowDestroyed>()
         .add_state::<ScreenState>()
@@ -233,7 +243,6 @@ fn setup(
     settings: Res<Settings>,
     game: Res<Game>,
     highscores: Res<Highscores>,
-    screen_padding: Res<ScreenPadding>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
@@ -272,10 +281,10 @@ fn setup(
         wheel: images.add(load_png(WHEEL)),
     };
 
-    let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu, screen_padding.0);
+    let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu);
     menu_setup(&mut main_screen, &fonts, &game, &images);
 
-    let mut game_screen = spawn_screen(&mut commands, ScreenState::Game, screen_padding.0);
+    let mut game_screen = spawn_screen(&mut commands, ScreenState::Game);
     board_setup(
         &mut game_screen,
         &mut meshes,
@@ -286,11 +295,10 @@ fn setup(
         &settings,
     );
 
-    let mut highscore_screen =
-        spawn_screen(&mut commands, ScreenState::Highscores, screen_padding.0);
+    let mut highscore_screen = spawn_screen(&mut commands, ScreenState::Highscores);
     highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
 
-    let mut settings_screen = spawn_screen(&mut commands, ScreenState::Settings, screen_padding.0);
+    let mut settings_screen = spawn_screen(&mut commands, ScreenState::Settings);
     settings_screen_setup(
         &mut settings_screen,
         &mut meshes,
@@ -450,17 +458,14 @@ fn load_png(bytes: &[u8]) -> Image {
 fn spawn_screen<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
     screen: ScreenState,
-    screen_padding: Sides,
 ) -> EntityCommands<'w, 's, 'a> {
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
         transform: Transform::from_2d_scale(100_000., 100_000.),
         style: if screen == ScreenState::Game {
-            FlexContainerStyle::default()
-                .with_gap(Val::Auto)
-                .with_padding(screen_padding)
+            FlexContainerStyle::default().with_gap(Val::Auto)
         } else {
-            FlexContainerStyle::default().with_padding(screen_padding)
+            FlexContainerStyle::default()
         },
         ..default()
     };

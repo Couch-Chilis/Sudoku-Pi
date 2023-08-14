@@ -1,5 +1,5 @@
 use super::flex::*;
-use crate::{Screen, ScreenInteraction, ScreenState};
+use crate::{Screen, ScreenInteraction, ScreenPadding, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use smallvec::smallvec;
 use std::collections::BTreeMap;
@@ -24,19 +24,21 @@ pub(crate) fn layout_system(
     changed_containers: Query<Entity, Changed<FlexContainerStyle>>,
     changed_items: Query<Entity, Changed<FlexItemStyle>>,
     events: EventReader<WindowResized>,
+    screen_padding: Res<ScreenPadding>,
 ) {
     if !changed_containers.is_empty() || !changed_items.is_empty() || !events.is_empty() {
-        layout(&mut flex_query);
+        layout(&mut flex_query, &screen_padding);
     }
 }
 
-fn layout(flex_query: &mut FlexQuery) {
-    let mut layout_info = LayoutInfo::from_query(flex_query);
+fn layout(flex_query: &mut FlexQuery, screen_padding: &ScreenPadding) {
+    let mut layout_info = LayoutInfo::from_query(flex_query, screen_padding);
     layout_info.apply();
 }
 
 struct LayoutInfo<'a> {
     screens: Vec<(Entity, ScreenState, f32, f32)>,
+    screen_padding: ScreenPadding,
     container_map: BTreeMap<Entity, (&'a Children, &'a FlexContainerStyle)>,
     item_map: BTreeMap<
         Entity,
@@ -59,7 +61,7 @@ struct LayoutInfo<'a> {
 }
 
 impl<'a> LayoutInfo<'a> {
-    fn from_query(flex_query: &'a mut FlexQuery) -> Self {
+    fn from_query(flex_query: &'a mut FlexQuery, screen_padding: &ScreenPadding) -> Self {
         let mut screens = Vec::new();
         let mut container_map = BTreeMap::new();
         let mut item_map = BTreeMap::new();
@@ -105,6 +107,7 @@ impl<'a> LayoutInfo<'a> {
 
         Self {
             screens,
+            screen_padding: screen_padding.clone(),
             container_map,
             item_map,
             text_map,
@@ -114,11 +117,11 @@ impl<'a> LayoutInfo<'a> {
     fn apply(&mut self) {
         for (entity, screen_state, width, height) in self.screens.clone() {
             let position = ComputedPosition {
-                width,
-                height,
+                width: width - self.screen_padding.left - self.screen_padding.right,
+                height: height - self.screen_padding.top - self.screen_padding.bottom,
                 screens: smallvec![screen_state],
-                x: 0.,
-                y: 0.,
+                x: self.screen_padding.left,
+                y: self.screen_padding.top,
             };
             self.apply_container(entity, position, (width, height));
         }
@@ -134,13 +137,13 @@ impl<'a> LayoutInfo<'a> {
             return;
         };
 
-        let vminmax_scales = position.axis_scales(screen_size.0, screen_size.1);
+        let axes_scales = position.axis_scales(screen_size.0, screen_size.1);
 
         let direction = container_style.direction;
-        let scaling = vminmax_scales.scaling_for_direction(direction);
+        let scaling = axes_scales.scaling_for_direction(direction);
 
         let cross = direction.cross();
-        let cross_scaling = vminmax_scales.scaling_for_direction(cross);
+        let cross_scaling = axes_scales.scaling_for_direction(cross);
 
         let padding_before_for_direction = container_style.padding.before_for_direction(direction);
         let padding_before = padding_before_for_direction.evaluate(&scaling);
@@ -246,8 +249,8 @@ impl<'a> LayoutInfo<'a> {
             // Start by assuming the base size.
             let flex_base = item_style.flex_base;
             let mut scale = Vec3::new(
-                flex_base.width.evaluate(&vminmax_scales.horizontal),
-                flex_base.height.evaluate(&vminmax_scales.vertical),
+                flex_base.width.evaluate(&axes_scales.horizontal),
+                flex_base.height.evaluate(&axes_scales.vertical),
                 1.,
             );
 
