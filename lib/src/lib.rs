@@ -184,13 +184,6 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
     app.init_resource::<Fonts>()
         .init_resource::<Images>()
         .init_resource::<SliceHandles>()
-        .insert_resource(game)
-        .insert_resource(timer)
-        .insert_resource(Settings::load())
-        .insert_resource(Highscores::load())
-        .insert_resource(screen_padding)
-        .insert_resource(zoom_factor)
-        .add_event::<WindowDestroyed>()
         .add_state::<ScreenState>()
         .add_systems(Startup, setup)
         .add_systems(
@@ -203,16 +196,29 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
                 on_exit.after(on_window_close),
             ),
         )
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            close_when_requested: false,
-            primary_window: Some(Window {
-                title: "Sudoku Pi".to_owned(),
-                resolution: (390., 845.).into(),
-                mode: get_initial_window_mode(),
+        .add_plugins(
+            DefaultPlugins.set(WindowPlugin {
+                close_when_requested: false,
+                primary_window: Some(Window {
+                    title: "Sudoku Pi".to_owned(),
+                    resolution: (
+                        390. - screen_padding.left - screen_padding.right,
+                        845. - screen_padding.top - screen_padding.bottom,
+                    )
+                        .into(),
+                    mode: get_initial_window_mode(),
+                    decorations: true,
+                    ..default()
+                }),
                 ..default()
             }),
-            ..default()
-        }))
+        )
+        .insert_resource(Settings::load())
+        .insert_resource(Highscores::load())
+        .insert_resource(game)
+        .insert_resource(screen_padding)
+        .insert_resource(timer)
+        .insert_resource(zoom_factor)
         .add_plugins((
             TweeningPlugin,
             UiPlugin,
@@ -426,7 +432,7 @@ fn on_window_close(
 }
 
 fn get_initial_window_mode() -> WindowMode {
-    if cfg!(target_os = "ios") || std::env::var_os("SteamTenfoot").is_some() {
+    if std::env::var_os("SteamTenfoot").is_some() {
         WindowMode::BorderlessFullscreen
     } else {
         WindowMode::Windowed
