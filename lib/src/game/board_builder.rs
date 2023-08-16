@@ -1,4 +1,4 @@
-use super::{board_numbers::fill_numbers, wheel::init_wheel};
+use super::{board_numbers::fill_numbers, wheel::init_wheel, DisabledSliceHandles};
 use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Images, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
@@ -19,6 +19,7 @@ pub struct MistakeCellBordersBundle {
 
 pub fn build_board(
     parent: &mut EntityCommands,
+    disabled_slice_handles: &DisabledSliceHandles,
     fonts: &Fonts,
     game: &Game,
     images: &Images,
@@ -41,7 +42,7 @@ pub fn build_board(
 
         fill_numbers(&mut board, fonts, game, settings);
 
-        init_wheel(&mut board, images, fonts);
+        init_wheel(&mut board, disabled_slice_handles, images, fonts);
 
         init_mistake_borders(&mut board);
     });

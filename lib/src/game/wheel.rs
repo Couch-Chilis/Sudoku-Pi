@@ -40,17 +40,20 @@ impl Wheel {
 pub struct Slice;
 
 #[derive(Component)]
+pub struct DisabledSlice(NonZeroU8);
+
+#[derive(Component)]
 pub struct TopLabel;
 
 #[derive(Component)]
 pub struct TopLabelText;
 
 #[derive(Default, Resource)]
-pub struct SliceHandles {
+pub struct ActiveSliceHandles {
     slices: [Handle<Image>; 9],
 }
 
-impl SliceHandles {
+impl ActiveSliceHandles {
     pub fn load(images: &Images) -> Self {
         Self {
             slices: [
@@ -72,16 +75,57 @@ impl SliceHandles {
     }
 }
 
-pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
+pub struct DisabledSliceHandles {
+    slices: [Handle<Image>; 9],
+}
+
+impl DisabledSliceHandles {
+    pub fn load(images: &Images) -> Self {
+        Self {
+            slices: [
+                images.slice_disabled_1.clone(),
+                images.slice_disabled_2.clone(),
+                images.slice_disabled_3.clone(),
+                images.slice_disabled_4.clone(),
+                images.slice_disabled_5.clone(),
+                images.slice_disabled_6.clone(),
+                images.slice_disabled_7.clone(),
+                images.slice_disabled_8.clone(),
+                images.slice_disabled_9.clone(),
+            ],
+        }
+    }
+}
+
+pub fn init_wheel(
+    board: &mut EntityCommands,
+    disabled_slice_handles: &DisabledSliceHandles,
+    images: &Images,
+    fonts: &Fonts,
+) {
     board.with_children(|board| {
-        board.spawn((
-            Wheel::default(),
-            SpriteBundle {
-                texture: images.wheel.clone(),
-                transform: Transform::from_2d_scale(0., 0.),
-                ..default()
-            },
-        ));
+        board
+            .spawn((
+                Wheel::default(),
+                SpriteBundle {
+                    texture: images.wheel.clone(),
+                    transform: Transform::from_2d_scale(0., 0.),
+                    ..default()
+                },
+            ))
+            .with_children(|wheel| {
+                for (i, disabled_slice) in disabled_slice_handles.slices.iter().enumerate() {
+                    wheel.spawn((
+                        DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
+                        SpriteBundle {
+                            texture: disabled_slice.clone(),
+                            transform: Transform::default_2d(),
+                            visibility: Visibility::Hidden,
+                            ..default()
+                        },
+                    ));
+                }
+            });
 
         board.spawn((
             Slice,
@@ -180,7 +224,7 @@ pub fn on_wheel_input(
                 }
 
                 let selected_number = get_selected_number(&wheel);
-                let may_select_number = settings.enable_wheel_aid
+                let may_select_number = !settings.enable_wheel_aid
                     || match selected_number {
                         Some(n) => game.current.may_set(wheel.cell.0, wheel.cell.1, n),
                         None => true, // It should always be allowed to deselect.
@@ -245,7 +289,7 @@ pub fn render_wheel(
     mut slice: Query<(&mut Transform, &mut Handle<Image>), (With<Slice>, Without<TopLabel>)>,
     mut top_label: Query<&mut Transform, (With<TopLabel>, Without<Wheel>, Without<Slice>)>,
     mut top_label_text: Query<&mut Text, With<TopLabelText>>,
-    slice_handles: Res<SliceHandles>,
+    active_slice_handles: Res<ActiveSliceHandles>,
     window_query: Query<&Window, With<PrimaryWindow>>,
 ) {
     let Ok((mut wheel_transform, mut wheel)) = wheel.get_single_mut() else {
@@ -292,7 +336,7 @@ pub fn render_wheel(
                     .max(0.);
         let scale = bounce * radius / WHEEL_SIZE;
 
-        *slice_texture = slice_handles.for_number(n);
+        *slice_texture = active_slice_handles.for_number(n);
         slice_transform.translation = Vec3::new(cx, cy, WHEEL_Z + 1.);
         slice_transform.scale = Vec3::new(scale, scale, 1.);
 
@@ -305,6 +349,26 @@ pub fn render_wheel(
     } else {
         *slice_transform = Transform::from_2d_scale(0., 0.);
         *top_label_transform = Transform::from_2d_scale(0., 0.);
+    }
+}
+
+pub fn render_disabled_wheel_slices(
+    mut disabled_slices: Query<(&DisabledSlice, &mut Visibility)>,
+    game: Res<Game>,
+    settings: Res<Settings>,
+    wheel: Query<&Wheel, Changed<Wheel>>,
+) {
+    let Ok((x, y)) = wheel.get_single().map(|wheel| wheel.cell) else {
+        return;
+    };
+
+    for (DisabledSlice(n), mut visibility) in &mut disabled_slices {
+        let is_disabled = settings.enable_wheel_aid && !game.current.may_set(x, y, *n);
+        *visibility = if is_disabled {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
     }
 }
 

@@ -19,7 +19,7 @@ use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
-use game::{board_setup, highscore_screen_setup, SliceHandles};
+use game::{board_setup, highscore_screen_setup, ActiveSliceHandles, DisabledSliceHandles};
 use highscores::Highscores;
 use menus::{menu_setup, settings_screen_setup};
 use settings::Settings;
@@ -49,15 +49,15 @@ const SLICE_6: &[u8] = include_bytes!("../../assets/slice_6.png");
 const SLICE_7: &[u8] = include_bytes!("../../assets/slice_7.png");
 const SLICE_8: &[u8] = include_bytes!("../../assets/slice_8.png");
 const SLICE_9: &[u8] = include_bytes!("../../assets/slice_9.png");
-//const SLICE_DISABLED_1: &[u8] = include_bytes!("../../assets/slice_disabled_1.png");
-//const SLICE_DISABLED_2: &[u8] = include_bytes!("../../assets/slice_disabled_2.png");
-//const SLICE_DISABLED_3: &[u8] = include_bytes!("../../assets/slice_disabled_3.png");
-//const SLICE_DISABLED_4: &[u8] = include_bytes!("../../assets/slice_disabled_4.png");
-//const SLICE_DISABLED_5: &[u8] = include_bytes!("../../assets/slice_disabled_5.png");
-//const SLICE_DISABLED_6: &[u8] = include_bytes!("../../assets/slice_disabled_6.png");
-//const SLICE_DISABLED_7: &[u8] = include_bytes!("../../assets/slice_disabled_7.png");
-//const SLICE_DISABLED_8: &[u8] = include_bytes!("../../assets/slice_disabled_8.png");
-//const SLICE_DISABLED_9: &[u8] = include_bytes!("../../assets/slice_disabled_9.png");
+const SLICE_DISABLED_1: &[u8] = include_bytes!("../../assets/slice_disabled_1.png");
+const SLICE_DISABLED_2: &[u8] = include_bytes!("../../assets/slice_disabled_2.png");
+const SLICE_DISABLED_3: &[u8] = include_bytes!("../../assets/slice_disabled_3.png");
+const SLICE_DISABLED_4: &[u8] = include_bytes!("../../assets/slice_disabled_4.png");
+const SLICE_DISABLED_5: &[u8] = include_bytes!("../../assets/slice_disabled_5.png");
+const SLICE_DISABLED_6: &[u8] = include_bytes!("../../assets/slice_disabled_6.png");
+const SLICE_DISABLED_7: &[u8] = include_bytes!("../../assets/slice_disabled_7.png");
+const SLICE_DISABLED_8: &[u8] = include_bytes!("../../assets/slice_disabled_8.png");
+const SLICE_DISABLED_9: &[u8] = include_bytes!("../../assets/slice_disabled_9.png");
 const TOP_LABEL: &[u8] = include_bytes!("../../assets/top_label.png");
 const WALL: &[u8] = include_bytes!("../../assets/wall.png");
 const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
@@ -94,15 +94,15 @@ pub struct Images {
     slice_active_7: Handle<Image>,
     slice_active_8: Handle<Image>,
     slice_active_9: Handle<Image>,
-    //slice_disabled_1: Handle<Image>,
-    //slice_disabled_2: Handle<Image>,
-    //slice_disabled_3: Handle<Image>,
-    //slice_disabled_4: Handle<Image>,
-    //slice_disabled_5: Handle<Image>,
-    //slice_disabled_6: Handle<Image>,
-    //slice_disabled_7: Handle<Image>,
-    //slice_disabled_8: Handle<Image>,
-    //slice_disabled_9: Handle<Image>,
+    slice_disabled_1: Handle<Image>,
+    slice_disabled_2: Handle<Image>,
+    slice_disabled_3: Handle<Image>,
+    slice_disabled_4: Handle<Image>,
+    slice_disabled_5: Handle<Image>,
+    slice_disabled_6: Handle<Image>,
+    slice_disabled_7: Handle<Image>,
+    slice_disabled_8: Handle<Image>,
+    slice_disabled_9: Handle<Image>,
     top_label: Handle<Image>,
     wall: Handle<Image>,
     wheel: Handle<Image>,
@@ -201,7 +201,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
     let mut app = App::new();
     app.init_resource::<Fonts>()
         .init_resource::<Images>()
-        .init_resource::<SliceHandles>()
+        .init_resource::<ActiveSliceHandles>()
         .insert_resource(game)
         .insert_resource(timer)
         .insert_resource(Settings::load())
@@ -294,6 +294,15 @@ fn setup(
         slice_active_7: images.add(load_png(SLICE_7)),
         slice_active_8: images.add(load_png(SLICE_8)),
         slice_active_9: images.add(load_png(SLICE_9)),
+        slice_disabled_1: images.add(load_png(SLICE_DISABLED_1)),
+        slice_disabled_2: images.add(load_png(SLICE_DISABLED_2)),
+        slice_disabled_3: images.add(load_png(SLICE_DISABLED_3)),
+        slice_disabled_4: images.add(load_png(SLICE_DISABLED_4)),
+        slice_disabled_5: images.add(load_png(SLICE_DISABLED_5)),
+        slice_disabled_6: images.add(load_png(SLICE_DISABLED_6)),
+        slice_disabled_7: images.add(load_png(SLICE_DISABLED_7)),
+        slice_disabled_8: images.add(load_png(SLICE_DISABLED_8)),
+        slice_disabled_9: images.add(load_png(SLICE_DISABLED_9)),
         top_label: images.add(load_png(TOP_LABEL)),
         wall: images.add(load_png(WALL)),
         wheel: images.add(load_png(WHEEL)),
@@ -307,6 +316,7 @@ fn setup(
         &mut game_screen,
         &mut meshes,
         &mut materials,
+        &DisabledSliceHandles::load(&images),
         &fonts,
         &game,
         &images,
@@ -329,7 +339,7 @@ fn setup(
         },
     ));
 
-    commands.insert_resource(SliceHandles::load(&images));
+    commands.insert_resource(ActiveSliceHandles::load(&images));
     commands.insert_resource(fonts);
     commands.insert_resource(fortune);
     commands.insert_resource(images);

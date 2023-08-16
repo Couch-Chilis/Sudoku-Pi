@@ -19,10 +19,13 @@ use highscore_screen::{highscore_button_actions, on_fortune, on_highscores_chang
 use mode_slider::{slider_interaction, ModeState};
 use std::num::NonZeroU8;
 use std::time::Duration;
-use wheel::{on_wheel_input, on_wheel_timer, render_wheel, NOTES_MODE_OPEN_DELAY};
+use wheel::{
+    on_wheel_input, on_wheel_timer, render_disabled_wheel_slices, render_wheel,
+    NOTES_MODE_OPEN_DELAY,
+};
 
 pub use highscore_screen::highscore_screen_setup;
-pub use wheel::{SliceHandles, Wheel};
+pub use wheel::{ActiveSliceHandles, DisabledSliceHandles, Wheel};
 
 pub struct GamePlugin;
 
@@ -30,7 +33,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(Selection::default())
             .insert_resource(Highlights::default())
-            .init_resource::<SliceHandles>()
+            .init_resource::<ActiveSliceHandles>()
             .add_state::<ModeState>()
             .add_systems(
                 Update,
@@ -55,6 +58,7 @@ impl Plugin for GamePlugin {
                     render_numbers,
                     render_notes.run_if(in_state(ScreenState::Game)),
                     render_wheel,
+                    render_disabled_wheel_slices,
                     settings_icon_interaction.run_if(in_state(ScreenState::Game)),
                     calculate_highlights,
                     render_cell_highlights.after(calculate_highlights),
@@ -156,13 +160,21 @@ pub fn board_setup(
     game_screen: &mut EntityCommands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
+    disabled_slice_handles: &DisabledSliceHandles,
     fonts: &Fonts,
     game: &Game,
     images: &Images,
     settings: &Settings,
 ) {
     init_game_ui(game_screen, meshes, materials, fonts, images, |parent| {
-        build_board(parent, fonts, game, images, settings)
+        build_board(
+            parent,
+            disabled_slice_handles,
+            fonts,
+            game,
+            images,
+            settings,
+        )
     });
 }
 
