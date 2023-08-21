@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, Fonts, Images, Settings};
+use crate::{constants::*, ui::*, utils::*, Fonts, Images, Settings};
 use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
@@ -7,6 +7,17 @@ pub enum SettingsToggle {
     SelectedCellHighlight,
     ShowMistakes,
 }
+
+#[derive(Default, Resource)]
+pub struct SettingsToggleTimer {
+    frames_passed: u8,
+}
+
+#[derive(Component)]
+pub struct Toggle;
+
+#[derive(Component)]
+pub struct ToggleEnabled;
 
 impl SettingsToggle {
     pub fn is_enabled(&self, settings: &Settings) -> bool {
@@ -20,8 +31,8 @@ impl SettingsToggle {
 
 pub struct SettingsToggleBuilder<'a> {
     container_style: FlexItemStyle,
+    images: &'a Images,
     text_style: TextStyle,
-    toggle_builder: ToggleBuilder<'a>,
 }
 
 impl<'a> SettingsToggleBuilder<'a> {
@@ -40,8 +51,8 @@ impl<'a> SettingsToggleBuilder<'a> {
 
         Self {
             container_style,
+            images,
             text_style,
-            toggle_builder: ToggleBuilder::new(images),
         }
     }
 
@@ -54,7 +65,6 @@ impl<'a> SettingsToggleBuilder<'a> {
     ) {
         parent
             .spawn((
-                ToggleContainer,
                 Interaction::None,
                 FlexBundle::new(
                     self.container_style.clone(),
@@ -65,12 +75,6 @@ impl<'a> SettingsToggleBuilder<'a> {
                 toggle,
             ))
             .with_children(|toggle_container| {
-                self.toggle_builder.build_with_marker(
-                    toggle_container,
-                    toggle,
-                    toggle.is_enabled(settings),
-                );
-
                 toggle_container
                     .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
                     .with_children(|label_container| {
@@ -82,6 +86,81 @@ impl<'a> SettingsToggleBuilder<'a> {
                             .with_anchor(Anchor::CenterLeft),
                         );
                     });
+
+                let is_enabled = toggle.is_enabled(settings);
+                let toggle_bundle = (
+                    Toggle,
+                    toggle,
+                    FlexItemBundle::from_style(
+                        FlexItemStyle::fixed_size(Val::CrossPercent(70.), Val::Percent(70.))
+                            .with_alignment(Alignment::Centered)
+                            .with_transform(Transform::from_2d_scale(1. / 121., 1. / 121.)),
+                    ),
+                    SpriteBundle {
+                        texture: if is_enabled {
+                            self.images.toggle_selected.clone()
+                        } else {
+                            self.images.toggle_deselected.clone()
+                        },
+                        ..default()
+                    },
+                );
+
+                if is_enabled {
+                    toggle_container.spawn((ToggleEnabled, toggle_bundle));
+                } else {
+                    toggle_container.spawn(toggle_bundle);
+                }
             });
+    }
+}
+
+pub fn render_settings_toggles(
+    mut toggle_query: Query<(&mut Handle<Image>, Option<&ToggleEnabled>), With<Toggle>>,
+    mut timer: ResMut<SettingsToggleTimer>,
+    images: Res<Images>,
+) {
+    if timer.frames_passed == 1 {
+        timer.frames_passed = 0;
+    } else {
+        timer.frames_passed += 1;
+        return;
+    }
+
+    for (mut texture, toggle_enabled) in &mut toggle_query {
+        let animation_images = get_animation_images(&images, toggle_enabled.is_some());
+        if let Some(index) = animation_images
+            .iter()
+            .position(|&image| *texture == *image)
+        {
+            if index < animation_images.len() - 1 {
+                let next_image = animation_images[index + 1];
+                *texture = next_image.clone();
+            }
+        } else {
+            *texture = animation_images[0].clone();
+        }
+    }
+}
+
+fn get_animation_images(images: &Images, is_enabled: bool) -> [&Handle<Image>; 6] {
+    if is_enabled {
+        [
+            &images.toggle_select_1,
+            &images.toggle_select_2,
+            &images.toggle_select_3,
+            &images.toggle_select_4,
+            &images.toggle_select_5,
+            &images.toggle_selected,
+        ]
+    } else {
+        [
+            &images.toggle_deselect_1,
+            &images.toggle_deselect_2,
+            &images.toggle_deselect_3,
+            &images.toggle_deselect_4,
+            &images.toggle_deselect_5,
+            &images.toggle_deselected,
+        ]
     }
 }

@@ -17,6 +17,7 @@ use std::f32::consts::PI;
 use std::time::Duration;
 
 pub use settings_menu::settings_screen_setup;
+pub use settings_toggle::SettingsToggleTimer;
 
 #[derive(Component, Default)]
 struct ButtonSection {
@@ -36,6 +37,7 @@ impl Plugin for MenuPlugin {
                 settings_screen_button_actions.run_if(in_state(ScreenState::Settings)),
                 settings_toggle_actions.run_if(in_state(ScreenState::Settings)),
                 on_setting_change,
+                render_settings_toggles.run_if(in_state(ScreenState::Settings)),
                 on_screen_change.before(LayoutSystem::ApplyLayout),
             ),
         );

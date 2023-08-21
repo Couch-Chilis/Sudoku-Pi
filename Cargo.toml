@@ -22,6 +22,6 @@ sudoku-lib = { path = "lib" }
 
 [patch.crates-io]
 #bevy = { path = "../bevy" }
-bevy_tweening = { path = "../bevy_tweening" }
+#bevy_tweening = { path = "../bevy_tweening" }
 bevy-steamworks = { path = "../bevy-steamworks" }
 #winit = { path = "../winit" }

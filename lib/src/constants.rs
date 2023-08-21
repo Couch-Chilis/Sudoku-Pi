@@ -49,7 +49,6 @@ pub const COLOR_SCORE_TEXT: Color = COLOR_POP_DARK;
 pub const COLOR_WHEEL_TOP_TEXT: Color = Color::WHITE;
 
 // Toggle colors.
-pub const COLOR_TOGGLE_OFF: Color = Color::WHITE;
 pub const COLOR_TOGGLE_ON: Color = COLOR_POP_DARK;
 
 // Hint color.

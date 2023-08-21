@@ -1,6 +1,7 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
 
+mod assets;
 mod constants;
 mod game;
 mod highscores;
@@ -13,100 +14,21 @@ mod sudoku;
 mod ui;
 mod utils;
 
+use assets::*;
 use bevy::app::AppExit;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
-use bevy::render::texture::{CompressedImageFormats, ImageType};
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
-use game::{board_setup, highscore_screen_setup, ActiveSliceHandles, DisabledSliceHandles};
+use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
 use highscores::Highscores;
-use menus::{menu_setup, settings_screen_setup};
+use menus::{menu_setup, settings_screen_setup, SettingsToggleTimer};
 use settings::Settings;
 use smallvec::SmallVec;
 use std::time::Duration;
 use sudoku::Game;
 use ui::*;
 use utils::{SpriteExt, TransformExt};
-
-const BOLD_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Bold.ttf");
-const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Medium.ttf");
-const LIGHT_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Light.ttf");
-
-const XIAOWEI_REGULAR_FONT: &[u8] = include_bytes!("../../assets/XiaoWei/ZCOOLXiaoWei-Regular.ttf");
-
-const COG: &[u8] = include_bytes!("../../assets/cog.png");
-const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
-const LOGO: &[u8] = include_bytes!("../../assets/logo.png");
-const MODE_SLIDER: &[u8] = include_bytes!("../../assets/mode_slider.png");
-const SCROLL: &[u8] = include_bytes!("../../assets/scroll.png");
-const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
-const SLICE_2: &[u8] = include_bytes!("../../assets/slice_2.png");
-const SLICE_3: &[u8] = include_bytes!("../../assets/slice_3.png");
-const SLICE_4: &[u8] = include_bytes!("../../assets/slice_4.png");
-const SLICE_5: &[u8] = include_bytes!("../../assets/slice_5.png");
-const SLICE_6: &[u8] = include_bytes!("../../assets/slice_6.png");
-const SLICE_7: &[u8] = include_bytes!("../../assets/slice_7.png");
-const SLICE_8: &[u8] = include_bytes!("../../assets/slice_8.png");
-const SLICE_9: &[u8] = include_bytes!("../../assets/slice_9.png");
-const SLICE_DISABLED_1: &[u8] = include_bytes!("../../assets/slice_disabled_1.png");
-const SLICE_DISABLED_2: &[u8] = include_bytes!("../../assets/slice_disabled_2.png");
-const SLICE_DISABLED_3: &[u8] = include_bytes!("../../assets/slice_disabled_3.png");
-const SLICE_DISABLED_4: &[u8] = include_bytes!("../../assets/slice_disabled_4.png");
-const SLICE_DISABLED_5: &[u8] = include_bytes!("../../assets/slice_disabled_5.png");
-const SLICE_DISABLED_6: &[u8] = include_bytes!("../../assets/slice_disabled_6.png");
-const SLICE_DISABLED_7: &[u8] = include_bytes!("../../assets/slice_disabled_7.png");
-const SLICE_DISABLED_8: &[u8] = include_bytes!("../../assets/slice_disabled_8.png");
-const SLICE_DISABLED_9: &[u8] = include_bytes!("../../assets/slice_disabled_9.png");
-const TOP_LABEL: &[u8] = include_bytes!("../../assets/top_label.png");
-const WALL: &[u8] = include_bytes!("../../assets/wall.png");
-const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
-
-const FORTUNE: &[u8] = include_bytes!("../../assets/fortune.txt");
-
-#[derive(Clone, Default, Resource)]
-pub struct Fonts {
-    bold: Handle<Font>,
-    medium: Handle<Font>,
-    light: Handle<Font>,
-
-    scroll: Handle<Font>,
-}
-
-#[derive(Clone, Default, Resource)]
-pub struct Fortune {
-    lines: Vec<&'static str>,
-}
-
-#[derive(Clone, Default, Resource)]
-pub struct Images {
-    cog: Handle<Image>,
-    cog_pressed: Handle<Image>,
-    logo: Handle<Image>,
-    mode_slider: Handle<Image>,
-    scroll: Handle<Image>,
-    slice_active_1: Handle<Image>,
-    slice_active_2: Handle<Image>,
-    slice_active_3: Handle<Image>,
-    slice_active_4: Handle<Image>,
-    slice_active_5: Handle<Image>,
-    slice_active_6: Handle<Image>,
-    slice_active_7: Handle<Image>,
-    slice_active_8: Handle<Image>,
-    slice_active_9: Handle<Image>,
-    slice_disabled_1: Handle<Image>,
-    slice_disabled_2: Handle<Image>,
-    slice_disabled_3: Handle<Image>,
-    slice_disabled_4: Handle<Image>,
-    slice_disabled_5: Handle<Image>,
-    slice_disabled_6: Handle<Image>,
-    slice_disabled_7: Handle<Image>,
-    slice_disabled_8: Handle<Image>,
-    slice_disabled_9: Handle<Image>,
-    top_label: Handle<Image>,
-    wall: Handle<Image>,
-    wheel: Handle<Image>,
-}
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -206,6 +128,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
         .insert_resource(timer)
         .insert_resource(Settings::load())
         .insert_resource(Highscores::load())
+        .insert_resource(SettingsToggleTimer::default())
         .insert_resource(screen_padding)
         .insert_resource(zoom_factor)
         .add_event::<WindowDestroyed>()
@@ -254,8 +177,8 @@ fn add_steamworks_plugin(_app: &mut App) {}
 
 fn setup(
     mut commands: Commands,
-    mut fonts: ResMut<Assets<Font>>,
-    mut images: ResMut<Assets<Image>>,
+    fonts: ResMut<Assets<Font>>,
+    images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     settings: Res<Settings>,
@@ -264,49 +187,9 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    let fonts = Fonts {
-        bold: fonts.add(Font::try_from_bytes(Vec::from(BOLD_FONT)).unwrap()),
-        medium: fonts.add(Font::try_from_bytes(Vec::from(MEDIUM_FONT)).unwrap()),
-        light: fonts.add(Font::try_from_bytes(Vec::from(LIGHT_FONT)).unwrap()),
-        scroll: fonts.add(Font::try_from_bytes(Vec::from(XIAOWEI_REGULAR_FONT)).unwrap()),
-    };
-
-    let fortune = Fortune {
-        lines: FORTUNE
-            .split(|&c| c == b'\n')
-            .map(|slice| std::str::from_utf8(slice).unwrap())
-            .filter(|string| !string.is_empty())
-            .collect(),
-    };
-
-    let images = Images {
-        cog: images.add(load_png(COG)),
-        cog_pressed: images.add(load_png(COG_PRESSED)),
-        logo: images.add(load_png(LOGO)),
-        mode_slider: images.add(load_png(MODE_SLIDER)),
-        scroll: images.add(load_png(SCROLL)),
-        slice_active_1: images.add(load_png(SLICE_1)),
-        slice_active_2: images.add(load_png(SLICE_2)),
-        slice_active_3: images.add(load_png(SLICE_3)),
-        slice_active_4: images.add(load_png(SLICE_4)),
-        slice_active_5: images.add(load_png(SLICE_5)),
-        slice_active_6: images.add(load_png(SLICE_6)),
-        slice_active_7: images.add(load_png(SLICE_7)),
-        slice_active_8: images.add(load_png(SLICE_8)),
-        slice_active_9: images.add(load_png(SLICE_9)),
-        slice_disabled_1: images.add(load_png(SLICE_DISABLED_1)),
-        slice_disabled_2: images.add(load_png(SLICE_DISABLED_2)),
-        slice_disabled_3: images.add(load_png(SLICE_DISABLED_3)),
-        slice_disabled_4: images.add(load_png(SLICE_DISABLED_4)),
-        slice_disabled_5: images.add(load_png(SLICE_DISABLED_5)),
-        slice_disabled_6: images.add(load_png(SLICE_DISABLED_6)),
-        slice_disabled_7: images.add(load_png(SLICE_DISABLED_7)),
-        slice_disabled_8: images.add(load_png(SLICE_DISABLED_8)),
-        slice_disabled_9: images.add(load_png(SLICE_DISABLED_9)),
-        top_label: images.add(load_png(TOP_LABEL)),
-        wall: images.add(load_png(WALL)),
-        wheel: images.add(load_png(WHEEL)),
-    };
+    let fonts = Fonts::load(fonts);
+    let fortune = Fortune::load();
+    let images = Images::load(images);
 
     let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu);
     menu_setup(&mut main_screen, &fonts, &game, &images);
@@ -316,7 +199,6 @@ fn setup(
         &mut game_screen,
         &mut meshes,
         &mut materials,
-        &DisabledSliceHandles::load(&images),
         &fonts,
         &game,
         &images,
@@ -370,6 +252,8 @@ fn on_escape(
     if input.just_pressed(KeyCode::Escape) {
         if current_state.get() == &ScreenState::MainMenu {
             app_exit_events.send(AppExit);
+        } else if current_state.get() == &ScreenState::Settings {
+            next_state.set(ScreenState::Game);
         } else {
             next_state.set(ScreenState::MainMenu);
         }
@@ -465,16 +349,6 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         Settings => (2., 0.),
         Upper => (0., 1.),
     }
-}
-
-fn load_png(bytes: &[u8]) -> Image {
-    Image::from_buffer(
-        bytes,
-        ImageType::Extension("png"),
-        CompressedImageFormats::all(),
-        true,
-    )
-    .unwrap()
 }
 
 fn spawn_screen<'w, 's, 'a>(

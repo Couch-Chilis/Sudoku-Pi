@@ -25,7 +25,7 @@ use wheel::{
 };
 
 pub use highscore_screen::highscore_screen_setup;
-pub use wheel::{ActiveSliceHandles, DisabledSliceHandles, Wheel};
+pub use wheel::{ActiveSliceHandles, Wheel};
 
 pub struct GamePlugin;
 
@@ -160,21 +160,13 @@ pub fn board_setup(
     game_screen: &mut EntityCommands,
     meshes: &mut Assets<Mesh>,
     materials: &mut Assets<ColorMaterial>,
-    disabled_slice_handles: &DisabledSliceHandles,
     fonts: &Fonts,
     game: &Game,
     images: &Images,
     settings: &Settings,
 ) {
     init_game_ui(game_screen, meshes, materials, fonts, images, |parent| {
-        build_board(
-            parent,
-            disabled_slice_handles,
-            fonts,
-            game,
-            images,
-            settings,
-        )
+        build_board(parent, fonts, game, images, settings)
     });
 }
 

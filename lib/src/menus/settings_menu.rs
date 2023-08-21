@@ -1,5 +1,5 @@
-use super::{ButtonBuilder, SettingsToggle, SettingsToggleBuilder};
-use crate::{constants::*, ui::*, Fonts, Images, ScreenState, Settings};
+use super::{settings_toggle::*, ButtonBuilder};
+use crate::{ui::*, Fonts, Images, ScreenState, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
@@ -56,7 +56,7 @@ pub fn spawn_settings(
         .with_children(|parent| {
             let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
             let buttons = ButtonBuilder::new(fonts, button_size);
-            buttons.build_selected_with_text_and_action(parent, "Back", Back);
+            buttons.build_secondary_with_text_and_action(parent, "Back", Back);
         });
 }
 
@@ -96,21 +96,22 @@ pub fn settings_toggle_actions(
     }
 }
 
-// Updates the toggle styling when the setting is switched.
+// Updates the `ToggleEnabled` component when the setting is switched.
 pub fn on_setting_change(
-    mut query: Query<(&mut Handle<ColorMaterial>, &SettingsToggle), With<Toggle>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut commands: Commands,
+    query: Query<(Entity, &SettingsToggle, Option<&ToggleEnabled>)>,
     settings: Res<Settings>,
 ) {
-    if !settings.is_changed() {
-        return;
-    }
-
-    for (mut material, toggle) in &mut query {
-        *material = materials.add(ColorMaterial::from(if toggle.is_enabled(&settings) {
-            COLOR_TOGGLE_ON
-        } else {
-            COLOR_TOGGLE_OFF
-        }));
+    if settings.is_changed() {
+        for (entity, settings_toggle, toggle_enabled) in &query {
+            let is_enabled = settings_toggle.is_enabled(&settings);
+            if is_enabled {
+                if toggle_enabled.is_none() {
+                    commands.entity(entity).insert(ToggleEnabled);
+                }
+            } else if toggle_enabled.is_some() {
+                commands.entity(entity).remove::<ToggleEnabled>();
+            }
+        }
     }
 }

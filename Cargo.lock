@@ -937,6 +937,8 @@ dependencies = [
 [[package]]
 name = "bevy_tweening"
 version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b182c9cf812b0052a5a96f59b1be16400fa0717b26da2497e13d81947299c7fc"
 dependencies = [
  "bevy",
  "interpolation",

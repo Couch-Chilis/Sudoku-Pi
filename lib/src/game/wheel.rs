@@ -75,34 +75,9 @@ impl ActiveSliceHandles {
     }
 }
 
-pub struct DisabledSliceHandles {
-    slices: [Handle<Image>; 9],
-}
+pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
+    let disabled_slice_handles = get_disabled_slice_handles(images);
 
-impl DisabledSliceHandles {
-    pub fn load(images: &Images) -> Self {
-        Self {
-            slices: [
-                images.slice_disabled_1.clone(),
-                images.slice_disabled_2.clone(),
-                images.slice_disabled_3.clone(),
-                images.slice_disabled_4.clone(),
-                images.slice_disabled_5.clone(),
-                images.slice_disabled_6.clone(),
-                images.slice_disabled_7.clone(),
-                images.slice_disabled_8.clone(),
-                images.slice_disabled_9.clone(),
-            ],
-        }
-    }
-}
-
-pub fn init_wheel(
-    board: &mut EntityCommands,
-    disabled_slice_handles: &DisabledSliceHandles,
-    images: &Images,
-    fonts: &Fonts,
-) {
     board.with_children(|board| {
         board
             .spawn((
@@ -114,7 +89,7 @@ pub fn init_wheel(
                 },
             ))
             .with_children(|wheel| {
-                for (i, disabled_slice) in disabled_slice_handles.slices.iter().enumerate() {
+                for (i, disabled_slice) in disabled_slice_handles.into_iter().enumerate() {
                     wheel.spawn((
                         DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
                         SpriteBundle {
@@ -161,6 +136,20 @@ pub fn init_wheel(
                 ));
             });
     });
+}
+
+fn get_disabled_slice_handles(images: &Images) -> [&Handle<Image>; 9] {
+    [
+        &images.slice_disabled_1,
+        &images.slice_disabled_2,
+        &images.slice_disabled_3,
+        &images.slice_disabled_4,
+        &images.slice_disabled_5,
+        &images.slice_disabled_6,
+        &images.slice_disabled_7,
+        &images.slice_disabled_8,
+        &images.slice_disabled_9,
+    ]
 }
 
 pub fn on_wheel_input(
