@@ -31,6 +31,7 @@ bevy = { version = "0.11", default-features = false, features = [
     "wayland",
     "x11",
 ] }
+bevy_framepace = { version = "0.13" }
 bevy-steamworks = { optional = true, version = "0.8" }
 bevy_tweening = { version = "0.8", default-features = false, features = [
     "bevy_asset",

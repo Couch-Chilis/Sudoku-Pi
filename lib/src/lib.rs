@@ -13,12 +13,14 @@ mod steam;
 mod sudoku;
 mod ui;
 mod utils;
+mod welcome;
 
 use assets::*;
 use bevy::app::AppExit;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
+use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
 use highscores::Highscores;
@@ -29,6 +31,7 @@ use std::time::Duration;
 use sudoku::Game;
 use ui::*;
 use utils::{SpriteExt, TransformExt};
+use welcome::{welcome_screen_button_actions, welcome_screen_setup};
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -65,9 +68,11 @@ pub enum ScreenState {
     SelectDifficulty,
     Game,
     Highscores,
-    HowToPlay,
     Settings,
     Upper,
+    Welcome1,
+    Welcome2,
+    Welcome3,
 }
 
 /// Overrides the screen(s) for which the given entity provides interactivity.
@@ -142,6 +147,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
                 on_screen_change,
                 on_window_close,
                 on_exit.after(on_window_close),
+                welcome_screen_button_actions,
             ),
         )
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -155,6 +161,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
             ..default()
         }))
         .add_plugins((
+            FramepacePlugin,
             TweeningPlugin,
             UiPlugin,
             game::GamePlugin,
@@ -178,14 +185,18 @@ fn add_steamworks_plugin(_app: &mut App) {}
 fn setup(
     mut commands: Commands,
     fonts: ResMut<Assets<Font>>,
+    mut framepace_settings: ResMut<FramepaceSettings>,
     images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut screen_state: ResMut<NextState<ScreenState>>,
     settings: Res<Settings>,
     game: Res<Game>,
     highscores: Res<Highscores>,
 ) {
     commands.spawn(Camera2dBundle::default());
+
+    framepace_settings.limiter = Limiter::from_framerate(60.0);
 
     let fonts = Fonts::load(fonts);
     let fortune = Fortune::load();
@@ -211,6 +222,19 @@ fn setup(
     let mut settings_screen = spawn_screen(&mut commands, ScreenState::Settings);
     settings_screen_setup(&mut settings_screen, &fonts, &images, &settings);
 
+    let mut welcome_screen_1 = spawn_screen(&mut commands, ScreenState::Welcome1);
+    welcome_screen_setup(&mut welcome_screen_1, &fonts, "Welcome to\nSudoku Pi");
+
+    let mut welcome_screen_2 = spawn_screen(&mut commands, ScreenState::Welcome2);
+    welcome_screen_setup(
+        &mut welcome_screen_2,
+        &fonts,
+        "A New Way\nto Select Numbers",
+    );
+
+    let mut welcome_screen_3 = spawn_screen(&mut commands, ScreenState::Welcome3);
+    welcome_screen_setup(&mut welcome_screen_3, &fonts, "A New Way\nto Draw Notes");
+
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.
     commands.spawn((
@@ -220,6 +244,10 @@ fn setup(
             ..default()
         },
     ));
+
+    if !settings.welcome_finished {
+        screen_state.set(ScreenState::Welcome1);
+    }
 
     commands.insert_resource(ActiveSliceHandles::load(&images));
     commands.insert_resource(fonts);
@@ -345,9 +373,11 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         MainMenu | SelectDifficulty => (0., 0.),
         Game => (1., 0.),
         Highscores => (1., 1.),
-        HowToPlay => (-1., 0.),
         Settings => (2., 0.),
         Upper => (0., 1.),
+        Welcome1 => (-3., 0.),
+        Welcome2 => (-2., 0.),
+        Welcome3 => (-1., 0.),
     }
 }
 

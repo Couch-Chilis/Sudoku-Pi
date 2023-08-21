@@ -14,7 +14,7 @@ pub type InteractionQuery<'w, 's, 'a> = Query<'w, 's, InteractionEntity<'a>>;
 #[derive(Clone, Component, Debug, Default)]
 pub struct InitialSelection;
 
-#[derive(Clone, Component, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Component, Copy, Debug, Default, Eq, PartialEq)]
 pub enum Interaction {
     #[default]
     None,
@@ -169,10 +169,10 @@ pub fn pointer_interaction(
                 } else if computed_position.screens.contains(screen.get()) {
                     Interaction::None
                 } else {
-                    interaction.clone()
+                    *interaction
                 }
             }
-            None => interaction.clone(),
+            None => *interaction,
         };
 
         if *interaction != new_interaction {

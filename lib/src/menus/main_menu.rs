@@ -71,18 +71,19 @@ pub fn main_menu_button_actions(
     interaction_query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
     game: Res<Game>,
 ) {
-    for (interaction, action) in &interaction_query {
-        if *interaction == Interaction::Pressed {
-            use MainScreenButtonAction::*;
-            match action {
-                ContinueGame => {
-                    *selection = Selection::new_for_game(&game);
-                    screen_state.set(ScreenState::Game);
-                }
-                GoToHowToPlay => screen_state.set(ScreenState::Highscores),
-                GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
-                Quit => app_exit_events.send(AppExit),
-            }
+    let Some((_, action)) = interaction_query.get_single().ok()
+        .filter(|(&interaction, _)| interaction == Interaction::Pressed) else {
+        return;
+    };
+
+    use MainScreenButtonAction::*;
+    match action {
+        ContinueGame => {
+            *selection = Selection::new_for_game(&game);
+            screen_state.set(ScreenState::Game);
         }
+        GoToHowToPlay => screen_state.set(ScreenState::Welcome2),
+        GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
+        Quit => app_exit_events.send(AppExit),
     }
 }

@@ -14,6 +14,9 @@ pub struct Settings {
 
     #[serde(default = "default_show_mistakes")]
     pub show_mistakes: bool,
+
+    #[serde(default)]
+    pub welcome_finished: bool,
 }
 
 fn default_enable_wheel_aid() -> bool {
@@ -34,6 +37,7 @@ impl Default for Settings {
             enable_wheel_aid: default_enable_wheel_aid(),
             selected_cell_highlight: default_selected_cell_highlight(),
             show_mistakes: default_show_mistakes(),
+            welcome_finished: false,
         }
     }
 }
