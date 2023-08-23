@@ -6,6 +6,7 @@ mod constants;
 mod game;
 mod highscores;
 mod menus;
+mod onboarding;
 mod pointer_query;
 mod settings;
 #[cfg(feature = "steam")]
@@ -13,7 +14,6 @@ mod steam;
 mod sudoku;
 mod ui;
 mod utils;
-mod welcome;
 
 use assets::*;
 use bevy::app::AppExit;
@@ -25,13 +25,13 @@ use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, 
 use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
 use highscores::Highscores;
 use menus::{menu_setup, settings_screen_setup, SettingsToggleTimer};
+use onboarding::{onboarding_screen_button_actions, onboarding_screen_setup};
 use settings::Settings;
 use smallvec::SmallVec;
 use std::time::Duration;
 use sudoku::Game;
 use ui::*;
 use utils::{SpriteExt, TransformExt};
-use welcome::{welcome_screen_button_actions, welcome_screen_setup};
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -70,9 +70,9 @@ pub enum ScreenState {
     Highscores,
     Settings,
     Upper,
-    Welcome1,
-    Welcome2,
-    Welcome3,
+    Welcome,
+    HowToPlayNumbers,
+    HowToPlayNotes,
 }
 
 /// Overrides the screen(s) for which the given entity provides interactivity.
@@ -147,7 +147,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
                 on_screen_change,
                 on_window_close,
                 on_exit.after(on_window_close),
-                welcome_screen_button_actions,
+                onboarding_screen_button_actions,
             ),
         )
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -202,10 +202,11 @@ fn setup(
     let fortune = Fortune::load();
     let images = Images::load(images);
 
-    let mut main_screen = spawn_screen(&mut commands, ScreenState::MainMenu);
+    use ScreenState::*;
+    let mut main_screen = spawn_screen(&mut commands, MainMenu);
     menu_setup(&mut main_screen, &fonts, &game, &images);
 
-    let mut game_screen = spawn_screen(&mut commands, ScreenState::Game);
+    let mut game_screen = spawn_screen(&mut commands, Game);
     board_setup(
         &mut game_screen,
         &mut meshes,
@@ -216,29 +217,46 @@ fn setup(
         &settings,
     );
 
-    let mut highscore_screen = spawn_screen(&mut commands, ScreenState::Highscores);
+    let mut highscore_screen = spawn_screen(&mut commands, Highscores);
     highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
 
-    let mut settings_screen = spawn_screen(&mut commands, ScreenState::Settings);
+    let mut settings_screen = spawn_screen(&mut commands, Settings);
     settings_screen_setup(&mut settings_screen, &fonts, &images, &settings);
 
-    let mut welcome_screen_1 = spawn_screen(&mut commands, ScreenState::Welcome1);
-    welcome_screen_setup(&mut welcome_screen_1, &fonts, "Welcome to\nSudoku Pi");
-
-    let mut welcome_screen_2 = spawn_screen(&mut commands, ScreenState::Welcome2);
-    welcome_screen_setup(
-        &mut welcome_screen_2,
+    let mut welcome_screen = spawn_screen(&mut commands, Welcome);
+    onboarding_screen_setup(
+        &mut welcome_screen,
         &fonts,
-        "A New Way\nto Select Numbers",
+        &game,
+        &images,
+        &settings,
+        Welcome,
     );
 
-    let mut welcome_screen_3 = spawn_screen(&mut commands, ScreenState::Welcome3);
-    welcome_screen_setup(&mut welcome_screen_3, &fonts, "A New Way\nto Draw Notes");
+    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers);
+    onboarding_screen_setup(
+        &mut how_to_play_screen_1,
+        &fonts,
+        &game,
+        &images,
+        &settings,
+        HowToPlayNumbers,
+    );
+
+    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes);
+    onboarding_screen_setup(
+        &mut how_to_play_screen_2,
+        &fonts,
+        &game,
+        &images,
+        &settings,
+        HowToPlayNotes,
+    );
 
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.
     commands.spawn((
-        Screen::for_state(ScreenState::Upper),
+        Screen::for_state(Upper),
         SpriteBundle {
             sprite: Sprite::from_color(Color::WHITE),
             ..default()
@@ -246,7 +264,7 @@ fn setup(
     ));
 
     if !settings.welcome_finished {
-        screen_state.set(ScreenState::Welcome1);
+        screen_state.set(Welcome);
     }
 
     commands.insert_resource(ActiveSliceHandles::load(&images));
@@ -375,9 +393,9 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         Highscores => (1., 1.),
         Settings => (2., 0.),
         Upper => (0., 1.),
-        Welcome1 => (-3., 0.),
-        Welcome2 => (-2., 0.),
-        Welcome3 => (-1., 0.),
+        Welcome => (-3., 0.),
+        HowToPlayNumbers => (-2., 0.),
+        HowToPlayNotes => (-1., 0.),
     }
 }
 

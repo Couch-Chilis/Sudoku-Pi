@@ -82,7 +82,7 @@ pub fn main_menu_button_actions(
             *selection = Selection::new_for_game(&game);
             screen_state.set(ScreenState::Game);
         }
-        GoToHowToPlay => screen_state.set(ScreenState::Welcome2),
+        GoToHowToPlay => screen_state.set(ScreenState::HowToPlayNumbers),
         GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
         Quit => app_exit_events.send(AppExit),
     }

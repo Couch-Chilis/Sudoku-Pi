@@ -18,33 +18,31 @@ pub struct MistakeCellBordersBundle {
 }
 
 pub fn build_board(
-    parent: &mut EntityCommands,
+    parent: &mut ChildBuilder,
     fonts: &Fonts,
     game: &Game,
     images: &Images,
     settings: &Settings,
 ) {
-    parent.with_children(|screen| {
-        let mut board = screen.spawn((
-            Board,
-            FlexBundle::new(
-                FlexItemStyle::preferred_and_minimum_size(
-                    Size::all(Val::Vmin(90.)),
-                    Size::all(Val::Vmin(50.)),
-                )
-                .with_fixed_aspect_ratio(),
-                FlexContainerStyle::row(),
-            ),
-        ));
+    let mut board = parent.spawn((
+        Board,
+        FlexBundle::new(
+            FlexItemStyle::preferred_and_minimum_size(
+                Size::all(Val::Vmin(90.)),
+                Size::all(Val::Vmin(50.)),
+            )
+            .with_fixed_aspect_ratio(),
+            FlexContainerStyle::row(),
+        ),
+    ));
 
-        draw_lines(&mut board);
+    draw_lines(&mut board);
 
-        fill_numbers(&mut board, fonts, game, settings);
+    fill_numbers(&mut board, fonts, game, settings);
 
-        init_wheel(&mut board, images, fonts);
+    init_wheel(&mut board, images, fonts);
 
-        init_mistake_borders(&mut board);
-    });
+    init_mistake_borders(&mut board);
 }
 
 enum Orientation {
