@@ -285,7 +285,7 @@ pub fn button_interaction(
 /// `InitialSelection` should be initially selected.
 pub(crate) fn reset_initial_selection_on_screen_change(
     mut interaction_query: Query<(Entity, &mut Interaction, Option<&InitialSelection>)>,
-    screen_query: Query<(Entity, Option<&Screen>, Option<&Children>)>,
+    screen_query: Query<(Entity, &Children, Option<&Screen>)>,
     screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() {
@@ -295,13 +295,11 @@ pub(crate) fn reset_initial_selection_on_screen_change(
     let mut screen_entity = None;
     let mut children_map = BTreeMap::new();
 
-    for (entity, screen, children) in &screen_query {
-        if let Some(children) = children {
-            children_map.insert(entity, children);
+    for (entity, children, screen) in &screen_query {
+        children_map.insert(entity, children);
 
-            if screen.is_some_and(|screen| &screen.state == screen_state.get()) {
-                screen_entity = Some(entity);
-            }
+        if screen.is_some_and(|screen| &screen.state == screen_state.get()) {
+            screen_entity = Some(entity);
         }
     }
 

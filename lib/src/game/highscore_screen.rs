@@ -128,7 +128,7 @@ pub fn highscore_button_actions(
             match action {
                 HighscoreButtonAction::Back => screen_state.set(ScreenState::MainMenu),
                 HighscoreButtonAction::NewGame => {
-                    *game = Game::generate(game.difficulty).unwrap();
+                    *game = Game::generate(game.difficulty).expect("Could not generate game");
                     *selection = Selection::new_for_game(&game);
                     game_timer.elapsed_secs = 0.;
                     screen_state.set(ScreenState::Game);

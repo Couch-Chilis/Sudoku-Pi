@@ -45,7 +45,7 @@ pub fn difficulty_screen_button_actions(
             match action {
                 BackToMain => screen_state.set(ScreenState::MainMenu),
                 StartGameAtDifficulty(difficulty) => {
-                    *game = Game::generate(*difficulty).unwrap();
+                    *game = Game::generate(*difficulty).expect("Could not generate game");
                     *selection = Selection::new_for_game(&game);
                     game_timer.elapsed_secs = 0.;
                     screen_state.set(ScreenState::Game);

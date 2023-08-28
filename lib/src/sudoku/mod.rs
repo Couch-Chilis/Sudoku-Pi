@@ -71,6 +71,24 @@ impl Game {
         !self.is_default() && self.current == self.solution
     }
 
+    /// Loads the tutorial game.
+    pub fn load_tutorial() -> Self {
+        Self {
+            start: Sudoku::tutorial(),
+            solution: solve(Sudoku::tutorial())
+                .map(|result| result.solution)
+                .expect("Cannot solve tutorial"),
+            current: Sudoku::tutorial(),
+            notes: Notes::default(),
+            mistakes: Notes::default(),
+            difficulty: Difficulty::Trivial,
+            score: 0,
+            elapsed_secs: 0.,
+            num_mistakes: 0,
+            num_hints: 1,
+        }
+    }
+
     /// Returns whether the game may be continued.
     pub fn may_continue(&self) -> bool {
         !self.is_default() && !self.is_solved()
@@ -399,6 +417,96 @@ impl Sudoku {
         let mut cells = self.cells;
         cells[pos] = None;
         Self { cells }
+    }
+
+    pub const fn tutorial() -> Self {
+        Self {
+            cells: unsafe {
+                [
+                    None,
+                    Some(NonZeroU8::new_unchecked(2)),
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(7)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(9)),
+                    Some(NonZeroU8::new_unchecked(1)),
+                    None,
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(9)),
+                    Some(NonZeroU8::new_unchecked(1)),
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(4)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(7)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(7)),
+                    Some(NonZeroU8::new_unchecked(1)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(5)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(8)),
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(8)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(2)),
+                    Some(NonZeroU8::new_unchecked(5)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(1)),
+                    None,
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(9)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(3)),
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(4)),
+                    Some(NonZeroU8::new_unchecked(5)),
+                    Some(NonZeroU8::new_unchecked(4)),
+                    Some(NonZeroU8::new_unchecked(5)),
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(2)),
+                    None,
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(1)),
+                    Some(NonZeroU8::new_unchecked(7)),
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(8)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(4)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(2)),
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(NonZeroU8::new_unchecked(7)),
+                    Some(NonZeroU8::new_unchecked(5)),
+                    Some(NonZeroU8::new_unchecked(9)),
+                    Some(NonZeroU8::new_unchecked(4)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(4)),
+                    None,
+                    Some(NonZeroU8::new_unchecked(3)),
+                    Some(NonZeroU8::new_unchecked(9)),
+                    Some(NonZeroU8::new_unchecked(5)),
+                    None,
+                    None,
+                    None,
+                ]
+            },
+        }
     }
 }
 

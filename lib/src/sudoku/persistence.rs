@@ -23,7 +23,9 @@ impl Game {
     pub fn save(&self) {
         let game_path = ensure_sudoku_dir().join("game.json");
 
-        if self.current == Sudoku::default() || self.is_solved() {
+        if self.start == Sudoku::tutorial() {
+            // Do nothing.
+        } else if self.current == Sudoku::default() || self.is_solved() {
             if game_path.exists() {
                 fs::remove_file(game_path)
                     .unwrap_or_else(|err| println!("Can't clean up Sudoku game: {err}"));

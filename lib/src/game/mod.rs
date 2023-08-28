@@ -41,7 +41,7 @@ impl Plugin for GamePlugin {
                 (
                     on_keyboard_input.run_if(in_state(ScreenState::Game)),
                     on_pointer_input.run_if(in_state(ScreenState::Game)),
-                    on_wheel_input.run_if(in_state(ScreenState::Game)),
+                    on_wheel_input,
                     on_score_changed.run_if(in_state(ScreenState::Game)),
                     on_fortune,
                     on_highscores_changed,
@@ -52,7 +52,7 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (
-                    on_wheel_timer.run_if(in_state(ScreenState::Game)),
+                    on_wheel_timer,
                     button_actions.run_if(in_state(ScreenState::Game)),
                     highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
                     slider_interaction.run_if(in_state(ScreenState::Game)),
@@ -168,7 +168,7 @@ pub fn board_setup(
 ) {
     init_game_ui(game_screen, meshes, materials, fonts, images, |parent| {
         parent.with_children(|parent| {
-            build_board(parent, fonts, game, images, settings);
+            build_board(parent, fonts, game, images, settings, ScreenState::Game);
         });
     });
 }

@@ -61,7 +61,7 @@ impl Screen {
 }
 
 /// State to track which screen we are in.
-#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
+#[derive(Clone, Component, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
 pub enum ScreenState {
     #[default]
     MainMenu,
@@ -118,7 +118,12 @@ extern "C" fn run_with_scales_and_padding(scale: f64, native_scale: f64, top_pad
 }
 
 fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
-    let game = Game::load();
+    let settings = Settings::load();
+    let game = if settings.welcome_finished {
+        Game::load()
+    } else {
+        Game::load_tutorial()
+    };
 
     let mut timer = GameTimer::default();
     if game.elapsed_secs != 0. {
@@ -131,7 +136,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
         .init_resource::<ActiveSliceHandles>()
         .insert_resource(game)
         .insert_resource(timer)
-        .insert_resource(Settings::load())
+        .insert_resource(settings)
         .insert_resource(Highscores::load())
         .insert_resource(SettingsToggleTimer::default())
         .insert_resource(screen_padding)

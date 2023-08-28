@@ -303,7 +303,8 @@ pub(super) fn render_cell_highlights(
     screen: Res<State<ScreenState>>,
     highlights: Res<Highlights>,
 ) {
-    if screen.get() != &ScreenState::Game && screen.get() != &ScreenState::Highscores {
+    use ScreenState::*;
+    if !matches!(screen.get(), Game | Highscores | HowToPlayNumbers) {
         return;
     }
 

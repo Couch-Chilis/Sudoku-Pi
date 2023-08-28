@@ -7,7 +7,7 @@ use crate::{
     pointer_query::{PointerQuery, PointerQueryExt},
     settings::Settings,
     utils::*,
-    ComputedPosition, Fonts, Game, GameTimer, Images,
+    ComputedPosition, Fonts, Game, GameTimer, Images, ScreenState,
 };
 use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
 use std::{f32::consts::PI, num::NonZeroU8};
@@ -75,13 +75,14 @@ impl ActiveSliceHandles {
     }
 }
 
-pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
+pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, screen: ScreenState) {
     let disabled_slice_handles = get_disabled_slice_handles(images);
 
     board.with_children(|board| {
         board
             .spawn((
                 Wheel::default(),
+                screen,
                 SpriteBundle {
                     texture: images.wheel.clone(),
                     transform: Transform::from_2d_scale(0., 0.),
@@ -104,6 +105,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
 
         board.spawn((
             Slice,
+            screen,
             SpriteBundle {
                 transform: Transform::from_2d_scale(0., 0.),
                 ..default()
@@ -119,6 +121,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts) {
         board
             .spawn((
                 TopLabel,
+                screen,
                 SpriteBundle {
                     texture: images.top_label.clone(),
                     transform: Transform::from_2d_scale(0., 0.),
@@ -153,31 +156,42 @@ fn get_disabled_slice_handles(images: &Images) -> [&Handle<Image>; 9] {
 }
 
 pub fn on_wheel_input(
-    mut wheel: Query<&mut Wheel>,
+    mut wheel: Query<(&mut Wheel, &ScreenState)>,
     mut game: ResMut<Game>,
     mut selection: ResMut<Selection>,
     mut notes: Query<&mut Note>,
     mut timer: ResMut<GameTimer>,
     mode: Res<State<ModeState>>,
     pointer_query: PointerQuery,
-    board: Query<&ComputedPosition, With<Board>>,
+    board: Query<(&ComputedPosition, &ScreenState), With<Board>>,
+    screen: Res<State<ScreenState>>,
     settings: Res<Settings>,
 ) {
+    use ScreenState::*;
+    let screen = screen.get();
+    if !matches!(screen, Game | HowToPlayNumbers | HowToPlayNotes) {
+        return;
+    }
+
     let Some((input_kind, position)) = pointer_query.get_changed_input_with_position() else {
         return;
     };
 
-    let Ok(board_position) = board.get_single() else {
-        return;
-    };
+    let Some(board_position) = board
+        .iter()
+        .find_map(|board| (board.1 == screen).then_some(board.0)) else {
+            return;
+        };
 
     let Some(translation) = get_board_translation(board_position, position) else {
         return;
     };
 
-    let Ok(mut wheel) = wheel.get_single_mut() else {
-        return;
-    };
+    let Some(mut wheel) = wheel
+        .iter_mut()
+        .find_map(|wheel| (wheel.1 == screen).then_some(wheel.0)) else {
+            return;
+        };
 
     wheel.current_position = translation;
 
@@ -258,7 +272,17 @@ pub fn on_wheel_input(
     }
 }
 
-pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
+pub fn on_wheel_timer(
+    mut wheel: Query<&mut Wheel>,
+    time: Res<Time>,
+    screen: Res<State<ScreenState>>,
+) {
+    use ScreenState::*;
+    let screen = screen.get();
+    if !matches!(screen, Game | HowToPlayNumbers | HowToPlayNotes) {
+        return;
+    }
+
     for mut wheel in &mut wheel {
         if wheel.is_open {
             wheel.spawn_timer += time.delta().as_secs_f32();
@@ -272,26 +296,41 @@ pub fn on_wheel_timer(mut wheel: Query<&mut Wheel>, time: Res<Time>) {
 
 pub fn render_wheel(
     mut wheel: Query<
-        (&mut Transform, &mut Wheel),
+        (&mut Transform, &mut Wheel, &ScreenState),
         (Changed<Wheel>, Without<Slice>, Without<TopLabel>),
     >,
-    mut slice: Query<(&mut Transform, &mut Handle<Image>), (With<Slice>, Without<TopLabel>)>,
-    mut top_label: Query<&mut Transform, (With<TopLabel>, Without<Wheel>, Without<Slice>)>,
+    mut slice: Query<
+        (&mut Transform, &mut Handle<Image>, &ScreenState),
+        (With<Slice>, Without<TopLabel>),
+    >,
+    mut top_label: Query<
+        (&mut Transform, &ScreenState),
+        (With<TopLabel>, Without<Wheel>, Without<Slice>),
+    >,
     mut top_label_text: Query<&mut Text, With<TopLabelText>>,
     active_slice_handles: Res<ActiveSliceHandles>,
     window_query: Query<&Window, With<PrimaryWindow>>,
+    screen: Res<State<ScreenState>>,
 ) {
-    let Ok((mut wheel_transform, mut wheel)) = wheel.get_single_mut() else {
-        return;
-    };
+    let screen = screen.get();
 
-    let Ok((mut slice_transform, mut slice_texture)) = slice.get_single_mut() else {
-        return;
-    };
+    let Some((mut wheel_transform, mut wheel)) = wheel
+        .iter_mut()
+        .find_map(|wheel| (wheel.2 == screen).then_some((wheel.0, wheel.1))) else {
+            return;
+        };
 
-    let Ok(mut top_label_transform) = top_label.get_single_mut() else {
-        return;
-    };
+    let Some((mut slice_transform, mut slice_texture)) = slice
+        .iter_mut()
+        .find_map(|slice| (slice.2 == screen).then_some((slice.0, slice.1))) else {
+            return;
+        };
+
+    let Some(mut top_label_transform) = top_label
+        .iter_mut()
+        .find_map(|top_label| (top_label.1 == screen).then_some(top_label.0)) else {
+            return;
+        };
 
     if !wheel.is_open
         || (wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY)
