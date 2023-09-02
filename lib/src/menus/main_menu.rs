@@ -70,16 +70,15 @@ pub fn main_menu_button_actions(
     mut transition_events: EventWriter<TransitionEvent>,
     interaction_query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
 ) {
-    let Some((_, action)) = interaction_query.get_single().ok()
-        .filter(|(&interaction, _)| interaction == Interaction::Pressed) else {
-        return;
-    };
-
-    use MainScreenButtonAction::*;
-    match action {
-        ContinueGame => transition_events.send(TransitionEvent::ContinueGame),
-        GoToHowToPlay => transition_events.send(TransitionEvent::HowToPlayNumbers),
-        GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
-        Quit => app_exit_events.send(AppExit),
+    for (interaction, action) in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            use MainScreenButtonAction::*;
+            match action {
+                ContinueGame => transition_events.send(TransitionEvent::ContinueGame),
+                GoToHowToPlay => transition_events.send(TransitionEvent::HowToPlayNumbers),
+                GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
+                Quit => app_exit_events.send(AppExit),
+            }
+        }
     }
 }
