@@ -1,5 +1,5 @@
 use super::ButtonBuilder;
-use crate::{constants::*, game::Selection, sudoku::*, ui::*, Fonts, ScreenState};
+use crate::{constants::*, sudoku::*, transition_events::*, ui::*, Fonts, ScreenState};
 use bevy::{app::AppExit, prelude::*, sprite::Anchor};
 
 #[derive(Component)]
@@ -67,8 +67,7 @@ pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, g
 pub fn main_menu_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut app_exit_events: EventWriter<AppExit>,
-    mut game: ResMut<Game>,
-    mut selection: ResMut<Selection>,
+    mut transition_events: EventWriter<TransitionEvent>,
     interaction_query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
 ) {
     let Some((_, action)) = interaction_query.get_single().ok()
@@ -78,20 +77,8 @@ pub fn main_menu_button_actions(
 
     use MainScreenButtonAction::*;
     match action {
-        ContinueGame => {
-            *selection = Selection::new_for_game(&game);
-            screen_state.set(ScreenState::Game);
-        }
-        GoToHowToPlay => {
-            *game = Game::load_tutorial();
-            *selection = Selection {
-                selected_cell: None,
-                selected_note: None,
-                hint: Some((6, 4)),
-                note_toggle: None,
-            };
-            screen_state.set(ScreenState::HowToPlayNumbers);
-        }
+        ContinueGame => transition_events.send(TransitionEvent::ContinueGame),
+        GoToHowToPlay => transition_events.send(TransitionEvent::HowToPlayNumbers),
         GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
         Quit => app_exit_events.send(AppExit),
     }

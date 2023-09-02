@@ -15,7 +15,7 @@ use std::{f32::consts::PI, num::NonZeroU8};
 const MAX_RADIUS: f32 = 0.6;
 const WHEEL_SIZE: f32 = 400.;
 const WHEEL_Z: f32 = 10.;
-pub const NOTES_MODE_OPEN_DELAY: f32 = 0.8;
+pub const NOTES_MODE_OPEN_DELAY: f32 = 0.6;
 
 #[derive(Component, Default)]
 pub struct Wheel {
@@ -251,7 +251,7 @@ pub fn on_wheel_input(
                                 &mut timer,
                                 &mut selection,
                                 &mut notes,
-                                &settings,
+                                settings.show_mistakes,
                                 false,
                                 x,
                                 y,
@@ -386,17 +386,17 @@ pub fn render_disabled_wheel_slices(
     settings: Res<Settings>,
     wheel: Query<&Wheel, Changed<Wheel>>,
 ) {
-    let Ok((x, y)) = wheel.get_single().map(|wheel| wheel.cell) else {
-        return;
-    };
+    for wheel in &wheel {
+        let (x, y) = wheel.cell;
 
-    for (DisabledSlice(n), mut visibility) in &mut disabled_slices {
-        let is_disabled = settings.enable_wheel_aid && !game.current.may_set(x, y, *n);
-        *visibility = if is_disabled {
-            Visibility::Visible
-        } else {
-            Visibility::Hidden
-        };
+        for (DisabledSlice(n), mut visibility) in &mut disabled_slices {
+            let is_disabled = settings.enable_wheel_aid && !game.current.may_set(x, y, *n);
+            *visibility = if is_disabled {
+                Visibility::Visible
+            } else {
+                Visibility::Hidden
+            };
+        }
     }
 }
 
@@ -456,7 +456,7 @@ fn get_selected_number(wheel: &Wheel) -> Option<NonZeroU8> {
     let touch_radius = (diff_x * diff_x + diff_y * diff_y).sqrt();
 
     if touch_radius > 0.08 && touch_radius < 0.5 {
-        let n = (11.25 - (angle / PI * 4.5)).round() as u8 % 9 + 1;
+        let n = (10.75 - (angle / PI * 4.5)).round() as u8 % 9 + 1;
         Some(NonZeroU8::new(n).unwrap())
     } else {
         None

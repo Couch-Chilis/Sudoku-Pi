@@ -12,6 +12,7 @@ mod settings;
 #[cfg(feature = "steam")]
 mod steam;
 mod sudoku;
+mod transition_events;
 mod ui;
 mod utils;
 
@@ -25,11 +26,12 @@ use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, 
 use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
 use highscores::Highscores;
 use menus::{menu_setup, settings_screen_setup, SettingsToggleTimer};
-use onboarding::{onboarding_screen_button_actions, onboarding_screen_setup};
+use onboarding::*;
 use settings::Settings;
 use smallvec::SmallVec;
 use std::time::Duration;
 use sudoku::Game;
+use transition_events::{on_transition, TransitionEvent};
 use ui::*;
 use utils::{SpriteExt, TransformExt};
 
@@ -119,7 +121,7 @@ extern "C" fn run_with_scales_and_padding(scale: f64, native_scale: f64, top_pad
 
 fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
     let settings = Settings::load();
-    let game = if settings.welcome_finished {
+    let game = if settings.onboarding_finished {
         Game::load()
     } else {
         Game::load_tutorial()
@@ -141,6 +143,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
         .insert_resource(SettingsToggleTimer::default())
         .insert_resource(screen_padding)
         .insert_resource(zoom_factor)
+        .add_event::<TransitionEvent>()
         .add_event::<WindowDestroyed>()
         .add_state::<ScreenState>()
         .add_systems(Startup, setup)
@@ -152,7 +155,10 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
                 on_screen_change,
                 on_window_close,
                 on_exit.after(on_window_close),
-                onboarding_screen_button_actions,
+                onboarding_screen_button_interaction,
+                how_to_play_numbers_interaction,
+                how_to_play_notes_interaction,
+                on_transition,
             ),
         )
         .add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -268,7 +274,7 @@ fn setup(
         },
     ));
 
-    if !settings.welcome_finished {
+    if !settings.onboarding_finished {
         screen_state.set(Welcome);
     }
 

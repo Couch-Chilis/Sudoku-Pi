@@ -16,6 +16,7 @@ pub use solver::Difficulty;
 const START_MULTIPLIERS_BY_DIFFICULTY: [i32; 5] = [20, 40, 60, 80, 100];
 const TIME_FOR_MULTIPLIER: i32 = 20;
 
+#[derive(Default)]
 pub struct SetNumberOptions {
     /// The current timer, in seconds.
     pub elapsed_secs: f32,
@@ -48,6 +49,11 @@ pub struct Game {
 }
 
 impl Game {
+    /// Returns whether the current game has any notes.
+    pub fn has_notes(&self) -> bool {
+        self.notes.has_notes()
+    }
+
     /// Returns whether the game is in its default (uninitialized) state.
     pub fn is_default(&self) -> bool {
         self.start == Sudoku::default()

@@ -129,11 +129,11 @@ pub fn pointer_interaction(
     mut interaction_query: InteractionQuery,
     screen: Res<State<ScreenState>>,
     pointer_query: PointerQuery,
-    wheel_query: Query<&Wheel>,
+    wheel_query: Query<(&Wheel, &ScreenState)>,
 ) {
     if wheel_query
-        .get_single()
-        .map(Wheel::is_open)
+        .iter()
+        .find_map(|wheel| (wheel.1 == screen.get()).then(|| wheel.0.is_open()))
         .unwrap_or_default()
     {
         return;

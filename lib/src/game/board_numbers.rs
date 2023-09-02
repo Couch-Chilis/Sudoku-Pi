@@ -132,6 +132,10 @@ pub(super) fn render_numbers(
     game: Res<Game>,
     settings: Res<Settings>,
 ) {
+    if !game.is_changed() && !settings.is_changed() {
+        return;
+    }
+
     for (Number(x, y), mut text) in &mut numbers {
         let current_color = text.sections[0].style.color;
         let new_color = if let Some(n) = game.current.get(*x, *y) {
@@ -304,7 +308,10 @@ pub(super) fn render_cell_highlights(
     highlights: Res<Highlights>,
 ) {
     use ScreenState::*;
-    if !matches!(screen.get(), Game | Highscores | HowToPlayNumbers) {
+    if !matches!(
+        screen.get(),
+        Game | Highscores | HowToPlayNumbers | HowToPlayNotes
+    ) {
         return;
     }
 
@@ -335,7 +342,8 @@ pub(super) fn render_note_highlights(
     highlights: Res<Highlights>,
     time: Res<Time>,
 ) {
-    if screen.get() != &ScreenState::Game {
+    use ScreenState::*;
+    if !matches!(screen.get(), Game | HowToPlayNumbers | HowToPlayNotes) {
         return;
     }
 
@@ -373,8 +381,8 @@ fn animate_mistake(
 ) {
     let (ratio, show_borders) = get_mistake_animation_ratio(note.animation_timer);
 
-    if let Ok((mut mistake_borders_transform, mut mistake_borders_visibility)) =
-        mistake_borders.get_single_mut()
+    for (mut mistake_borders_transform, mut mistake_borders_visibility) in
+        mistake_borders.iter_mut()
     {
         if show_borders {
             mistake_borders_transform.translation.x = (note.x as f32 - 4.) * CELL_SIZE;

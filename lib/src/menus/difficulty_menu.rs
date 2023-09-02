@@ -1,6 +1,5 @@
 use super::ButtonBuilder;
-use crate::{game::Selection, sudoku::Difficulty, ui::*};
-use crate::{Fonts, Game, GameTimer, ScreenState};
+use crate::{sudoku::Difficulty, ui::*, Fonts, ScreenState, TransitionEvent};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -30,10 +29,8 @@ pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, fonts: &Fonts) {
 
 // Handles screen navigation based on button actions in the difficulty screen.
 pub fn difficulty_screen_button_actions(
-    mut game: ResMut<Game>,
-    mut game_timer: ResMut<GameTimer>,
     mut screen_state: ResMut<NextState<ScreenState>>,
-    mut selection: ResMut<Selection>,
+    mut transition_events: EventWriter<TransitionEvent>,
     interaction_query: Query<
         (&Interaction, &DifficultyScreenButtonAction),
         (Changed<Interaction>, With<Button>),
@@ -45,10 +42,7 @@ pub fn difficulty_screen_button_actions(
             match action {
                 BackToMain => screen_state.set(ScreenState::MainMenu),
                 StartGameAtDifficulty(difficulty) => {
-                    *game = Game::generate(*difficulty).expect("Could not generate game");
-                    *selection = Selection::new_for_game(&game);
-                    game_timer.elapsed_secs = 0.;
-                    screen_state.set(ScreenState::Game);
+                    transition_events.send(TransitionEvent::StartGame(*difficulty))
                 }
             }
         }

@@ -1,5 +1,4 @@
-use super::Selection;
-use crate::{constants::*, ui::*, utils::*, Fortune, GameTimer, Images};
+use crate::{constants::*, ui::*, utils::*, Fortune, Images, TransitionEvent};
 use crate::{Fonts, Game, Highscores, ScreenState};
 use bevy::sprite::Anchor;
 use bevy::text::Text2dBounds;
@@ -117,21 +116,17 @@ pub fn highscore_screen_setup(
 }
 
 pub fn highscore_button_actions(
-    mut game: ResMut<Game>,
-    mut game_timer: ResMut<GameTimer>,
-    mut selection: ResMut<Selection>,
     mut screen_state: ResMut<NextState<ScreenState>>,
+    mut transition_events: EventWriter<TransitionEvent>,
     query: Query<(&Interaction, &HighscoreButtonAction), (Changed<Interaction>, With<Button>)>,
+    game: Res<Game>,
 ) {
     for (interaction, action) in &query {
         if *interaction == Interaction::Pressed {
             match action {
                 HighscoreButtonAction::Back => screen_state.set(ScreenState::MainMenu),
                 HighscoreButtonAction::NewGame => {
-                    *game = Game::generate(game.difficulty).expect("Could not generate game");
-                    *selection = Selection::new_for_game(&game);
-                    game_timer.elapsed_secs = 0.;
-                    screen_state.set(ScreenState::Game);
+                    transition_events.send(TransitionEvent::StartGame(game.difficulty))
                 }
             }
         }
