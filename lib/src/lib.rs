@@ -85,7 +85,7 @@ pub struct ScreenInteraction {
 
 /// Padding to reserve space on the screen edges, for things like status bars
 /// on mobile.
-#[derive(Clone, Default, Resource)]
+#[derive(Clone, Copy, Default, Resource)]
 pub struct ScreenPadding {
     top: f32,
     right: f32,
@@ -108,6 +108,7 @@ pub fn main() {
 #[cfg(target_os = "ios")]
 extern "C" fn run_with_scales_and_padding(scale: f64, native_scale: f64, top_padding: f64) {
     let scale = (scale / native_scale) as f32;
+    println!("Starting with scale at {scale} and top padding of {top_padding}px");
     run(
         ScreenPadding {
             top: top_padding as f32,
@@ -162,7 +163,6 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
             ),
         )
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            close_when_requested: false,
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
                 resolution: (390., 845.).into(),
@@ -204,6 +204,7 @@ fn setup(
     settings: Res<Settings>,
     game: Res<Game>,
     highscores: Res<Highscores>,
+    padding: Res<ScreenPadding>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
@@ -214,10 +215,10 @@ fn setup(
     let images = Images::load(images);
 
     use ScreenState::*;
-    let mut main_screen = spawn_screen(&mut commands, MainMenu);
-    menu_setup(&mut main_screen, &fonts, &game, &images);
+    let mut main_screen = spawn_screen(&mut commands, MainMenu, &padding);
+    menu_setup(&mut main_screen, &fonts, &game, &images, &padding);
 
-    let mut game_screen = spawn_screen(&mut commands, Game);
+    let mut game_screen = spawn_screen(&mut commands, Game, &padding);
     board_setup(
         &mut game_screen,
         &mut meshes,
@@ -228,13 +229,13 @@ fn setup(
         &settings,
     );
 
-    let mut highscore_screen = spawn_screen(&mut commands, Highscores);
+    let mut highscore_screen = spawn_screen(&mut commands, Highscores, &padding);
     highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
 
-    let mut settings_screen = spawn_screen(&mut commands, Settings);
+    let mut settings_screen = spawn_screen(&mut commands, Settings, &padding);
     settings_screen_setup(&mut settings_screen, &fonts, &images, &settings);
 
-    let mut welcome_screen = spawn_screen(&mut commands, Welcome);
+    let mut welcome_screen = spawn_screen(&mut commands, Welcome, &padding);
     onboarding_screen_setup(
         &mut welcome_screen,
         &fonts,
@@ -244,7 +245,7 @@ fn setup(
         Welcome,
     );
 
-    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers);
+    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &padding);
     onboarding_screen_setup(
         &mut how_to_play_screen_1,
         &fonts,
@@ -254,7 +255,7 @@ fn setup(
         HowToPlayNumbers,
     );
 
-    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes);
+    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &padding);
     onboarding_screen_setup(
         &mut how_to_play_screen_2,
         &fonts,
@@ -413,6 +414,7 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
 fn spawn_screen<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
     screen: ScreenState,
+    padding: &ScreenPadding
 ) -> EntityCommands<'w, 's, 'a> {
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
@@ -421,7 +423,12 @@ fn spawn_screen<'w, 's, 'a>(
             FlexContainerStyle::default().with_gap(Val::Auto)
         } else {
             FlexContainerStyle::default()
-        },
+        }.with_padding(Sides {
+            top: Val::Pixel(padding.top),
+            right: Val::Pixel(padding.right),
+            bottom: Val::Pixel(padding.bottom),
+            left: Val::Pixel(padding.left),
+        }),
         ..default()
     };
 

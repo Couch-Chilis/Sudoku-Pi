@@ -401,7 +401,7 @@ pub enum Alignment {
     Start,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Size {
     pub width: Val,
     pub height: Val,
@@ -409,7 +409,7 @@ pub struct Size {
 
 impl Size {
     pub fn all(val: Val) -> Self {
-        Self::new(val, val)
+        Self::new(val.clone(), val)
     }
 
     pub fn new(width: Val, height: Val) -> Self {
@@ -418,13 +418,13 @@ impl Size {
 
     pub fn for_direction(&self, direction: FlexDirection) -> Val {
         match direction {
-            FlexDirection::Column => self.height,
-            FlexDirection::Row => self.width,
+            FlexDirection::Column => self.height.clone(),
+            FlexDirection::Row => self.width.clone(),
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Debug, Default)]
 pub struct Sides {
     pub top: Val,
     pub right: Val,
@@ -434,7 +434,7 @@ pub struct Sides {
 
 impl Sides {
     pub fn all(val: Val) -> Self {
-        Self::new(val, val)
+        Self::new(val.clone(), val)
     }
 
     pub fn bottom(bottom: Val) -> Self {
@@ -461,8 +461,8 @@ impl Sides {
 
     pub fn new(horizontal: Val, vertical: Val) -> Self {
         Self {
-            top: vertical,
-            right: horizontal,
+            top: vertical.clone(),
+            right: horizontal.clone(),
             bottom: vertical,
             left: horizontal,
         }
@@ -492,20 +492,20 @@ impl Sides {
 
     pub fn before_for_direction(&self, direction: FlexDirection) -> Val {
         match direction {
-            FlexDirection::Column => self.top,
-            FlexDirection::Row => self.left,
+            FlexDirection::Column => self.top.clone(),
+            FlexDirection::Row => self.left.clone(),
         }
     }
 
     pub fn after_for_direction(&self, direction: FlexDirection) -> Val {
         match direction {
-            FlexDirection::Column => self.bottom,
-            FlexDirection::Row => self.right,
+            FlexDirection::Column => self.bottom.clone(),
+            FlexDirection::Row => self.right.clone(),
         }
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub enum Val {
     /// Nada.
     #[default]
@@ -536,6 +536,8 @@ pub enum Val {
     /// direct chain from the `Screen` to the flex item through (nested) flex
     /// containers.
     Vmin(f32),
+    /// Calculates a value from one or more others.
+    Calc(Box<Expr>),
 }
 
 impl Val {
@@ -547,6 +549,7 @@ impl Val {
             Self::CrossPercent(value) => axis_scaling.axis_ratio * value * 0.01,
             Self::Vmax(value) => axis_scaling.vmax_scale * value,
             Self::Vmin(value) => axis_scaling.vmin_scale * value,
+            Self::Calc(expr) => expr.evaluate(axis_scaling)
         }
     }
 }
@@ -563,6 +566,7 @@ impl Mul<Val> for f32 {
             Val::CrossPercent(percentage) => Val::CrossPercent(self * percentage),
             Val::Vmax(percentage) => Val::Vmax(self * percentage),
             Val::Vmin(percentage) => Val::Vmin(self * percentage),
+            Val::Calc(expr) => Val::Calc(Box::new(self * *expr))
         }
     }
 }
@@ -707,4 +711,38 @@ impl Default for AxisScaling {
             vmax_scale: 0.01,
         }
     }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum Expr {
+    Binary {
+        left: Val,
+        operator: Operator,
+        right: Val,
+    }
+}
+
+impl Expr {
+    pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
+        match self {
+            Self::Binary { left, operator, right } => match operator {
+                Operator::Minus => left.evaluate(axis_scaling) - right.evaluate(axis_scaling)
+            }
+        }
+    }
+}
+
+impl Mul<Expr> for f32 {
+    type Output = Expr;
+
+    fn mul(self, rhs: Expr) -> Self::Output {
+        match rhs {
+            Expr::Binary { left, operator, right } => Expr::Binary { left: self * left, operator, right: self * right }
+        }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum Operator {
+    Minus
 }

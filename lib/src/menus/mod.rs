@@ -4,7 +4,9 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenState};
+use crate::{
+    sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenPadding, ScreenState,
+};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -44,12 +46,25 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_setup(main_screen: &mut EntityCommands, fonts: &Fonts, game: &Game, images: &Images) {
+pub fn menu_setup(
+    main_screen: &mut EntityCommands,
+    fonts: &Fonts,
+    game: &Game,
+    images: &Images,
+    padding: &ScreenPadding,
+) {
     main_screen.with_children(|screen| {
         // Logo.
         screen
             .spawn(FlexBundle::new(
-                FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.)),
+                FlexItemStyle::fixed_size(
+                    Val::Percent(100.),
+                    Val::Calc(Box::new(Expr::Binary {
+                        left: Val::Percent(50.),
+                        operator: Operator::Minus,
+                        right: Val::Pixel(padding.top),
+                    })),
+                ),
                 FlexContainerStyle::row().with_padding(Sides::new(Val::Auto, Val::Vmin(5.))),
             ))
             .with_children(|logo_section| {

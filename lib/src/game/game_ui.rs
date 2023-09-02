@@ -94,7 +94,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     let line_height = if cfg!(target_os = "ios") {
         Val::Pixel(1.)
     } else {
-        0.03 * height
+        0.03 * height.clone()
     };
 
     let text_style = TextStyle {
@@ -106,7 +106,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
     row.spawn((
-        FlexItemBundle::from_style(FlexItemStyle::fixed_size(width, line_height)),
+        FlexItemBundle::from_style(FlexItemStyle::fixed_size(width.clone(), line_height.clone())),
         SpriteBundle {
             sprite: Sprite::from_color(COLOR_TIMER_BORDER),
             ..default()
@@ -114,7 +114,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     ));
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::minimum_size(
-        width,
+        width.clone(),
         0.9 * height,
     )))
     .with_children(|text_leaf| {

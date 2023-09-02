@@ -3,8 +3,8 @@
 void run_with_scales_and_padding(double, double, double);
 
 int main(int argc, char *argv[]) {
-    UIWindow *window = UIApplication.sharedApplication.windows.firstObject;
-    CGFloat topPadding = window.safeAreaInsets.top;
+    //CGSize statusBarSize = [[UIApplication sharedApplication] statusBarFrame].size;
+    CGFloat topPadding = 44.0;
 
     UIScreen *screen = [UIScreen mainScreen];
     CGFloat scale = screen.scale;
