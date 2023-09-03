@@ -120,8 +120,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     .with_children(|text_leaf| {
         text_leaf.spawn((
             Timer,
-            FlexTextBundle::from_text(Text::from_section("0:00", text_style))
-                .with_translation(0., -3.),
+            FlexTextBundle::from_text(Text::from_section("0:00", text_style)),
         ));
     });
 

@@ -56,8 +56,7 @@ pub fn highscore_screen_setup(
                             FlexTextBundle::from_text(Text::default())
                                 .with_bounds(Text2dBounds {
                                     size: Vec2::new(550., 200.),
-                                })
-                                .with_translation(0., 4.),
+                                }),
                         ));
                     });
             });

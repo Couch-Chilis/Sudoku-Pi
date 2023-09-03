@@ -353,7 +353,6 @@ impl FlexLeafBundle {
 pub struct FlexTextBundle {
     pub flex: Flex,
     pub text: Text2dBundle,
-    pub style: FlexTextStyle,
     pub computed_position: ComputedPosition,
 }
 
@@ -378,19 +377,6 @@ impl FlexTextBundle {
         self.text.text_2d_bounds = bounds;
         self
     }
-
-    pub fn with_translation(mut self, x: f32, y: f32) -> Self {
-        self.style.transform = Transform::from_translation(Vec3::new(x, y, 0.));
-        self
-    }
-}
-
-/// Additional styling to apply to flex text bundles.
-#[derive(Clone, Component, Default)]
-pub struct FlexTextStyle {
-    /// A custom transform to apply on top of the transform determined by the
-    /// layout system.
-    pub transform: Transform,
 }
 
 #[derive(Clone, Copy, Debug, Default)]

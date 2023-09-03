@@ -8,7 +8,6 @@ type FlexEntity<'a> = (
     Entity,
     &'a mut Transform,
     Option<&'a FlexItemStyle>,
-    Option<&'a FlexTextStyle>,
     Option<&'a FlexContainerStyle>,
     Option<&'a mut ComputedPosition>,
     Option<&'a Children>,
@@ -51,7 +50,6 @@ struct LayoutInfo<'a> {
         Entity,
         (
             &'a Anchor,
-            &'a FlexTextStyle,
             Mut<'a, Transform>,
             Mut<'a, ComputedPosition>,
         ),
@@ -69,7 +67,6 @@ impl<'a> LayoutInfo<'a> {
             entity,
             transform,
             item_style,
-            text_style,
             container_style,
             computed_position,
             children,
@@ -89,11 +86,11 @@ impl<'a> LayoutInfo<'a> {
                 }
             }
 
-            match (text, anchor, text_style, item_style, computed_position) {
-                (Some(_text), Some(anchor), Some(text_style), _, Some(computed_position)) => {
-                    text_map.insert(entity, (anchor, text_style, transform, computed_position));
+            match (text, anchor, item_style, computed_position) {
+                (Some(_text), Some(anchor), _, Some(computed_position)) => {
+                    text_map.insert(entity, (anchor, transform, computed_position));
                 }
-                (_, _, _, Some(item_style), Some(computed_position)) => {
+                (_, _, Some(item_style), Some(computed_position)) => {
                     item_map.insert(
                         entity,
                         (item_style, computed_position, transform, screen_interaction),
@@ -212,7 +209,7 @@ impl<'a> LayoutInfo<'a> {
 
         for item_entity in children {
             // Special handling for text items:
-            if let Some((anchor, text_style, mut transform, mut computed_position)) =
+            if let Some((anchor, mut transform, mut computed_position)) =
                 self.text_map.remove(item_entity)
             {
                 let ComputedPosition { width, height, .. } = position;
@@ -223,16 +220,9 @@ impl<'a> LayoutInfo<'a> {
                         Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
                         _ => 0.,
                     },
-                    -3. / height,
+                    0.,
                     1.,
                 );
-
-                // Apply custom transformation, if requested.
-                if text_style.transform != Transform::IDENTITY {
-                    transform.scale *= text_style.transform.scale;
-                    transform.translation +=
-                        text_style.transform.translation / Vec3::new(width, height, 1.);
-                }
 
                 *computed_position = position.transformed(transform.scale, transform.translation);
                 continue;

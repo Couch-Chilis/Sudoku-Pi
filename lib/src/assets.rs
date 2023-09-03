@@ -1,9 +1,9 @@
 use bevy::prelude::*;
 use bevy::render::texture::{CompressedImageFormats, ImageType};
 
-const BOLD_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Bold.ttf");
-const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Medium.ttf");
-const LIGHT_FONT: &[u8] = include_bytes!("../../assets/Tajawal/Tajawal-Light.ttf");
+const BOLD_FONT: &[u8] = include_bytes!("../../assets/Poppins/Poppins-Bold.ttf");
+const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Poppins/Poppins-Medium.ttf");
+const LIGHT_FONT: &[u8] = include_bytes!("../../assets/Poppins/Poppins-Light.ttf");
 
 const XIAOWEI_REGULAR_FONT: &[u8] = include_bytes!("../../assets/XiaoWei/ZCOOLXiaoWei-Regular.ttf");
 

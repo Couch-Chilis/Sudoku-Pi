@@ -113,16 +113,14 @@ fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundl
         FlexTextBundle::from_text(Text::from_section(
             cell.map(|n| n.to_string()).unwrap_or_default(),
             number_style,
-        ))
-        .with_translation(0., -3.),
+        )),
     )
 }
 
 fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
     (
         Note::new(x, y, n),
-        FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style))
-            .with_translation(0., 1.),
+        FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style)),
     )
 }
 
