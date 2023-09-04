@@ -3,6 +3,7 @@ use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
 pub enum SettingsToggle {
+    AutofillCorrectNotes,
     EnableWheelAid,
     SelectedCellHighlight,
     ShowMistakes,
@@ -22,6 +23,7 @@ pub struct ToggleEnabled;
 impl SettingsToggle {
     pub fn is_enabled(&self, settings: &Settings) -> bool {
         match self {
+            SettingsToggle::AutofillCorrectNotes => settings.autofill_correct_notes,
             SettingsToggle::EnableWheelAid => settings.enable_wheel_aid,
             SettingsToggle::SelectedCellHighlight => settings.selected_cell_highlight,
             SettingsToggle::ShowMistakes => settings.show_mistakes,

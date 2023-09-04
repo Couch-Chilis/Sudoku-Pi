@@ -275,6 +275,7 @@ fn on_pointer_input(
                 InputKind::Press => {
                     if game.current.has(x, y) {
                         selection.toggle(x, y);
+                        selection.note_toggle = None;
                     } else if let Some(n) = selection
                         .selected_cell
                         .and_then(|(x, y)| game.current.get(x, y))
@@ -490,12 +491,38 @@ fn give_hint(
 fn on_timer(
     mut game_timer: ResMut<GameTimer>,
     mut selection: ResMut<Selection>,
+    mut game: ResMut<Game>,
     screen: Res<State<ScreenState>>,
+    settings: Res<Settings>,
     time: Res<Time>,
 ) {
     match screen.get() {
         ScreenState::Game => {
+            let autofill_timer = (game_timer.elapsed_secs * 5.) as u32;
+
             game_timer.elapsed_secs += time.delta().as_secs_f32();
+
+            // Auto-filling behind a timer to make it smoothly transition into
+            // the solved animation.
+            if settings.autofill_correct_notes
+                && (game_timer.elapsed_secs * 5.) as u32 != autofill_timer
+                && game.is_solved_through_notes()
+            {
+                for pos in 0..81 {
+                    if let Some(n) = game.notes.get_only_number(pos) {
+                        let (x, y) = get_x_and_y_from_pos(pos);
+                        let options = SetNumberOptions {
+                            elapsed_secs: game_timer.elapsed_secs,
+                            is_hint: false,
+                            show_mistakes: false,
+                        };
+                        game.set(x, y, n, options);
+                        selection.set(x, y);
+                        selection.note_toggle = None;
+                        break;
+                    }
+                }
+            }
         }
         ScreenState::Highscores => {
             // Show a little animation for the solved state.

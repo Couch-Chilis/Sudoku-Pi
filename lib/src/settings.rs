@@ -6,6 +6,9 @@ use std::fs;
 
 #[derive(Deserialize, Resource, Serialize)]
 pub struct Settings {
+    #[serde(default = "default_autofill_correct_notes")]
+    pub autofill_correct_notes: bool,
+
     #[serde(default = "default_enable_wheel_aid")]
     pub enable_wheel_aid: bool,
 
@@ -17,6 +20,10 @@ pub struct Settings {
 
     #[serde(default)]
     pub onboarding_finished: bool,
+}
+
+fn default_autofill_correct_notes() -> bool {
+    true
 }
 
 fn default_enable_wheel_aid() -> bool {
@@ -34,6 +41,7 @@ fn default_show_mistakes() -> bool {
 impl Default for Settings {
     fn default() -> Self {
         Self {
+            autofill_correct_notes: default_autofill_correct_notes(),
             enable_wheel_aid: default_enable_wheel_aid(),
             selected_cell_highlight: default_selected_cell_highlight(),
             show_mistakes: default_show_mistakes(),

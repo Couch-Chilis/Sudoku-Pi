@@ -77,6 +77,27 @@ impl Game {
         !self.is_default() && self.current == self.solution
     }
 
+    /// Returns whether the game has open cells left, all of which contain
+    /// only the correct number in their notes.
+    pub fn is_solved_through_notes(&self) -> bool {
+        let mut found_notes = false;
+        for pos in 0..81 {
+            if let Some(solution_n) = self.solution.get_by_pos(pos) {
+                if self.current.get_by_pos(pos) == Some(solution_n) {
+                    continue;
+                }
+
+                if self.notes.get_only_number(pos) != Some(solution_n) {
+                    return false;
+                }
+
+                found_notes = true;
+            }
+        }
+
+        found_notes
+    }
+
     /// Loads the tutorial game.
     pub fn load_tutorial() -> Self {
         Self {

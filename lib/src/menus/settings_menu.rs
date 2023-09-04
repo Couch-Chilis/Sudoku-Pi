@@ -46,6 +46,13 @@ pub fn spawn_settings(
             );
 
             toggles.build_settings_toggle(parent, settings, "Show mistakes", ShowMistakes);
+
+            toggles.build_settings_toggle(
+                parent,
+                settings,
+                "Auto-fill correct notes",
+                AutofillCorrectNotes,
+            );
         });
 
     parent
@@ -80,6 +87,9 @@ pub fn settings_toggle_actions(
     for (interaction, toggle) in &query {
         if *interaction == Interaction::Pressed {
             match toggle {
+                SettingsToggle::AutofillCorrectNotes => {
+                    settings.autofill_correct_notes = !settings.autofill_correct_notes;
+                }
                 SettingsToggle::EnableWheelAid => {
                     settings.enable_wheel_aid = !settings.enable_wheel_aid;
                 }
