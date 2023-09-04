@@ -236,34 +236,13 @@ fn setup(
     settings_screen_setup(&mut settings_screen, &fonts, &images, &settings);
 
     let mut welcome_screen = spawn_screen(&mut commands, Welcome, &padding);
-    onboarding_screen_setup(
-        &mut welcome_screen,
-        &fonts,
-        &game,
-        &images,
-        &settings,
-        Welcome,
-    );
+    welcome_screen_setup(&mut welcome_screen, &fonts);
 
     let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &padding);
-    onboarding_screen_setup(
-        &mut how_to_play_screen_1,
-        &fonts,
-        &game,
-        &images,
-        &settings,
-        HowToPlayNumbers,
-    );
+    how_to_play_numbers_screen_setup(&mut how_to_play_screen_1, &fonts, &game, &images, &settings);
 
     let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &padding);
-    onboarding_screen_setup(
-        &mut how_to_play_screen_2,
-        &fonts,
-        &game,
-        &images,
-        &settings,
-        HowToPlayNotes,
-    );
+    how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &fonts, &game, &images, &settings);
 
     // This screen is just there so there is no empty space in the transition
     // from highscore back to the main menu.
@@ -414,7 +393,7 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
 fn spawn_screen<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
     screen: ScreenState,
-    padding: &ScreenPadding
+    padding: &ScreenPadding,
 ) -> EntityCommands<'w, 's, 'a> {
     let flex_container = FlexContainerBundle {
         background: Sprite::from_color(Color::WHITE),
@@ -423,7 +402,8 @@ fn spawn_screen<'w, 's, 'a>(
             FlexContainerStyle::default().with_gap(Val::Auto)
         } else {
             FlexContainerStyle::default()
-        }.with_padding(Sides {
+        }
+        .with_padding(Sides {
             top: Val::Pixel(padding.top),
             right: Val::Pixel(padding.right),
             bottom: Val::Pixel(padding.bottom),

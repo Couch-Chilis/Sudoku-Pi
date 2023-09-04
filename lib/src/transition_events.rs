@@ -54,7 +54,7 @@ pub fn on_transition(
                 *selection = Selection {
                     selected_cell: Some((6, 4)),
                     selected_note: None,
-                    hint: None,
+                    hint: Some((3, 2)),
                     note_toggle: None,
                 };
                 mode_state.set(ModeState::Notes);
