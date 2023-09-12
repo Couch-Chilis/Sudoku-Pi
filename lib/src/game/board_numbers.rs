@@ -269,9 +269,14 @@ pub(super) fn calculate_highlights(
                 for pos in 0..81 {
                     if game.current.get_by_pos(pos) == selected_cell {
                         let (x, y) = get_x_and_y_from_pos(pos);
+                        let block_x = get_block_offset(x);
+                        let block_y = get_block_offset(y);
+
                         for i in 0..9 {
                             cell_highlights[get_pos(x, i)] = Some(CellHighlightKind::InRange);
                             cell_highlights[get_pos(i, y)] = Some(CellHighlightKind::InRange);
+                            cell_highlights[get_pos(block_x + i / 3, block_y + i % 3)] =
+                                Some(CellHighlightKind::InRange);
                         }
                     }
                 }
