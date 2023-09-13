@@ -33,7 +33,7 @@ use std::time::Duration;
 use sudoku::Game;
 use transition_events::{on_transition, TransitionEvent};
 use ui::*;
-use utils::{SpriteExt, TransformExt};
+use utils::TransformExt;
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -71,7 +71,6 @@ pub enum ScreenState {
     Game,
     Highscores,
     Settings,
-    Upper,
     Welcome,
     HowToPlayNumbers,
     HowToPlayNotes,
@@ -144,6 +143,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
         .insert_resource(SettingsToggleTimer::default())
         .insert_resource(screen_padding)
         .insert_resource(zoom_factor)
+        .insert_resource(ClearColor(Color::WHITE))
         .add_event::<TransitionEvent>()
         .add_event::<WindowDestroyed>()
         .add_state::<ScreenState>()
@@ -243,16 +243,6 @@ fn setup(
 
     let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &padding);
     how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &fonts, &game, &images, &settings);
-
-    // This screen is just there so there is no empty space in the transition
-    // from highscore back to the main menu.
-    commands.spawn((
-        Screen::for_state(Upper),
-        SpriteBundle {
-            sprite: Sprite::from_color(Color::WHITE),
-            ..default()
-        },
-    ));
 
     if !settings.onboarding_finished {
         screen_state.set(Welcome);
@@ -383,7 +373,6 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         Game => (1., 0.),
         Highscores => (1., 1.),
         Settings => (2., 0.),
-        Upper => (0., 1.),
         Welcome => (-3., 0.),
         HowToPlayNumbers => (-2., 0.),
         HowToPlayNotes => (-1., 0.),
@@ -396,7 +385,7 @@ fn spawn_screen<'w, 's, 'a>(
     padding: &ScreenPadding,
 ) -> EntityCommands<'w, 's, 'a> {
     let flex_container = FlexContainerBundle {
-        background: Sprite::from_color(Color::WHITE),
+        background: Sprite::default(),
         transform: Transform::from_2d_scale(100_000., 100_000.),
         style: if screen == ScreenState::Game {
             FlexContainerStyle::default().with_gap(Val::Auto)
