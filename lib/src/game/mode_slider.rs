@@ -163,12 +163,9 @@ fn build_labels(row: &mut ChildBuilder, fonts: &Fonts) {
 }
 
 pub fn slider_interaction(
-    mut commands: Commands,
-    mut slider_query: Query<(&ComputedPosition, &mut ModeSlider)>,
     mut next_state: ResMut<NextState<ModeState>>,
+    mut slider_query: Query<(&ComputedPosition, &mut ModeSlider)>,
     state: Res<State<ModeState>>,
-    knob_query: Query<(Entity, &ComputedPosition), (With<ModeSliderKnob>, Without<ModeSlider>)>,
-    opposite_query: Query<Entity, (With<OppositeSliderKnob>, Without<ModeSlider>)>,
     pointer_query: PointerQuery,
 ) {
     let Some((input, position)) = pointer_query.get_changed_input_with_position() else {
@@ -188,10 +185,6 @@ pub fn slider_interaction(
         return;
     }
 
-    let Ok((knob, knob_position)) = knob_query.get_single() else {
-        return;
-    };
-
     let mode = if position.x > slider_position.x + 0.5 * slider_position.width {
         ModeState::Notes
     } else {
@@ -200,15 +193,49 @@ pub fn slider_interaction(
     if state.get() != &mode {
         next_state.set(mode);
     }
+}
+
+pub fn render_slider_knobs(
+    mut commands: Commands,
+    slider_position_query: Query<&ComputedPosition, With<ModeSlider>>,
+    slider_query: Query<&ModeSlider>,
+    mode: Res<State<ModeState>>,
+    knob_query: Query<(Entity, &ComputedPosition), With<ModeSliderKnob>>,
+    opposite_knob_query: Query<Entity, With<OppositeSliderKnob>>,
+    pointer_query: PointerQuery,
+) {
+    let slider_active = slider_query.get_single().is_ok_and(|slider| slider.active);
+    if mode.is_added() || !mode.is_changed() && !slider_active {
+        return;
+    }
+
+    let Ok((knob, knob_position)) = knob_query.get_single() else {
+        return;
+    };
+
+    let Ok(slider_position) = slider_position_query.get_single() else {
+        return;
+    };
 
     let knob_width = knob_position.width / slider_position.width;
     let width = 1. - knob_width;
-    let knob_start =
-        (position.x - slider_position.x - 0.5 * knob_position.width) / slider_position.width;
-    let knob_end = match mode {
+    let knob_start = if slider_active {
+        let Some((_, position)) = pointer_query.get_changed_input_with_position() else {
+            return;
+        };
+        (position.x - slider_position.x - 0.5 * knob_position.width) / slider_position.width
+    } else {
+        match mode.get() {
+            ModeState::Normal => width - knob_width,
+            ModeState::Notes => -knob_width,
+        }
+    };
+
+    let knob_end = match mode.get() {
         ModeState::Normal => 0.,
         ModeState::Notes => width,
     };
+
     let animator = Animator::new(Tween::new(
         EaseFunction::QuadraticInOut,
         ANIMATION_DURATION,
@@ -221,8 +248,8 @@ pub fn slider_interaction(
 
     commands.entity(knob).insert(animator);
 
-    if state.get() != &mode {
-        if let Ok(opposite) = opposite_query.get_single() {
+    if mode.is_changed() {
+        if let Ok(opposite) = opposite_knob_query.get_single() {
             let animator = Animator::new(Tween::new(
                 EaseFunction::QuadraticInOut,
                 ANIMATION_DURATION,

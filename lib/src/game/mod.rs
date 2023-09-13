@@ -16,7 +16,7 @@ use game_ui::{
     init_game_ui, on_score_changed, on_time_changed, settings_icon_interaction, UiButtonAction,
 };
 use highscore_screen::{highscore_button_actions, on_fortune, on_highscores_changed};
-use mode_slider::slider_interaction;
+use mode_slider::{render_slider_knobs, slider_interaction};
 use std::num::NonZeroU8;
 use std::time::Duration;
 use wheel::{
@@ -61,6 +61,7 @@ impl Plugin for GamePlugin {
                     render_notes,
                     render_wheel,
                     render_disabled_wheel_slices,
+                    render_slider_knobs,
                     settings_icon_interaction.run_if(in_state(ScreenState::Game)),
                     calculate_highlights,
                     render_cell_highlights.after(calculate_highlights),
@@ -178,6 +179,7 @@ fn on_keyboard_input(
     mut game: ResMut<Game>,
     mut timer: ResMut<GameTimer>,
     mut selection: ResMut<Selection>,
+    mut mode: ResMut<NextState<ModeState>>,
     mut notes: Query<&mut Note>,
     settings: Res<Settings>,
     keys: Res<Input<KeyCode>>,
@@ -193,6 +195,9 @@ fn on_keyboard_input(
             Slash => give_hint(&mut game, &mut timer, &mut selection, &mut notes),
 
             Back | Delete => clear_selection(&mut game, &selection),
+
+            U => mode.set(ModeState::Normal),
+            O => mode.set(ModeState::Notes),
 
             key => {
                 if let Some(n) = match key {
@@ -252,9 +257,10 @@ fn on_pointer_input(
 
     let Some(board_position) = board
         .iter()
-        .find_map(|board| (board.1 == screen.get()).then_some(board.0)) else {
-            return;
-        };
+        .find_map(|board| (board.1 == screen.get()).then_some(board.0))
+    else {
+        return;
+    };
 
     let board_x_and_y = get_board_x_and_y(board_position, position);
 
@@ -302,11 +308,10 @@ fn on_pointer_input(
                         {
                             let Some(wheel) = wheel
                                 .iter()
-                                .find_map(|wheel| {
-                                    (wheel.1 == screen.get()).then_some(wheel.0)
-                                }) else {
-                                    return;
-                                };
+                                .find_map(|wheel| (wheel.1 == screen.get()).then_some(wheel.0))
+                            else {
+                                return;
+                            };
 
                             if wheel.is_open && wheel.spawn_timer >= NOTES_MODE_OPEN_DELAY {
                                 // Revert the initial toggle at the start of the long press.
