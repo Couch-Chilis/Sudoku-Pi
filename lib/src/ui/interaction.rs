@@ -7,7 +7,7 @@ pub type InteractionEntity<'a> = (
     Entity,
     &'a mut Interaction,
     &'a ComputedPosition,
-    &'a ComputedVisibility,
+    &'a ViewVisibility,
 );
 pub type InteractionQuery<'w, 's, 'a> = Query<'w, 's, InteractionEntity<'a>>;
 
@@ -44,20 +44,21 @@ pub fn keyboard_interaction(
 fn move_selection(interaction_query: &mut InteractionQuery, screen: &ScreenState, key: KeyCode) {
     let mut screen_entities: Vec<_> = interaction_query
         .iter_mut()
-        .filter(|(_, _, computed_position, computed_visibility)| {
-            computed_position.screens.contains(screen) && computed_visibility.is_visible()
+        .filter(|(_, _, computed_position, visibility)| {
+            computed_position.screens.contains(screen) && visibility.get()
         })
         .collect();
 
     let Some(selected_entity) = screen_entities
-            .iter()
-            .find(|(_, interaction, ..)| **interaction == Interaction::Selected) else {
-                // Select the first interactive entity if there was no selection.
-                if let Some((_, ref mut interaction, ..)) = screen_entities.first_mut() {
-                    **interaction = Interaction::Selected;
-                }
-                return;
-            };
+        .iter()
+        .find(|(_, interaction, ..)| **interaction == Interaction::Selected)
+    else {
+        // Select the first interactive entity if there was no selection.
+        if let Some((_, ref mut interaction, ..)) = screen_entities.first_mut() {
+            **interaction = Interaction::Selected;
+        }
+        return;
+    };
 
     let mut candidates: Vec<_> = screen_entities
         .iter()
@@ -114,13 +115,15 @@ fn is_in_direction(position: &ComputedPosition, origin: &ComputedPosition, key: 
 }
 
 fn confirm_selection(interaction_query: &mut InteractionQuery, screen: &ScreenState) {
-    if let Some(mut selected_entity) = interaction_query.iter_mut().find(
-        |(_, interaction, computed_position, computed_visibility)| {
-            computed_position.screens.contains(screen)
-                && computed_visibility.is_visible()
-                && **interaction == Interaction::Selected
-        },
-    ) {
+    if let Some(mut selected_entity) =
+        interaction_query
+            .iter_mut()
+            .find(|(_, interaction, computed_position, visibility)| {
+                computed_position.screens.contains(screen)
+                    && visibility.get()
+                    && **interaction == Interaction::Selected
+            })
+    {
         *selected_entity.1 = Interaction::Pressed;
     }
 }
@@ -143,16 +146,19 @@ pub fn pointer_interaction(
         .get_changed_input_with_position()
         .map(|(input_kind, position)| (Some(input_kind), position))
         .or_else(|| {
-            pointer_query.get_changed_hover().map(|position| (None, position))
-        }) else {
-            return;
-        };
+            pointer_query
+                .get_changed_hover()
+                .map(|position| (None, position))
+        })
+    else {
+        return;
+    };
 
     let selected_entity = interaction_query
         .iter()
-        .find(|(_, _, computed_position, computed_visibility)| {
+        .find(|(_, _, computed_position, visibility)| {
             computed_position.screens.contains(screen.get())
-                && computed_visibility.is_visible()
+                && visibility.get()
                 && computed_position.contains(position)
         })
         .map(|(entity, ..)| entity);

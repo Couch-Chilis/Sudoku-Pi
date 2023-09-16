@@ -20,7 +20,7 @@ pub fn on_transition(
     mut selection: ResMut<Selection>,
     mut settings: ResMut<Settings>,
 ) {
-    for event in &mut reader {
+    for event in reader.read() {
         use TransitionEvent::*;
         match event {
             ContinueGame => {

@@ -18,7 +18,7 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_set(
+        app.configure_sets(
             PostUpdate,
             LayoutSystem::ApplyLayout.before(TransformSystem::TransformPropagate),
         )

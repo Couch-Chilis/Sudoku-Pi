@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::{utils::*, ScreenInteraction, ScreenState};
-use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor, text::Text2dBounds};
+use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;
 use std::ops::Mul;
 
@@ -59,7 +59,8 @@ pub struct FlexContainerBundle {
     pub global_transform: GlobalTransform,
     pub texture: Handle<Image>,
     pub visibility: Visibility,
-    pub computed_visibility: ComputedVisibility,
+    pub inherited_visibility: InheritedVisibility,
+    pub view_visibility: ViewVisibility,
 }
 
 impl Default for FlexContainerBundle {
@@ -69,9 +70,10 @@ impl Default for FlexContainerBundle {
             background: Sprite::from_color(Color::NONE),
             transform: Transform::default_2d(),
             global_transform: Default::default(),
-            texture: DEFAULT_IMAGE_HANDLE.typed(),
+            texture: Default::default(),
             visibility: Default::default(),
-            computed_visibility: Default::default(),
+            inherited_visibility: Default::default(),
+            view_visibility: Default::default(),
         }
     }
 }
@@ -333,7 +335,8 @@ pub struct FlexLeafBundle {
     pub global_transform: GlobalTransform,
     pub texture: Handle<Image>,
     pub visibility: Visibility,
-    pub computed_visibility: ComputedVisibility,
+    pub inherited_visibility: InheritedVisibility,
+    pub view_visibility: ViewVisibility,
 }
 
 impl FlexLeafBundle {
@@ -535,7 +538,7 @@ impl Val {
             Self::CrossPercent(value) => axis_scaling.axis_ratio * value * 0.01,
             Self::Vmax(value) => axis_scaling.vmax_scale * value,
             Self::Vmin(value) => axis_scaling.vmin_scale * value,
-            Self::Calc(expr) => expr.evaluate(axis_scaling)
+            Self::Calc(expr) => expr.evaluate(axis_scaling),
         }
     }
 }
@@ -552,7 +555,7 @@ impl Mul<Val> for f32 {
             Val::CrossPercent(percentage) => Val::CrossPercent(self * percentage),
             Val::Vmax(percentage) => Val::Vmax(self * percentage),
             Val::Vmin(percentage) => Val::Vmin(self * percentage),
-            Val::Calc(expr) => Val::Calc(Box::new(self * *expr))
+            Val::Calc(expr) => Val::Calc(Box::new(self * *expr)),
         }
     }
 }
@@ -705,15 +708,19 @@ pub enum Expr {
         left: Val,
         operator: Operator,
         right: Val,
-    }
+    },
 }
 
 impl Expr {
     pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
         match self {
-            Self::Binary { left, operator, right } => match operator {
-                Operator::Minus => left.evaluate(axis_scaling) - right.evaluate(axis_scaling)
-            }
+            Self::Binary {
+                left,
+                operator,
+                right,
+            } => match operator {
+                Operator::Minus => left.evaluate(axis_scaling) - right.evaluate(axis_scaling),
+            },
         }
     }
 }
@@ -723,12 +730,20 @@ impl Mul<Expr> for f32 {
 
     fn mul(self, rhs: Expr) -> Self::Output {
         match rhs {
-            Expr::Binary { left, operator, right } => Expr::Binary { left: self * left, operator, right: self * right }
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => Expr::Binary {
+                left: self * left,
+                operator,
+                right: self * right,
+            },
         }
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Operator {
-    Minus
+    Minus,
 }
