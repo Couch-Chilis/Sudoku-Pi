@@ -30,12 +30,6 @@ pub struct Wheel {
     pub slice_timer: f32,
 }
 
-impl Wheel {
-    pub fn is_open(&self) -> bool {
-        self.is_open
-    }
-}
-
 #[derive(Component)]
 pub struct Slice;
 
@@ -179,9 +173,10 @@ pub fn on_wheel_input(
 
     let Some(board_position) = board
         .iter()
-        .find_map(|board| (board.1 == screen).then_some(board.0)) else {
-            return;
-        };
+        .find_map(|board| (board.1 == screen).then_some(board.0))
+    else {
+        return;
+    };
 
     let Some(translation) = get_board_translation(board_position, position) else {
         return;
@@ -189,9 +184,10 @@ pub fn on_wheel_input(
 
     let Some(mut wheel) = wheel
         .iter_mut()
-        .find_map(|wheel| (wheel.1 == screen).then_some(wheel.0)) else {
-            return;
-        };
+        .find_map(|wheel| (wheel.1 == screen).then_some(wheel.0))
+    else {
+        return;
+    };
 
     wheel.current_position = translation;
 
@@ -316,21 +312,24 @@ pub fn render_wheel(
 
     let Some((mut wheel_transform, mut wheel)) = wheel
         .iter_mut()
-        .find_map(|wheel| (wheel.2 == screen).then_some((wheel.0, wheel.1))) else {
-            return;
-        };
+        .find_map(|wheel| (wheel.2 == screen).then_some((wheel.0, wheel.1)))
+    else {
+        return;
+    };
 
     let Some((mut slice_transform, mut slice_texture)) = slice
         .iter_mut()
-        .find_map(|slice| (slice.2 == screen).then_some((slice.0, slice.1))) else {
-            return;
-        };
+        .find_map(|slice| (slice.2 == screen).then_some((slice.0, slice.1)))
+    else {
+        return;
+    };
 
     let Some(mut top_label_transform) = top_label
         .iter_mut()
-        .find_map(|top_label| (top_label.1 == screen).then_some(top_label.0)) else {
-            return;
-        };
+        .find_map(|top_label| (top_label.1 == screen).then_some(top_label.0))
+    else {
+        return;
+    };
 
     if !wheel.is_open
         || (wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY)

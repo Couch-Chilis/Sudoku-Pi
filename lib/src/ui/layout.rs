@@ -46,14 +46,7 @@ struct LayoutInfo<'a> {
             Option<&'a ScreenInteraction>,
         ),
     >,
-    text_map: BTreeMap<
-        Entity,
-        (
-            &'a Anchor,
-            Mut<'a, Transform>,
-            Mut<'a, ComputedPosition>,
-        ),
-    >,
+    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>, Mut<'a, ComputedPosition>)>,
 }
 
 impl<'a> LayoutInfo<'a> {
@@ -229,9 +222,10 @@ impl<'a> LayoutInfo<'a> {
             }
 
             let Some((item_style, mut computed_position, mut transform, screen_interaction)) =
-                self.item_map.remove(item_entity) else {
-                    continue;
-                };
+                self.item_map.remove(item_entity)
+            else {
+                continue;
+            };
 
             // Start by assuming the base size.
             let flex_base = item_style.flex_base.clone();

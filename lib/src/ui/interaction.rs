@@ -50,14 +50,15 @@ fn move_selection(interaction_query: &mut InteractionQuery, screen: &ScreenState
         .collect();
 
     let Some(selected_entity) = screen_entities
-            .iter()
-            .find(|(_, interaction, ..)| **interaction == Interaction::Selected) else {
-                // Select the first interactive entity if there was no selection.
-                if let Some((_, ref mut interaction, ..)) = screen_entities.first_mut() {
-                    **interaction = Interaction::Selected;
-                }
-                return;
-            };
+        .iter()
+        .find(|(_, interaction, ..)| **interaction == Interaction::Selected)
+    else {
+        // Select the first interactive entity if there was no selection.
+        if let Some((_, ref mut interaction, ..)) = screen_entities.first_mut() {
+            **interaction = Interaction::Selected;
+        }
+        return;
+    };
 
     let mut candidates: Vec<_> = screen_entities
         .iter()
@@ -133,7 +134,7 @@ pub fn pointer_interaction(
 ) {
     if wheel_query
         .iter()
-        .find_map(|wheel| (wheel.1 == screen.get()).then(|| wheel.0.is_open()))
+        .find_map(|wheel| (wheel.1 == screen.get()).then_some(wheel.0.is_open))
         .unwrap_or_default()
     {
         return;
@@ -143,10 +144,13 @@ pub fn pointer_interaction(
         .get_changed_input_with_position()
         .map(|(input_kind, position)| (Some(input_kind), position))
         .or_else(|| {
-            pointer_query.get_changed_hover().map(|position| (None, position))
-        }) else {
-            return;
-        };
+            pointer_query
+                .get_changed_hover()
+                .map(|position| (None, position))
+        })
+    else {
+        return;
+    };
 
     let selected_entity = interaction_query
         .iter()

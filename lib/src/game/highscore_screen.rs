@@ -53,10 +53,9 @@ pub fn highscore_screen_setup(
                     .with_children(|scroll_text_container| {
                         scroll_text_container.spawn((
                             ScrollQuoteText,
-                            FlexTextBundle::from_text(Text::default())
-                                .with_bounds(Text2dBounds {
-                                    size: Vec2::new(550., 200.),
-                                }),
+                            FlexTextBundle::from_text(Text::default()).with_bounds(Text2dBounds {
+                                size: Vec2::new(550., 200.),
+                            }),
                         ));
                     });
             });
@@ -255,7 +254,7 @@ fn render_score_text(
 }
 
 pub fn on_fortune(
-    mut scroll_quote: Query<(&mut Text, With<ScrollQuoteText>)>,
+    mut scroll_quote: Query<&mut Text, With<ScrollQuoteText>>,
     fonts: Res<Fonts>,
     fortune: Res<Fortune>,
     screen_state: Res<State<ScreenState>>,
@@ -266,18 +265,37 @@ pub fn on_fortune(
 
     let line_index = rand::random::<usize>() % fortune.lines.len();
     let line = fortune.lines[line_index];
+    let (quote, author) = if let Some(emdash_index) = line.find('—') {
+        let quote = line[..emdash_index].trim_end();
+        let author = line[emdash_index + '—'.len_utf8()..].trim_start();
+        (quote, author)
+    } else {
+        (line, "")
+    };
 
-    let Ok((mut quote_text, _)) = scroll_quote.get_single_mut() else {
+    let Ok(mut quote_text) = scroll_quote.get_single_mut() else {
         return;
     };
 
-    *quote_text = Text::from_section(
-        line,
-        TextStyle {
-            font: fonts.scroll.clone(),
-            font_size: 40.,
-            color: Color::BLACK,
-        },
-    )
+    let quote_style = TextStyle {
+        font: fonts.scroll.clone(),
+        font_size: 35.,
+        color: Color::BLACK,
+    };
+
+    let author_style = TextStyle {
+        font: fonts.scroll.clone(),
+        font_size: 30.,
+        color: Color::BLACK,
+    };
+
+    *quote_text = Text::from_sections(if author.is_empty() {
+        vec![TextSection::new(quote, quote_style)]
+    } else {
+        vec![
+            TextSection::new(format!("{quote}\n"), quote_style),
+            TextSection::new(format!("— {author}"), author_style),
+        ]
+    })
     .with_alignment(TextAlignment::Center);
 }
