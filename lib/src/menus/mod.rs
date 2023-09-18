@@ -4,9 +4,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{
-    sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenPadding, ScreenState,
-};
+use crate::{sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenState};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -46,41 +44,27 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_setup(
-    main_screen: &mut EntityCommands,
-    fonts: &Fonts,
-    game: &Game,
-    images: &Images,
-    padding: &ScreenPadding,
-) {
+pub fn menu_setup(main_screen: &mut EntityCommands, fonts: &Fonts, game: &Game, images: &Images) {
     main_screen.with_children(|screen| {
         // Logo.
-        screen
-            .spawn(FlexBundle::new(
-                FlexItemStyle::fixed_size(
-                    Val::Percent(100.),
-                    Val::Calc(Box::new(Expr::Binary {
-                        left: Val::Percent(50.),
-                        operator: Operator::Minus,
-                        right: Val::Pixel(padding.top),
-                    })),
-                ),
-                FlexContainerStyle::row().with_padding(Sides::new(Val::Auto, Val::Vmin(5.))),
-            ))
-            .with_children(|logo_section| {
-                // Logo.
-                logo_section.spawn((
-                    FlexItemBundle::from_style(
-                        FlexItemStyle::preferred_size(Val::CrossPercent(37.), Val::Percent(80.))
-                            .with_fixed_aspect_ratio()
-                            .with_transform(Transform::from_2d_scale(1. / 241., 1. / 513.)),
-                    ),
-                    SpriteBundle {
-                        texture: images.logo.clone(),
-                        ..default()
-                    },
-                ));
-            });
+        screen.spawn((
+            FlexItemBundle::from_style(
+                FlexItemStyle::fixed_size(Val::CrossPercent(46.19), Val::Percent(100.))
+                    .with_fixed_aspect_ratio()
+                    .without_occupying_space()
+                    .with_transform(Transform::from_2d_scale(1. / 1170., 1. / 2533.)),
+            ),
+            SpriteBundle {
+                texture: images.launch_screen.clone(),
+                ..default()
+            },
+        ));
+
+        // Spacer.
+        screen.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
+            Val::Percent(100.),
+            Val::Percent(50.),
+        )));
 
         // Main menu buttons.
         build_button_section(screen, ScreenState::MainMenu, 0., |main_section| {
@@ -111,7 +95,7 @@ fn build_button_section(
                     .without_occupying_space()
                     .with_transform(Transform {
                         rotation: Quat::from_rotation_z(initial_rotation),
-                        translation: Vec3::new(0., -1., 1.),
+                        translation: Vec3::new(0., -1., 2.),
                         ..default()
                     }),
                 FlexContainerStyle::default().with_padding(Sides::all(Val::Vmin(10.))),

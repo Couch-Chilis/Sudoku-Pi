@@ -216,7 +216,7 @@ fn setup(
 
     use ScreenState::*;
     let mut main_screen = spawn_screen(&mut commands, MainMenu, &padding);
-    menu_setup(&mut main_screen, &fonts, &game, &images, &padding);
+    menu_setup(&mut main_screen, &fonts, &game, &images);
 
     let mut game_screen = spawn_screen(&mut commands, Game, &padding);
     board_setup(

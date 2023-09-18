@@ -9,7 +9,7 @@ const XIAOWEI_REGULAR_FONT: &[u8] = include_bytes!("../../assets/XiaoWei/ZCOOLXi
 
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
-const LOGO: &[u8] = include_bytes!("../../assets/logo.png");
+const LAUNCH_SCREEN: &[u8] = include_bytes!("../../assets/launch_screen.png");
 const MODE_SLIDER: &[u8] = include_bytes!("../../assets/mode_slider.png");
 const SCROLL: &[u8] = include_bytes!("../../assets/scroll.png");
 const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
@@ -89,7 +89,7 @@ impl Fortune {
 pub struct Images {
     pub cog: Handle<Image>,
     pub cog_pressed: Handle<Image>,
-    pub logo: Handle<Image>,
+    pub launch_screen: Handle<Image>,
     pub mode_slider: Handle<Image>,
     pub scroll: Handle<Image>,
     pub slice_active_1: Handle<Image>,
@@ -132,7 +132,7 @@ impl Images {
         Self {
             cog: images.add(load_png(COG)),
             cog_pressed: images.add(load_png(COG_PRESSED)),
-            logo: images.add(load_png(LOGO)),
+            launch_screen: images.add(load_png(LAUNCH_SCREEN)),
             mode_slider: images.add(load_png(MODE_SLIDER)),
             scroll: images.add(load_png(SCROLL)),
             slice_active_1: images.add(load_png(SLICE_1)),
