@@ -41,21 +41,17 @@ pub fn build_mode_slider(
                 ModeSlider { active: false },
                 FlexBundle::new(
                     FlexItemStyle::preferred_size(
-                        if screen_sizing.is_ipad {
-                            Val::Vmin(80.)
-                        } else {
-                            Val::Vmin(90.)
-                        },
-                        Val::Vmin(30.),
+                        Val::Vmin(if screen_sizing.is_ipad { 80. } else { 90. }),
+                        Val::Pixel(105),
                     )
-                    .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                    .with_margin(Size::new(Val::None, Val::Pixel(15))),
                     FlexContainerStyle::column(),
                 ),
             ))
             .with_children(|column| {
                 column
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Vmin(9.)),
+                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(35)),
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {
@@ -65,7 +61,7 @@ pub fn build_mode_slider(
 
                 column
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Vmin(21.)),
+                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(70)),
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {

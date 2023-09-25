@@ -34,6 +34,9 @@ use sudoku::Game;
 use transition_events::{on_transition, TransitionEvent};
 use ui::*;
 
+const INITIAL_WIDTH: f32 = 768.;
+const INITIAL_HEIGHT: f32 = 1024.;
+
 #[derive(Default, Resource)]
 pub struct GameTimer {
     elapsed_secs: f32,
@@ -87,7 +90,7 @@ pub struct ScreenInteraction {
 pub struct ScreenSizing {
     width: f32,
     height: f32,
-    top_padding: f32,
+    top_padding: i32,
     is_ipad: bool,
 }
 
@@ -95,10 +98,10 @@ impl Default for ScreenSizing {
     fn default() -> Self {
         // Dimensions will be determined in `on_resize()`.
         Self {
-            width: 100_000.,
-            height: 100_000.,
-            top_padding: 0.,
-            is_ipad: false,
+            width: INITIAL_WIDTH,
+            height: INITIAL_HEIGHT,
+            top_padding: 0,
+            is_ipad: true,
         }
     }
 }
@@ -121,7 +124,7 @@ extern "C" fn run_with_fixed_sizes(
     height: f64,
     scale: f64,
     native_scale: f64,
-    top_padding: f64,
+    top_padding: i32,
     is_ipad: bool,
 ) {
     let scale = (scale / native_scale) as f32;
@@ -130,7 +133,7 @@ extern "C" fn run_with_fixed_sizes(
         ScreenSizing {
             width: width as f32,
             height: height as f32,
-            top_padding: top_padding as f32,
+            top_padding,
             is_ipad,
         },
         ZoomFactor { x: scale, y: scale },
@@ -184,7 +187,7 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
-                resolution: (390., 845.).into(),
+                resolution: (INITIAL_WIDTH, INITIAL_HEIGHT).into(),
                 mode: get_initial_window_mode(),
                 ..default()
             }),
@@ -250,19 +253,46 @@ fn setup(
     );
 
     let mut highscore_screen = spawn_screen(&mut commands, Highscores, &screen_sizing);
-    highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images, &screen_sizing);
+    highscore_screen_setup(
+        &mut highscore_screen,
+        &fonts,
+        &game,
+        &highscores,
+        &images,
+        &screen_sizing,
+    );
 
     let mut settings_screen = spawn_screen(&mut commands, Settings, &screen_sizing);
-    settings_screen_setup(&mut settings_screen, &fonts, &images, &screen_sizing, &settings);
+    settings_screen_setup(
+        &mut settings_screen,
+        &fonts,
+        &images,
+        &screen_sizing,
+        &settings,
+    );
 
     let mut welcome_screen = spawn_screen(&mut commands, Welcome, &screen_sizing);
     welcome_screen_setup(&mut welcome_screen, &fonts, &screen_sizing);
 
     let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &screen_sizing);
-    how_to_play_numbers_screen_setup(&mut how_to_play_screen_1, &fonts, &game, &images, &screen_sizing, &settings);
+    how_to_play_numbers_screen_setup(
+        &mut how_to_play_screen_1,
+        &fonts,
+        &game,
+        &images,
+        &screen_sizing,
+        &settings,
+    );
 
     let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &screen_sizing);
-    how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &fonts, &game, &images, &screen_sizing, &settings);
+    how_to_play_notes_screen_setup(
+        &mut how_to_play_screen_2,
+        &fonts,
+        &game,
+        &images,
+        &screen_sizing,
+        &settings,
+    );
 
     if !settings.onboarding_finished {
         screen_state.set(Welcome);

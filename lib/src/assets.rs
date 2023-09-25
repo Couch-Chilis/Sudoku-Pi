@@ -45,6 +45,7 @@ const TOGGLE_DESELECT_5: &[u8] = include_bytes!("../../assets/toggle_deselect_5.
 const TOGGLE_DESELECTED: &[u8] = include_bytes!("../../assets/toggle_deselected.png");
 const TOP_LABEL: &[u8] = include_bytes!("../../assets/top_label.png");
 const WALL: &[u8] = include_bytes!("../../assets/wall.png");
+const WALL_IPAD: &[u8] = include_bytes!("../../assets/wall_ipad.png");
 const WHEEL: &[u8] = include_bytes!("../../assets/wheel.png");
 
 const FORTUNE: &[u8] = include_bytes!("../../assets/fortune.txt");
@@ -126,6 +127,7 @@ pub struct Images {
     pub toggle_deselected: Handle<Image>,
     pub top_label: Handle<Image>,
     pub wall: Handle<Image>,
+    pub wall_ipad: Handle<Image>,
     pub wheel: Handle<Image>,
 }
 
@@ -170,6 +172,7 @@ impl Images {
             toggle_deselected: images.add(load_png(TOGGLE_DESELECTED)),
             top_label: images.add(load_png(TOP_LABEL)),
             wall: images.add(load_png(WALL)),
+            wall_ipad: images.add(load_png(WALL_IPAD)),
             wheel: images.add(load_png(WHEEL)),
         }
     }

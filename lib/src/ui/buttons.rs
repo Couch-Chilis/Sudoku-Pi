@@ -3,7 +3,7 @@ use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
 const BORDER_THICKNESS: Val = if cfg!(target_os = "ios") {
-    Val::Pixel(1.)
+    Val::Pixel(1)
 } else {
     Val::Vmin(0.3)
 };

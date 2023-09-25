@@ -136,7 +136,7 @@ pub fn how_to_play_numbers_screen_setup(
 
         parent
             .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80.)),
+                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
                 FlexContainerStyle::default(),
             ))
             .with_children(|top| {
@@ -161,7 +161,7 @@ pub fn how_to_play_numbers_screen_setup(
 
         parent
             .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80.)),
+                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
                 FlexContainerStyle::default(),
             ))
             .with_children(|bottom| {
@@ -218,7 +218,7 @@ pub fn how_to_play_notes_screen_setup(
 
         parent
             .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80.)),
+                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
                 FlexContainerStyle::default(),
             ))
             .with_children(|top| {
@@ -243,7 +243,7 @@ pub fn how_to_play_notes_screen_setup(
 
         parent
             .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80.)),
+                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
                 FlexContainerStyle::default(),
             ))
             .with_children(|bottom| {

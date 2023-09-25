@@ -3,7 +3,7 @@
 use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;
-use std::ops::Mul;
+use std::ops::{Mul, Sub};
 
 /// Marker for any flex entity, be it an item or a container.
 #[derive(Clone, Component, Default)]
@@ -500,7 +500,7 @@ pub enum Val {
     /// unless otherwise specified.
     Auto,
     /// An exact pixel value, measured in logical pixels.
-    Pixel(f32),
+    Pixel(i32),
     /// Percentage along the relevant axis. This is a percentage of the width or
     /// height of the parent entity, not the entire window.
     Percent(f32),
@@ -530,12 +530,12 @@ impl Val {
     pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
         match self {
             Self::Auto | Self::None => 0.,
-            Self::Pixel(value) => axis_scaling.pixel_scale * value,
+            Self::Pixel(value) => axis_scaling.pixel_scale * (*value as f32),
             Self::Percent(value) => value * 0.01,
             Self::CrossPercent(value) => axis_scaling.axis_ratio * value * 0.01,
             Self::Vmax(value) => axis_scaling.vmax_scale * value,
             Self::Vmin(value) => axis_scaling.vmin_scale * value,
-            Self::Calc(expr) => expr.evaluate(axis_scaling)
+            Self::Calc(expr) => expr.evaluate(axis_scaling),
         }
     }
 }
@@ -547,12 +547,70 @@ impl Mul<Val> for f32 {
         match rhs {
             Val::None => Val::None,
             Val::Auto => Val::Auto,
-            Val::Pixel(value) => Val::Pixel(self * value),
+            Val::Pixel(value) => Val::Pixel((self * value as f32) as i32),
             Val::Percent(percentage) => Val::Percent(self * percentage),
             Val::CrossPercent(percentage) => Val::CrossPercent(self * percentage),
             Val::Vmax(percentage) => Val::Vmax(self * percentage),
             Val::Vmin(percentage) => Val::Vmin(self * percentage),
-            Val::Calc(expr) => Val::Calc(Box::new(self * *expr))
+            Val::Calc(expr) => Val::Calc(Box::new(self * *expr)),
+        }
+    }
+}
+
+impl Sub<Val> for Val {
+    type Output = Val;
+
+    fn sub(self, rhs: Val) -> Self::Output {
+        match (self, rhs) {
+            (Self::None, _) => Self::None,
+            (Self::Auto, Val::None) => Self::Auto,
+            (Self::Auto, Val::Auto) => Self::None,
+            (Self::Auto, rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::Auto,
+                operator: Operator::Minus,
+                right: rhs,
+            })),
+            (Self::Pixel(value), Val::None) => Self::Pixel(value),
+            (Self::Pixel(value), Val::Pixel(rhs)) => Self::Pixel(value - rhs),
+            (Self::Pixel(value), rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::Pixel(value),
+                operator: Operator::Minus,
+                right: rhs,
+            })),
+            (Self::Percent(value), Val::None) => Self::Percent(value),
+            (Self::Percent(value), Val::Percent(rhs)) => Self::Percent(value - rhs),
+            (Self::Percent(value), rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::Percent(value),
+                operator: Operator::Minus,
+                right: rhs,
+            })),
+            (Self::CrossPercent(value), Val::None) => Self::CrossPercent(value),
+            (Self::CrossPercent(value), Val::CrossPercent(rhs)) => Self::CrossPercent(value - rhs),
+            (Self::CrossPercent(value), rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::CrossPercent(value),
+                operator: Operator::Minus,
+                right: rhs,
+            })),
+            (Self::Vmax(value), Val::None) => Self::Vmax(value),
+            (Self::Vmax(value), Val::Vmax(rhs)) => Self::Vmax(value - rhs),
+            (Self::Vmax(value), rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::Vmax(value),
+                operator: Operator::Minus,
+                right: rhs,
+            })),
+            (Self::Vmin(value), Val::None) => Self::Vmin(value),
+            (Self::Vmin(value), Val::Vmin(rhs)) => Self::Vmin(value - rhs),
+            (Self::Vmin(value), rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::Vmin(value),
+                operator: Operator::Minus,
+                right: rhs,
+            })),
+            (Self::Calc(expr), Val::None) => Self::Calc(expr),
+            (Self::Calc(expr), rhs) => Val::Calc(Box::new(Expr::Binary {
+                left: Self::Calc(expr),
+                operator: Operator::Minus,
+                right: rhs,
+            })),
         }
     }
 }
@@ -705,15 +763,19 @@ pub enum Expr {
         left: Val,
         operator: Operator,
         right: Val,
-    }
+    },
 }
 
 impl Expr {
     pub fn evaluate(&self, axis_scaling: &AxisScaling) -> f32 {
         match self {
-            Self::Binary { left, operator, right } => match operator {
-                Operator::Minus => left.evaluate(axis_scaling) - right.evaluate(axis_scaling)
-            }
+            Self::Binary {
+                left,
+                operator,
+                right,
+            } => match operator {
+                Operator::Minus => left.evaluate(axis_scaling) - right.evaluate(axis_scaling),
+            },
         }
     }
 }
@@ -723,12 +785,20 @@ impl Mul<Expr> for f32 {
 
     fn mul(self, rhs: Expr) -> Self::Output {
         match rhs {
-            Expr::Binary { left, operator, right } => Expr::Binary { left: self * left, operator, right: self * right }
+            Expr::Binary {
+                left,
+                operator,
+                right,
+            } => Expr::Binary {
+                left: self * left,
+                operator,
+                right: self * right,
+            },
         }
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Operator {
-    Minus
+    Minus,
 }

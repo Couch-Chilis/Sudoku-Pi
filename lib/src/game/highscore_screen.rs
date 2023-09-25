@@ -63,7 +63,10 @@ pub fn highscore_screen_setup(
 
         screen
             .spawn(FlexBundle::new(
-                FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(102.5)),
+                FlexItemStyle::fixed_size(
+                    Val::Percent(100.),
+                    Val::CrossPercent(if screen_sizing.is_ipad { 59.8 } else { 102.5 }),
+                ),
                 FlexContainerStyle::row(),
             ))
             .with_children(|wall_section| {
@@ -72,10 +75,18 @@ pub fn highscore_screen_setup(
                     FlexItemBundle::from_style(
                         FlexItemStyle::available_size()
                             .without_occupying_space()
-                            .with_transform(Transform::from_2d_scale(1. / 780., 1. / 797.)),
+                            .with_transform(if screen_sizing.is_ipad {
+                                Transform::from_2d_scale(1. / 2503., 1. / 1497.)
+                            } else {
+                                Transform::from_2d_scale(1. / 780., 1. / 797.)
+                            }),
                     ),
                     SpriteBundle {
-                        texture: images.wall.clone(),
+                        texture: if screen_sizing.is_ipad {
+                            images.wall_ipad.clone()
+                        } else {
+                            images.wall.clone()
+                        },
                         ..default()
                     },
                 ));
