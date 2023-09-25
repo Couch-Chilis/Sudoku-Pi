@@ -1,5 +1,5 @@
 use super::ButtonBuilder;
-use crate::{constants::*, game::*, ui::*};
+use crate::{constants::*, game::*, ui::*, ScreenSizing};
 use crate::{Fonts, Game, Images, ScreenState, Settings, TransitionEvent};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
@@ -31,7 +31,11 @@ pub struct OnboardingNotesInstruction;
 #[derive(Component)]
 pub struct OnboardingNotesHint;
 
-pub fn welcome_screen_setup(screen: &mut EntityCommands, fonts: &Fonts) {
+pub fn welcome_screen_setup(
+    screen: &mut EntityCommands,
+    fonts: &Fonts,
+    screen_sizing: &ScreenSizing,
+) {
     screen.with_children(|parent| {
         parent
             .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
@@ -99,8 +103,7 @@ pub fn welcome_screen_setup(screen: &mut EntityCommands, fonts: &Fonts) {
             ))
             .with_children(|footer| {
                 use OnboardingScreenAction::*;
-                let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
-                let buttons = ButtonBuilder::new(fonts, button_size);
+                let buttons = make_button_builder(fonts, screen_sizing);
                 buttons.build_selected_with_text_and_action(footer, "Next", HowToPlayNumbers);
             });
     });
@@ -111,6 +114,7 @@ pub fn how_to_play_numbers_screen_setup(
     fonts: &Fonts,
     game: &Game,
     images: &Images,
+    screen_sizing: &ScreenSizing,
     settings: &Settings,
 ) {
     screen.with_children(|parent| {
@@ -153,7 +157,7 @@ pub fn how_to_play_numbers_screen_setup(
             });
 
         use ScreenState::*;
-        build_board(parent, fonts, game, images, settings, HowToPlayNumbers);
+        build_board(parent, fonts, game, images, HowToPlayNumbers, screen_sizing, settings);
 
         parent
             .spawn(FlexBundle::new(
@@ -181,8 +185,7 @@ pub fn how_to_play_numbers_screen_setup(
             ))
             .with_children(|footer| {
                 use OnboardingScreenAction::*;
-                let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
-                let buttons = ButtonBuilder::new(fonts, button_size);
+                let buttons = make_button_builder(fonts, screen_sizing);
                 buttons.build_with_text_and_action(footer, "Next", HowToPlayNotes);
             });
     });
@@ -193,6 +196,7 @@ pub fn how_to_play_notes_screen_setup(
     fonts: &Fonts,
     game: &Game,
     images: &Images,
+    screen_sizing: &ScreenSizing,
     settings: &Settings,
 ) {
     screen.with_children(|parent| {
@@ -235,7 +239,7 @@ pub fn how_to_play_notes_screen_setup(
             });
 
         use ScreenState::*;
-        build_board(parent, fonts, game, images, settings, HowToPlayNotes);
+        build_board(parent, fonts, game, images, HowToPlayNotes, screen_sizing, settings);
 
         parent
             .spawn(FlexBundle::new(
@@ -263,13 +267,12 @@ pub fn how_to_play_notes_screen_setup(
             ))
             .with_children(|footer| {
                 use OnboardingScreenAction::*;
-                let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
                 let button_text = if settings.onboarding_finished {
                     "Return to Menu"
                 } else {
                     "Start Game"
                 };
-                let buttons = ButtonBuilder::new(fonts, button_size);
+                let buttons = make_button_builder(fonts, screen_sizing);
                 buttons.build_with_text_and_action(footer, button_text, FinishOnboarding);
             });
     });
@@ -377,4 +380,13 @@ pub fn how_to_play_notes_interaction(
             }
         }
     }
+}
+
+fn make_button_builder(fonts: &Fonts, screen_sizing: &ScreenSizing) -> ButtonBuilder {
+    let button_size = if screen_sizing.is_ipad {
+        FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(5.))
+    } else {
+        FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.))
+    };
+    ButtonBuilder::new(fonts, button_size)
 }

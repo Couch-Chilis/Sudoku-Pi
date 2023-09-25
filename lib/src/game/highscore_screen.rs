@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Fortune, Images, TransitionEvent};
+use crate::{constants::*, ui::*, utils::*, Fortune, Images, ScreenSizing, TransitionEvent};
 use crate::{Fonts, Game, Highscores, ScreenState};
 use bevy::sprite::Anchor;
 use bevy::text::Text2dBounds;
@@ -22,6 +22,7 @@ pub fn highscore_screen_setup(
     game: &Game,
     highscores: &Highscores,
     images: &Images,
+    screen_sizing: &ScreenSizing,
 ) {
     highscore_screen.with_children(|screen| {
         screen
@@ -96,15 +97,20 @@ pub fn highscore_screen_setup(
                 FlexContainerStyle::column().with_padding(Sides::new(Val::None, Val::Auto)),
             ))
             .with_children(|button_section| {
-                let button_style = FlexItemStyle::fixed_size(Val::Percent(70.), Val::Vmin(10.))
-                    .with_margin(Size::all(Val::Vmin(1.5)));
-                let button_builder = ButtonBuilder::new(fonts, button_style);
-                button_builder.build_secondary_with_text_and_action(
+                let button_style = if screen_sizing.is_ipad {
+                    FlexItemStyle::fixed_size(Val::Vmin(35.), Val::Vmin(5.))
+                        .with_margin(Size::all(Val::Vmin(1.5)))
+                } else {
+                    FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
+                        .with_margin(Size::all(Val::Vmin(1.5)))
+                };
+                let buttons = ButtonBuilder::new(fonts, button_style);
+                buttons.build_secondary_with_text_and_action(
                     button_section,
                     "Back to Menu",
                     HighscoreButtonAction::Back,
                 );
-                button_builder.build_selected_with_text_and_action(
+                buttons.build_selected_with_text_and_action(
                     button_section,
                     "Start a New Game",
                     HighscoreButtonAction::NewGame,

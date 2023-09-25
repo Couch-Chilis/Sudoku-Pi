@@ -1,4 +1,6 @@
-use crate::{constants::*, pointer_query::*, ui::*, utils::TransformExt, Fonts, Images};
+use crate::{
+    constants::*, pointer_query::*, ui::*, utils::TransformExt, Fonts, Images, ScreenSizing,
+};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
@@ -31,21 +33,29 @@ pub fn build_mode_slider(
     materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     images: &Images,
+    screen_sizing: &ScreenSizing,
 ) {
     parent.with_children(|parent| {
         parent
             .spawn((
                 ModeSlider { active: false },
                 FlexBundle::new(
-                    FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(30.))
-                        .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                    FlexItemStyle::preferred_size(
+                        if screen_sizing.is_ipad {
+                            Val::Vmin(80.)
+                        } else {
+                            Val::Vmin(90.)
+                        },
+                        Val::Vmin(30.),
+                    )
+                    .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
                     FlexContainerStyle::column(),
                 ),
             ))
             .with_children(|column| {
                 column
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.)),
+                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Vmin(9.)),
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {
@@ -55,7 +65,7 @@ pub fn build_mode_slider(
 
                 column
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(21.)),
+                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Vmin(21.)),
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {

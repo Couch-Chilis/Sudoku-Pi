@@ -11,12 +11,14 @@ pub enum MainScreenButtonAction {
     Quit,
 }
 
-pub fn spawn_main_menu_buttons(main_section: &mut ChildBuilder, fonts: &Fonts, game: &Game) {
+pub fn spawn_main_menu_buttons(
+    main_section: &mut ChildBuilder,
+    buttons: &ButtonBuilder,
+    fonts: &Fonts,
+    game: &Game,
+) {
     use MainScreenButtonAction::*;
 
-    let button_style = FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
-        .with_margin(Size::all(Val::Vmin(1.5)));
-    let buttons = ButtonBuilder::new(fonts, button_style);
     if cfg!(not(target_os = "ios")) {
         buttons.build_ternary_with_text_and_action(
             main_section,

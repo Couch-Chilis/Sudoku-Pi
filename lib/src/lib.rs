@@ -9,8 +9,8 @@ mod menus;
 mod onboarding;
 mod pointer_query;
 mod settings;
-#[cfg(feature = "steam")]
-mod steam;
+//#[cfg(feature = "steam")]
+//mod steam;
 mod sudoku;
 mod transition_events;
 mod ui;
@@ -33,7 +33,6 @@ use std::time::Duration;
 use sudoku::Game;
 use transition_events::{on_transition, TransitionEvent};
 use ui::*;
-use utils::TransformExt;
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -84,12 +83,24 @@ pub struct ScreenInteraction {
 
 /// Padding to reserve space on the screen edges, for things like status bars
 /// on mobile.
-#[derive(Clone, Copy, Default, Resource)]
-pub struct ScreenPadding {
-    top: f32,
-    right: f32,
-    bottom: f32,
-    left: f32,
+#[derive(Clone, Copy, Resource)]
+pub struct ScreenSizing {
+    width: f32,
+    height: f32,
+    top_padding: f32,
+    is_ipad: bool,
+}
+
+impl Default for ScreenSizing {
+    fn default() -> Self {
+        // Dimensions will be determined in `on_resize()`.
+        Self {
+            width: 100_000.,
+            height: 100_000.,
+            top_padding: 0.,
+            is_ipad: false,
+        }
+    }
 }
 
 /// Helps compensate zooming that occurs on iPhone Mini.
@@ -100,26 +111,33 @@ pub struct ZoomFactor {
 }
 
 pub fn main() {
-    run(ScreenPadding::default(), ZoomFactor::default())
+    run(ScreenSizing::default(), ZoomFactor::default())
 }
 
 #[no_mangle]
 #[cfg(target_os = "ios")]
-extern "C" fn run_with_scales_and_padding(scale: f64, native_scale: f64, top_padding: f64) {
+extern "C" fn run_with_fixed_sizes(
+    width: f64,
+    height: f64,
+    scale: f64,
+    native_scale: f64,
+    top_padding: f64,
+    is_ipad: bool,
+) {
     let scale = (scale / native_scale) as f32;
-    println!("Starting with scale at {scale} and top padding of {top_padding}px");
+    println!("Starting at size {width}x{height} (scale={scale}, top_padding={top_padding}px)");
     run(
-        ScreenPadding {
-            top: top_padding as f32,
-            right: 0.,
-            bottom: 0.,
-            left: 0.,
+        ScreenSizing {
+            width: width as f32,
+            height: height as f32,
+            top_padding: top_padding as f32,
+            is_ipad,
         },
         ZoomFactor { x: scale, y: scale },
     )
 }
 
-fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
+fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
     let settings = Settings::load();
     let game = if settings.onboarding_finished {
         Game::load()
@@ -152,6 +170,7 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
             Update,
             (
                 on_escape,
+                #[cfg(not(platform = "ios"))]
                 on_resize,
                 on_screen_change,
                 on_window_close,
@@ -184,13 +203,13 @@ fn run(screen_padding: ScreenPadding, zoom_factor: ZoomFactor) {
     app.run();
 }
 
-#[cfg(feature = "steam")]
-fn add_steamworks_plugin(app: &mut App) {
-    use bevy_steamworks::*;
-    app.add_plugins(SteamworksPlugin::new(AppId(892884)));
-}
+// #[cfg(feature = "steam")]
+// fn add_steamworks_plugin(app: &mut App) {
+//     use bevy_steamworks::*;
+//     app.add_plugins(SteamworksPlugin::new(AppId(892884)));
+// }
 
-#[cfg(not(feature = "steam"))]
+// #[cfg(not(feature = "steam"))]
 fn add_steamworks_plugin(_app: &mut App) {}
 
 fn setup(
@@ -204,7 +223,7 @@ fn setup(
     settings: Res<Settings>,
     game: Res<Game>,
     highscores: Res<Highscores>,
-    padding: Res<ScreenPadding>,
+    screen_sizing: Res<ScreenSizing>,
 ) {
     commands.spawn(Camera2dBundle::default());
 
@@ -215,10 +234,10 @@ fn setup(
     let images = Images::load(images);
 
     use ScreenState::*;
-    let mut main_screen = spawn_screen(&mut commands, MainMenu, &padding);
-    menu_setup(&mut main_screen, &fonts, &game, &images);
+    let mut main_screen = spawn_screen(&mut commands, MainMenu, &screen_sizing);
+    menu_setup(&mut main_screen, &fonts, &game, &images, &screen_sizing);
 
-    let mut game_screen = spawn_screen(&mut commands, Game, &padding);
+    let mut game_screen = spawn_screen(&mut commands, Game, &screen_sizing);
     board_setup(
         &mut game_screen,
         &mut meshes,
@@ -226,23 +245,24 @@ fn setup(
         &fonts,
         &game,
         &images,
+        &screen_sizing,
         &settings,
     );
 
-    let mut highscore_screen = spawn_screen(&mut commands, Highscores, &padding);
-    highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images);
+    let mut highscore_screen = spawn_screen(&mut commands, Highscores, &screen_sizing);
+    highscore_screen_setup(&mut highscore_screen, &fonts, &game, &highscores, &images, &screen_sizing);
 
-    let mut settings_screen = spawn_screen(&mut commands, Settings, &padding);
-    settings_screen_setup(&mut settings_screen, &fonts, &images, &settings);
+    let mut settings_screen = spawn_screen(&mut commands, Settings, &screen_sizing);
+    settings_screen_setup(&mut settings_screen, &fonts, &images, &screen_sizing, &settings);
 
-    let mut welcome_screen = spawn_screen(&mut commands, Welcome, &padding);
-    welcome_screen_setup(&mut welcome_screen, &fonts);
+    let mut welcome_screen = spawn_screen(&mut commands, Welcome, &screen_sizing);
+    welcome_screen_setup(&mut welcome_screen, &fonts, &screen_sizing);
 
-    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &padding);
-    how_to_play_numbers_screen_setup(&mut how_to_play_screen_1, &fonts, &game, &images, &settings);
+    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &screen_sizing);
+    how_to_play_numbers_screen_setup(&mut how_to_play_screen_1, &fonts, &game, &images, &screen_sizing, &settings);
 
-    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &padding);
-    how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &fonts, &game, &images, &settings);
+    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &screen_sizing);
+    how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &fonts, &game, &images, &screen_sizing, &settings);
 
     if !settings.onboarding_finished {
         screen_state.set(Welcome);
@@ -320,6 +340,7 @@ fn on_screen_change(
     }
 }
 
+#[cfg(not(platform = "ios"))]
 fn on_resize(
     mut commands: Commands,
     mut events: EventReader<WindowResized>,
@@ -382,21 +403,34 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
 fn spawn_screen<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
     screen: ScreenState,
-    padding: &ScreenPadding,
+    screen_sizing: &ScreenSizing,
 ) -> EntityCommands<'w, 's, 'a> {
+    let (tile_x, tile_y) = get_tile_offset_for_screen(screen);
     let flex_container = FlexContainerBundle {
         background: Sprite::default(),
-        transform: Transform::from_2d_scale(100_000., 100_000.),
+        transform: Transform {
+            scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
+            translation: Vec3::new(
+                screen_sizing.width * tile_x,
+                screen_sizing.height * tile_y,
+                1.,
+            ),
+            ..default()
+        },
         style: if screen == ScreenState::Game {
             FlexContainerStyle::default().with_gap(Val::Auto)
         } else {
             FlexContainerStyle::default()
         }
         .with_padding(Sides {
-            top: Val::Pixel(padding.top),
-            right: Val::Pixel(padding.right),
-            bottom: Val::Pixel(padding.bottom),
-            left: Val::Pixel(padding.left),
+            top: if screen == ScreenState::MainMenu {
+                Val::None
+            } else {
+                Val::Pixel(screen_sizing.top_padding)
+            },
+            right: Val::None,
+            bottom: Val::None,
+            left: Val::None,
         }),
         ..default()
     };

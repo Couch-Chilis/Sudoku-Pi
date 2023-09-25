@@ -10,6 +10,7 @@ const XIAOWEI_REGULAR_FONT: &[u8] = include_bytes!("../../assets/XiaoWei/ZCOOLXi
 const COG: &[u8] = include_bytes!("../../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
 const LAUNCH_SCREEN: &[u8] = include_bytes!("../../assets/launch_screen.png");
+const LAUNCH_SCREEN_IPAD: &[u8] = include_bytes!("../../assets/launch_screen_ipad.png");
 const MODE_SLIDER: &[u8] = include_bytes!("../../assets/mode_slider.png");
 const SCROLL: &[u8] = include_bytes!("../../assets/scroll.png");
 const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
@@ -90,6 +91,7 @@ pub struct Images {
     pub cog: Handle<Image>,
     pub cog_pressed: Handle<Image>,
     pub launch_screen: Handle<Image>,
+    pub launch_screen_ipad: Handle<Image>,
     pub mode_slider: Handle<Image>,
     pub scroll: Handle<Image>,
     pub slice_active_1: Handle<Image>,
@@ -133,6 +135,7 @@ impl Images {
             cog: images.add(load_png(COG)),
             cog_pressed: images.add(load_png(COG_PRESSED)),
             launch_screen: images.add(load_png(LAUNCH_SCREEN)),
+            launch_screen_ipad: images.add(load_png(LAUNCH_SCREEN_IPAD)),
             mode_slider: images.add(load_png(MODE_SLIDER)),
             scroll: images.add(load_png(SCROLL)),
             slice_active_1: images.add(load_png(SLICE_1)),
