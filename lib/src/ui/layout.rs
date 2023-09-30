@@ -2,7 +2,7 @@ use super::flex::*;
 use crate::{Screen, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use smallvec::smallvec;
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, ops::DerefMut};
 
 type FlexEntity<'a> = (
     Entity,
@@ -12,7 +12,7 @@ type FlexEntity<'a> = (
     Option<&'a mut ComputedPosition>,
     Option<&'a Children>,
     Option<&'a Screen>,
-    Option<&'a Text>,
+    Option<&'a mut Text>,
     Option<&'a Anchor>,
     Option<&'a ScreenInteraction>,
 );
@@ -46,7 +46,7 @@ struct LayoutInfo<'a> {
             Option<&'a ScreenInteraction>,
         ),
     >,
-    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Transform>, Mut<'a, ComputedPosition>)>,
+    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Text>, Mut<'a, Transform>, Mut<'a, ComputedPosition>)>,
 }
 
 impl<'a> LayoutInfo<'a> {
@@ -80,8 +80,8 @@ impl<'a> LayoutInfo<'a> {
             }
 
             match (text, anchor, item_style, computed_position) {
-                (Some(_text), Some(anchor), _, Some(computed_position)) => {
-                    text_map.insert(entity, (anchor, transform, computed_position));
+                (Some(text), Some(anchor), _, Some(computed_position)) => {
+                    text_map.insert(entity, (anchor, text, transform, computed_position));
                 }
                 (_, _, Some(item_style), Some(computed_position)) => {
                     item_map.insert(
@@ -202,7 +202,7 @@ impl<'a> LayoutInfo<'a> {
 
         for item_entity in children {
             // Special handling for text items:
-            if let Some((anchor, mut transform, mut computed_position)) =
+            if let Some((anchor, mut text, mut transform, mut computed_position)) =
                 self.text_map.remove(item_entity)
             {
                 let ComputedPosition { width, height, .. } = position;
@@ -218,6 +218,7 @@ impl<'a> LayoutInfo<'a> {
                 );
 
                 *computed_position = position.transformed(transform.scale, transform.translation);
+                text.deref_mut(); // Prevent text appearing too small on iOS.
                 continue;
             }
 

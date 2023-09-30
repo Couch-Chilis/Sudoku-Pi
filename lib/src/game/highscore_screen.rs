@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Fortune, Images, TransitionEvent};
+use crate::{constants::*, ui::*, utils::*, Fortune, Images, ScreenSizing, TransitionEvent};
 use crate::{Fonts, Game, Highscores, ScreenState};
 use bevy::sprite::Anchor;
 use bevy::text::Text2dBounds;
@@ -11,10 +11,34 @@ pub enum HighscoreButtonAction {
 }
 
 #[derive(Component)]
-pub struct ScoreContainer;
+pub struct StatsContainer;
 
 #[derive(Component)]
 pub struct ScrollQuoteText;
+
+#[derive(Component)]
+pub struct StatTextMarker {
+    kind: StatKind,
+}
+
+impl StatTextMarker {
+    fn new(kind: StatKind) -> Self {
+        Self { kind }
+    }
+}
+
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum StatKind {
+    Score,
+    Time,
+    Mistakes,
+    Hints,
+    HighestScore,
+    BestTime,
+}
+
+#[derive(Component)]
+pub struct BestTimeText;
 
 pub fn highscore_screen_setup(
     highscore_screen: &mut EntityCommands,
@@ -22,18 +46,27 @@ pub fn highscore_screen_setup(
     game: &Game,
     highscores: &Highscores,
     images: &Images,
+    screen_sizing: &ScreenSizing,
 ) {
     highscore_screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
                 FlexItemStyle::available_size(),
-                FlexContainerStyle::row().with_padding(Sides::all(Val::Vmin(5.))),
+                FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(5.))),
             ))
             .with_children(|scroll_section| {
+                let item_style = if screen_sizing.is_ipad {
+                    FlexItemStyle::fixed_size(Val::Percent(45.), Val::CrossPercent(17.1))
+                } else {
+                    FlexItemStyle::fixed_size(Val::Percent(90.), Val::CrossPercent(34.3))
+                };
+
                 // Scroll.
                 scroll_section.spawn((
                     FlexItemBundle::from_style(
-                        FlexItemStyle::fixed_size(Val::Percent(90.), Val::CrossPercent(34.3))
+                        item_style
+                            .clone()
+                            .with_alignment(Alignment::Centered)
                             .with_fixed_aspect_ratio()
                             .without_occupying_space()
                             .with_transform(Transform::from_2d_scale(1. / 1416., 1. / 537.)),
@@ -46,7 +79,7 @@ pub fn highscore_screen_setup(
 
                 scroll_section
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::available_size()
+                        item_style
                             .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
                         FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(10.))),
                     ))
@@ -62,7 +95,10 @@ pub fn highscore_screen_setup(
 
         screen
             .spawn(FlexBundle::new(
-                FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(102.5)),
+                FlexItemStyle::fixed_size(
+                    Val::Percent(100.),
+                    Val::CrossPercent(if screen_sizing.is_ipad { 59.8 } else { 102.5 }),
+                ),
                 FlexContainerStyle::row(),
             ))
             .with_children(|wall_section| {
@@ -71,21 +107,49 @@ pub fn highscore_screen_setup(
                     FlexItemBundle::from_style(
                         FlexItemStyle::available_size()
                             .without_occupying_space()
-                            .with_transform(Transform::from_2d_scale(1. / 780., 1. / 797.)),
+                            .with_transform(if screen_sizing.is_ipad {
+                                Transform::from_2d_scale(1. / 2503., 1. / 1497.)
+                            } else {
+                                Transform::from_2d_scale(1. / 780., 1. / 797.)
+                            }),
                     ),
                     SpriteBundle {
-                        texture: images.wall.clone(),
+                        texture: if screen_sizing.is_ipad {
+                            images.wall_ipad.clone()
+                        } else {
+                            images.wall.clone()
+                        },
                         ..default()
                     },
                 ));
 
                 let _spacer = wall_section.spawn(FlexItemBundle::from_style(
-                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8)),
+                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8))
+                        .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
                 ));
 
+                let padding = if screen_sizing.is_ipad {
+                    Sides {
+                        top: Val::Percent(35.),
+                        right: Val::Percent(30.),
+                        bottom: Val::Percent(15.),
+                        left: Val::Percent(30.),
+                    }
+                } else {
+                    Sides {
+                        top: Val::Percent(30.),
+                        right: Val::Percent(15.),
+                        bottom: Val::Percent(10.),
+                        left: Val::Percent(15.),
+                    }
+                };
                 let mut score_container = wall_section.spawn((
-                    ScoreContainer,
-                    FlexLeafBundle::from_style(FlexItemStyle::available_size()),
+                    StatsContainer,
+                    FlexBundle::new(
+                        FlexItemStyle::available_size()
+                            .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
+                        FlexContainerStyle::column().with_padding(padding),
+                    ),
                 ));
                 render_scores(&mut score_container, fonts, game, highscores);
             });
@@ -96,15 +160,20 @@ pub fn highscore_screen_setup(
                 FlexContainerStyle::column().with_padding(Sides::new(Val::None, Val::Auto)),
             ))
             .with_children(|button_section| {
-                let button_style = FlexItemStyle::fixed_size(Val::Percent(70.), Val::Vmin(10.))
-                    .with_margin(Size::all(Val::Vmin(1.5)));
-                let button_builder = ButtonBuilder::new(fonts, button_style);
-                button_builder.build_secondary_with_text_and_action(
+                let button_style = if screen_sizing.is_ipad {
+                    FlexItemStyle::fixed_size(Val::Vmin(35.), Val::Vmin(5.))
+                        .with_margin(Size::all(Val::Vmin(1.5)))
+                } else {
+                    FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
+                        .with_margin(Size::all(Val::Vmin(1.5)))
+                };
+                let buttons = ButtonBuilder::new(fonts, button_style);
+                buttons.build_secondary_with_text_and_action(
                     button_section,
                     "Back to Menu",
                     HighscoreButtonAction::Back,
                 );
-                button_builder.build_selected_with_text_and_action(
+                buttons.build_selected_with_text_and_action(
                     button_section,
                     "Start a New Game",
                     HighscoreButtonAction::NewGame,
@@ -132,9 +201,7 @@ pub fn highscore_button_actions(
 }
 
 pub fn on_highscores_changed(
-    mut commands: Commands,
-    mut container: Query<Entity, With<ScoreContainer>>,
-    fonts: Res<Fonts>,
+    mut stats_query: Query<(&mut Text, &StatTextMarker)>,
     game: Res<Game>,
     highscores: Res<Highscores>,
 ) {
@@ -142,14 +209,26 @@ pub fn on_highscores_changed(
         return;
     }
 
-    let Ok(container) = container.get_single_mut() else {
-        return;
-    };
+    for (mut text, marker) in &mut stats_query {
+        text.sections[0].value = get_stat_text(marker.kind, &game, &highscores);
+    }
+}
 
-    let mut score_container = commands.entity(container);
-    score_container.despawn_descendants();
-
-    render_scores(&mut score_container, &fonts, &game, &highscores);
+fn get_stat_text(kind: StatKind, game: &Game, highscores: &Highscores) -> String {
+    match kind {
+        StatKind::Score => game.score.to_string(),
+        StatKind::Time => format_time(game.elapsed_secs),
+        StatKind::Mistakes => game.num_mistakes.to_string(),
+        StatKind::Hints => game.num_hints.to_string(),
+        StatKind::HighestScore => highscores
+            .best_scores
+            .first()
+            .unwrap_or(&game.score)
+            .to_string(),
+        StatKind::BestTime => {
+            format_time(*highscores.best_times.first().unwrap_or(&game.elapsed_secs))
+        }
+    }
 }
 
 fn render_scores(
@@ -158,99 +237,86 @@ fn render_scores(
     game: &Game,
     highscores: &Highscores,
 ) {
-    let height = 1. / 7.;
-
     score_container.with_children(|container| {
-        let mut y = 0.;
-        render_left(container, &fonts.medium, y, "Score:".to_owned());
-        render_right(container, &fonts.medium, y, game.score.to_string());
+        let mut create_row = |marker: StatTextMarker, label: &str| {
+            create_stat_row(container, fonts, game, highscores, marker, label);
+        };
 
-        y += height;
-        render_left(container, &fonts.medium, y, "Time:".to_owned());
-        render_right(container, &fonts.medium, y, format_time(game.elapsed_secs));
+        create_row(StatTextMarker::new(StatKind::Score), "Score:");
+        create_row(StatTextMarker::new(StatKind::Time), "Time:");
+        create_row(StatTextMarker::new(StatKind::Mistakes), "Mistakes:");
+        create_row(StatTextMarker::new(StatKind::Hints), "Hints:");
 
-        y += height;
-        render_left(container, &fonts.medium, y, "Mistakes:".to_owned());
-        render_right(container, &fonts.medium, y, game.num_mistakes.to_string());
+        let _spacer = container.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
-        y += height;
-        render_left(container, &fonts.medium, y, "Hints:".to_owned());
-        render_right(container, &fonts.medium, y, game.num_hints.to_string());
+        let mut create_row = |marker: StatTextMarker, label: &str| {
+            create_stat_row(container, fonts, game, highscores, marker, label);
+        };
 
-        y += 2. * height;
-        render_left(container, &fonts.bold, y, "Highest score:".to_owned());
-        render_right(
-            container,
-            &fonts.bold,
-            y,
-            highscores
-                .best_scores
-                .first()
-                .unwrap_or(&game.score)
-                .to_string(),
+        create_row(
+            StatTextMarker::new(StatKind::HighestScore),
+            "Highest score:",
         );
-
-        y += height;
-        render_left(container, &fonts.bold, y, "Best time:".to_owned());
-        render_right(
-            container,
-            &fonts.bold,
-            y,
-            format_time(*highscores.best_times.first().unwrap_or(&game.elapsed_secs)),
-        );
+        create_row(StatTextMarker::new(StatKind::BestTime), "Best time:");
     });
 }
 
-fn render_left(score_container: &mut ChildBuilder, font: &Handle<Font>, y: f32, text: String) {
-    render_score_text(
-        score_container,
-        font,
-        Transform {
-            translation: Vec3::new(0., 0.105 - y * 0.5, 1.),
-            scale: Vec3::new(0.0015, 0.0016, 1.),
-            ..default()
-        },
-        Anchor::CenterRight,
-        text,
-        COLOR_MAIN_DARKER,
-    );
-}
-
-fn render_right(score_container: &mut ChildBuilder, font: &Handle<Font>, y: f32, text: String) {
-    render_score_text(
-        score_container,
-        font,
-        Transform {
-            translation: Vec3::new(0.1, 0.105 - y * 0.5, 1.),
-            scale: Vec3::new(0.0015, 0.0016, 1.),
-            ..default()
-        },
-        Anchor::CenterLeft,
-        text,
-        COLOR_POP_FOCUS,
-    );
-}
-
-fn render_score_text(
-    score_container: &mut ChildBuilder,
-    font: &Handle<Font>,
-    transform: Transform,
-    text_anchor: Anchor,
-    text: String,
-    color: Color,
+fn create_stat_row(
+    container: &mut ChildBuilder,
+    fonts: &Fonts,
+    game: &Game,
+    highscores: &Highscores,
+    marker: StatTextMarker,
+    label: &str,
 ) {
-    let text_style = TextStyle {
-        color,
-        font: font.clone(),
-        font_size: 40.,
+    let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
+        fonts.bold.clone()
+    } else {
+        fonts.medium.clone()
     };
 
-    score_container.spawn(Text2dBundle {
-        text: Text::from_section(text, text_style),
-        text_anchor,
-        transform,
-        ..default()
-    });
+    container
+        .spawn(FlexBundle::new(
+            FlexItemStyle::available_size(),
+            FlexContainerStyle::row(),
+        ))
+        .with_children(|row| {
+            row.spawn(FlexBundle::from_item_style(FlexItemStyle::preferred_size(
+                Val::Percent(50.),
+                Val::Percent(100.),
+            )))
+            .with_children(|left| {
+                let style = TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: COLOR_MAIN_DARKER,
+                };
+
+                left.spawn(
+                    FlexTextBundle::from_text(Text::from_section(label, style))
+                        .with_anchor(Anchor::CenterRight),
+                );
+            });
+
+            row.spawn(FlexBundle::from_item_style(
+                FlexItemStyle::preferred_size(Val::Percent(40.), Val::Percent(100.))
+                    .with_margin(Size::new(Val::Percent(5.), Val::None)),
+            ))
+            .with_children(|right| {
+                let value = get_stat_text(marker.kind, game, highscores);
+                let style = TextStyle {
+                    font,
+                    font_size: 40.,
+                    color: COLOR_POP_FOCUS,
+                };
+
+                right.spawn((
+                    marker,
+                    FlexTextBundle::from_text(Text::from_section(value, style))
+                        .with_anchor(Anchor::CenterLeft),
+                ));
+            });
+        });
 }
 
 pub fn on_fortune(

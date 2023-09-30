@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Images};
+use crate::{constants::*, ui::*, utils::*, Images, ScreenSizing};
 use crate::{Fonts, Game, GameTimer, Highscores, ScreenState};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
@@ -26,9 +26,10 @@ pub fn init_game_ui(
     materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     images: &Images,
+    screen_sizing: &ScreenSizing,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
-    build_button_row(game_screen, |icon_row| {
+    build_button_row(game_screen, screen_sizing, |icon_row| {
         icon_row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
         build_settings_icon(icon_row, images);
@@ -38,12 +39,15 @@ pub fn init_game_ui(
         build_timer(timer_row, fonts);
     });
 
-    build_button_row(game_screen, |button_row| {
-        let button_size = if cfg!(target_os = "ios") {
-            FlexItemStyle::fixed_size(Val::Pixel(80.), Val::Pixel(35.))
-        } else {
-            FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(10.))
-        };
+    build_button_row(game_screen, screen_sizing, |button_row| {
+        let button_size = FlexItemStyle::fixed_size(
+            if screen_sizing.is_ipad {
+                Val::Pixel(120)
+            } else {
+                Val::Pixel(80)
+            },
+            Val::Pixel(35),
+        );
 
         let buttons = ButtonBuilder::new(fonts, button_size);
         buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
@@ -55,7 +59,7 @@ pub fn init_game_ui(
 
     board_builder(game_screen);
 
-    build_mode_slider(game_screen, meshes, materials, fonts, images);
+    build_mode_slider(game_screen, meshes, materials, fonts, images, screen_sizing);
 }
 
 fn build_settings_icon(screen: &mut ChildBuilder, images: &Images) {
@@ -65,9 +69,8 @@ fn build_settings_icon(screen: &mut ChildBuilder, images: &Images) {
         Interaction::None,
         UiButtonAction::GoToSettings,
         FlexItemBundle::from_style(
-            FlexItemStyle::fixed_size(Val::Vmin(8.), Val::Vmin(8.))
+            FlexItemStyle::fixed_size(Val::Pixel(30), Val::Pixel(30))
                 .with_alignment(Alignment::Start)
-                .with_margin(Size::all(Val::Vmin(5.)))
                 .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
         ),
         SpriteBundle {
@@ -81,21 +84,17 @@ fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut 
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::from_item_style(
-                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(13.))
-                    .with_margin(Size::all(Val::Vmin(2.5))),
+                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(42))
+                    .with_margin(Size::all(Val::Pixel(15))),
             ))
             .with_children(child_builder);
     });
 }
 
 fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
-    let width = Val::Vmin(26.0);
-    let height = Val::Vmin(11.0);
-    let line_height = if cfg!(target_os = "ios") {
-        Val::Pixel(1.)
-    } else {
-        0.03 * height.clone()
-    };
+    let width = Val::Pixel(100);
+    let height = Val::Pixel(42);
+    let line_height = Val::Pixel(1);
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
@@ -106,7 +105,10 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
     row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
     row.spawn((
-        FlexItemBundle::from_style(FlexItemStyle::fixed_size(width.clone(), line_height.clone())),
+        FlexItemBundle::from_style(FlexItemStyle::fixed_size(
+            width.clone(),
+            line_height.clone(),
+        )),
         SpriteBundle {
             sprite: Sprite::from_color(COLOR_TIMER_BORDER),
             ..default()
@@ -115,7 +117,7 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::minimum_size(
         width.clone(),
-        0.9 * height,
+        height - 2. * line_height.clone(),
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((
@@ -135,13 +137,17 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
 
 pub fn build_button_row(
     screen: &mut EntityCommands,
+    screen_sizing: &ScreenSizing,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.))
-                    .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                FlexItemStyle::preferred_size(
+                    Val::Vmin(if screen_sizing.is_ipad { 80. } else { 90. }),
+                    Val::Pixel(35),
+                )
+                .with_margin(Size::new(Val::None, Val::Pixel(15))),
                 FlexContainerStyle::row().with_gap(Val::Auto),
             ))
             .with_children(child_builder);
@@ -156,8 +162,8 @@ fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
     };
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
-        Val::Vmin(25.0),
-        Val::Vmin(9.0),
+        Val::Pixel(100),
+        Val::Pixel(35),
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((

@@ -9,7 +9,7 @@ publish = false
 [features]
 android_shared_stdcxx = ["bevy/android_shared_stdcxx"]
 dynamic_linking = ["bevy/dynamic_linking"]
-steam = ["dep:bevy-steamworks"]
+#steam = ["dep:bevy-steamworks"]
 
 [dependencies]
 anyhow = "1"
@@ -32,7 +32,7 @@ bevy = { version = "0.11", default-features = false, features = [
     "x11",
 ] }
 bevy_framepace = { version = "0.13" }
-bevy-steamworks = { optional = true, version = "0.8" }
+#bevy-steamworks = { optional = true, version = "0.8" }
 bevy_tweening = { version = "0.8", default-features = false, features = [
     "bevy_asset",
     "bevy_sprite",

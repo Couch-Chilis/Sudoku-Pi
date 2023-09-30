@@ -1,4 +1,6 @@
-use crate::{constants::*, pointer_query::*, ui::*, utils::TransformExt, Fonts, Images};
+use crate::{
+    constants::*, pointer_query::*, ui::*, utils::TransformExt, Fonts, Images, ScreenSizing,
+};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
@@ -31,21 +33,26 @@ pub fn build_mode_slider(
     materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     images: &Images,
+    screen_sizing: &ScreenSizing,
 ) {
     parent.with_children(|parent| {
         parent
             .spawn((
                 ModeSlider { active: false },
                 FlexBundle::new(
-                    FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(30.))
-                        .with_margin(Size::new(Val::None, Val::Vmin(4.5))),
+                    FlexItemStyle::preferred_size(
+                        Val::Vmin(if screen_sizing.is_ipad { 80. } else { 90. }),
+                        Val::Pixel(105),
+                    )
+                    .with_margin(Size::new(Val::None, Val::Pixel(15))),
                     FlexContainerStyle::column(),
                 ),
             ))
             .with_children(|column| {
                 column
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(9.)),
+                        FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
+                            .with_fixed_aspect_ratio(),
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {
@@ -55,11 +62,11 @@ pub fn build_mode_slider(
 
                 column
                     .spawn(FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Vmin(21.)),
+                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(70)),
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {
-                        build_labels(row, fonts);
+                        build_labels(row, fonts, screen_sizing);
                     });
             });
     });
@@ -68,8 +75,7 @@ pub fn build_mode_slider(
 fn build_background(row: &mut ChildBuilder, images: &Images) {
     row.spawn((
         FlexItemBundle::from_style(
-            FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
-                .with_fixed_aspect_ratio()
+            FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.))
                 .without_occupying_space()
                 .with_margin(Size::new(Val::None, Val::CrossPercent(1.5)))
                 .with_transform(Transform::from_2d_scale(1. / 1282., 1. / 118.)),
@@ -101,7 +107,7 @@ fn build_knobs(
         materials,
         OppositeSliderKnob,
         COLOR_BOARD_LINE_THIN,
-        0.9,
+        0.91,
         INACTIVE_KNOB_Z,
     );
 }
@@ -132,7 +138,7 @@ fn build_knob(
     });
 }
 
-fn build_labels(row: &mut ChildBuilder, fonts: &Fonts) {
+fn build_labels(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizing) {
     let text_style = TextStyle {
         font: fonts.medium.clone(),
         font_size: 48.,
@@ -145,8 +151,15 @@ fn build_labels(row: &mut ChildBuilder, fonts: &Fonts) {
     ))
     .with_children(|label_container| {
         label_container.spawn(
-            FlexTextBundle::from_text(Text::from_section("Normal\nmode", text_style.clone()))
-                .with_anchor(Anchor::CenterLeft),
+            FlexTextBundle::from_text(Text::from_section(
+                if screen_sizing.is_ipad {
+                    "Normal mode"
+                } else {
+                    "Normal\nmode"
+                },
+                text_style.clone(),
+            ))
+            .with_anchor(Anchor::CenterLeft),
         );
     });
 
@@ -156,8 +169,15 @@ fn build_labels(row: &mut ChildBuilder, fonts: &Fonts) {
     ))
     .with_children(|label_container| {
         label_container.spawn(
-            FlexTextBundle::from_text(Text::from_section("Notes\nmode", text_style))
-                .with_anchor(Anchor::CenterRight),
+            FlexTextBundle::from_text(Text::from_section(
+                if screen_sizing.is_ipad {
+                    "Notes mode"
+                } else {
+                    "Notes\nmode"
+                },
+                text_style,
+            ))
+            .with_anchor(Anchor::CenterRight),
         );
     });
 }
@@ -240,7 +260,7 @@ pub fn render_slider_knobs(
         EaseFunction::QuadraticInOut,
         ANIMATION_DURATION,
         TransformTranslateKnobLens {
-            start: knob_start.clamp(0., 0.9),
+            start: knob_start.clamp(0., 0.91),
             end: knob_end,
             center: 0.5 * width,
         },

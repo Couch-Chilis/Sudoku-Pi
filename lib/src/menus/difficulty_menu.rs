@@ -1,5 +1,5 @@
 use super::ButtonBuilder;
-use crate::{sudoku::Difficulty, ui::*, Fonts, ScreenState, TransitionEvent};
+use crate::{sudoku::Difficulty, ui::*, ScreenState, TransitionEvent};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -8,13 +8,10 @@ pub enum DifficultyScreenButtonAction {
     StartGameAtDifficulty(Difficulty),
 }
 
-pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, fonts: &Fonts) {
+pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, buttons: &ButtonBuilder) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
 
-    let button_style = FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
-        .with_margin(Size::all(Val::Vmin(1.5)));
-    let buttons = ButtonBuilder::new(fonts, button_style);
     buttons.build_secondary_with_text_and_action_and_custom_margin(
         parent,
         "Back",

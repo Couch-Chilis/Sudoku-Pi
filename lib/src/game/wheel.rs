@@ -7,12 +7,13 @@ use crate::{
     pointer_query::{PointerQuery, PointerQueryExt},
     settings::Settings,
     utils::*,
-    ComputedPosition, Fonts, Game, GameTimer, Images, ScreenState,
+    ComputedPosition, Fonts, Game, GameTimer, Images, ScreenSizing, ScreenState,
 };
-use bevy::{ecs::system::EntityCommands, prelude::*, window::PrimaryWindow};
+use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
+const MAX_RADIUS_IPAD: f32 = 0.4;
 const WHEEL_SIZE: f32 = 400.;
 const WHEEL_Z: f32 = 10.;
 pub const NOTES_MODE_OPEN_DELAY: f32 = 0.6;
@@ -305,8 +306,8 @@ pub fn render_wheel(
     >,
     mut top_label_text: Query<&mut Text, With<TopLabelText>>,
     active_slice_handles: Res<ActiveSliceHandles>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
     screen: Res<State<ScreenState>>,
+    screen_sizing: Res<ScreenSizing>,
 ) {
     let screen = screen.get();
 
@@ -340,12 +341,8 @@ pub fn render_wheel(
         return;
     }
 
-    let Ok(window) = window_query.get_single() else {
-        return;
-    };
-
-    let radius = get_radius(&wheel);
-    let center_position = get_wheel_center(window, &wheel, radius);
+    let radius = get_radius(&screen_sizing, &wheel);
+    let center_position = get_wheel_center(&screen_sizing, &wheel, radius);
     if wheel.center_position != center_position {
         wheel.center_position = center_position;
     }
@@ -407,7 +404,7 @@ fn get_board_translation(board_position: &ComputedPosition, cursor_position: Vec
     Some(Vec2::new(board_x, board_y))
 }
 
-fn get_radius(wheel: &Wheel) -> f32 {
+fn get_radius(screen_sizing: &ScreenSizing, wheel: &Wheel) -> f32 {
     let mut spawn_timer = wheel.spawn_timer;
     if wheel.mode == ModeState::Notes {
         spawn_timer = (spawn_timer - NOTES_MODE_OPEN_DELAY).max(0.);
@@ -415,29 +412,31 @@ fn get_radius(wheel: &Wheel) -> f32 {
 
     let finger_radius = 2.5 * wheel.start_position.distance(wheel.current_position);
     let time_radius = (spawn_timer * 40.).powi(2) / 10.;
-    finger_radius.max(time_radius).min(MAX_RADIUS)
+    finger_radius
+        .max(time_radius)
+        .min(if screen_sizing.is_ipad {
+            MAX_RADIUS_IPAD
+        } else {
+            MAX_RADIUS
+        })
 }
 
 /// Returns the X and Y coordinates of the center position of the wheel.
 ///
 /// The center position is usually the position where the press started, but it
 /// maybe adjusted to avoid the wheel from going outside the screen dimensions.
-fn get_wheel_center(window: &Window, wheel: &Wheel, radius: f32) -> Vec2 {
-    let overflow_ratio = 0.9;
-
+fn get_wheel_center(screen_sizing: &ScreenSizing, wheel: &Wheel, radius: f32) -> Vec2 {
     let mut cx = wheel.start_position.x;
-    let mut cy = wheel.start_position.y;
+    let cy = wheel.start_position.y;
 
-    if window.width() > window.height() {
-        if cy + radius > overflow_ratio {
-            cy = overflow_ratio - radius;
-        } else if cy - radius < -overflow_ratio {
-            cy = -overflow_ratio + radius;
+    if !screen_sizing.is_ipad {
+        let overflow_ratio = 0.9;
+
+        if cx + radius > overflow_ratio {
+            cx = overflow_ratio - radius;
+        } else if cx - radius < -overflow_ratio {
+            cx = -overflow_ratio + radius;
         }
-    } else if cx + radius > overflow_ratio {
-        cx = overflow_ratio - radius;
-    } else if cx - radius < -overflow_ratio {
-        cx = -overflow_ratio + radius;
     }
 
     Vec2::new(cx, cy)

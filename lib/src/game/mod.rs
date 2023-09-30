@@ -5,8 +5,8 @@ mod highscore_screen;
 mod mode_slider;
 mod wheel;
 
-use crate::pointer_query::*;
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
+use crate::{pointer_query::*, ScreenSizing};
 use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -166,13 +166,25 @@ pub fn board_setup(
     fonts: &Fonts,
     game: &Game,
     images: &Images,
+    screen_sizing: &ScreenSizing,
     settings: &Settings,
 ) {
-    init_game_ui(game_screen, meshes, materials, fonts, images, |parent| {
+    let board_builder = |parent: &mut EntityCommands| {
         parent.with_children(|parent| {
-            build_board(parent, fonts, game, images, settings, ScreenState::Game);
+            use ScreenState::*;
+            build_board(parent, fonts, game, images, Game, screen_sizing, settings);
         });
-    });
+    };
+
+    init_game_ui(
+        game_screen,
+        meshes,
+        materials,
+        fonts,
+        images,
+        screen_sizing,
+        board_builder,
+    );
 }
 
 fn on_keyboard_input(

@@ -21,7 +21,11 @@ identifier = "nl.couch-chilis.sudoku-pi"
 sudoku-lib = { path = "lib" }
 
 [patch.crates-io]
-#bevy = { path = "../bevy" }
+bevy = { path = "../bevy" }
+bevy_app = { path = "../bevy/crates/bevy_app" }
+bevy_ecs = { path = "../bevy/crates/bevy_ecs" }
+bevy_log = { path = "../bevy/crates/bevy_log" }
+bevy_utils = { path = "../bevy/crates/bevy_utils" }
 #bevy_tweening = { path = "../bevy_tweening" }
-bevy-steamworks = { path = "../bevy-steamworks" }
-#winit = { path = "../winit" }
+#bevy-steamworks = { path = "../bevy-steamworks" }
+winit = { path = "../winit" }
