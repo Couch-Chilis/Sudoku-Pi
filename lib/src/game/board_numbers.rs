@@ -4,13 +4,14 @@ use crate::{
     sudoku::*,
     ui::*,
     utils::{SpriteExt, TransformExt},
-    Fonts, Settings,
+    Fonts, ScreenSizing, Settings,
 };
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
 const NUMBER_FONT_SIZE: f32 = 80.;
 const NOTE_FONT_SIZE: f32 = 30.;
+const NOTE_FONT_SIZE_IPAD: f32 = 40.;
 
 #[derive(Clone, Copy)]
 pub(super) enum CellHighlightKind {
@@ -26,7 +27,13 @@ pub(super) enum NoteHighlightKind {
     Mistake,
 }
 
-pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, settings: &Settings) {
+pub fn fill_numbers(
+    board: &mut EntityCommands,
+    fonts: &Fonts,
+    game: &Game,
+    screen_sizing: &ScreenSizing,
+    settings: &Settings,
+) {
     board.with_children(|board| {
         for x in 0..9 {
             board
@@ -36,7 +43,7 @@ pub fn fill_numbers(board: &mut EntityCommands, fonts: &Fonts, game: &Game, sett
                 ))
                 .with_children(|column| {
                     for y in 0..9 {
-                        spawn_cell(column, fonts, game, settings, x, y);
+                        spawn_cell(column, fonts, game, screen_sizing, settings, x, y);
                     }
                 });
         }
@@ -47,6 +54,7 @@ fn spawn_cell(
     parent: &mut ChildBuilder,
     fonts: &Fonts,
     game: &Game,
+    screen_sizing: &ScreenSizing,
     settings: &Settings,
     x: u8,
     y: u8,
@@ -69,7 +77,11 @@ fn spawn_cell(
 
     let note_style = TextStyle {
         font: fonts.bold.clone(),
-        font_size: NOTE_FONT_SIZE,
+        font_size: if screen_sizing.is_ipad {
+            NOTE_FONT_SIZE_IPAD
+        } else {
+            NOTE_FONT_SIZE
+        },
         color: Color::NONE,
     };
 

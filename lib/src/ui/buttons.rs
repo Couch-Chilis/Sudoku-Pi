@@ -2,11 +2,7 @@ use super::{flex::*, InitialSelection, Interaction};
 use crate::{constants::*, Fonts};
 use bevy::prelude::*;
 
-const BORDER_THICKNESS: Val = if cfg!(target_os = "ios") {
-    Val::Pixel(1)
-} else {
-    Val::Vmin(0.3)
-};
+const BORDER_THICKNESS: Val = Val::Pixel(1);
 
 /// Marker for buttons.
 #[derive(Clone, Component, Default)]

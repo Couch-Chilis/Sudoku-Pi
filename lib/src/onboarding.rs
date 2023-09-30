@@ -10,7 +10,8 @@ const PROCEED_NUMBER_INSTRUCTION: &str = "Great!\nLet's proceed to trying out no
 const INITIAL_NOTES_INSTRUCTION: &str =
     "Now it's time to try out some notes.\nTouch any open cell to \"draw\" notes.";
 const PROCEED_NOTES_INSTRUCTION: &str = "Great!\nYou're ready to start your first game!";
-const PROCEED_NOTES_INSTRUCTION_ALT: &str = "Great!\nLooks like you got the hang of it!";
+const PROCEED_NOTES_INSTRUCTION_ALT: &str =
+    "Great!\nWhichever number is selected is the one you will draw.";
 
 #[derive(Clone, Component, Copy, Eq, PartialEq)]
 pub enum OnboardingScreenAction {

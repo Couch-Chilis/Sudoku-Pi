@@ -13,7 +13,7 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
-const MAX_RADIUS_IPAD: f32 = 0.5;
+const MAX_RADIUS_IPAD: f32 = 0.4;
 const WHEEL_SIZE: f32 = 400.;
 const WHEEL_Z: f32 = 10.;
 pub const NOTES_MODE_OPEN_DELAY: f32 = 0.6;

@@ -50,7 +50,7 @@ pub fn build_board(
 
     draw_lines(&mut board);
 
-    fill_numbers(&mut board, fonts, game, settings);
+    fill_numbers(&mut board, fonts, game, screen_sizing, settings);
 
     init_wheel(&mut board, images, fonts, screen);
 
