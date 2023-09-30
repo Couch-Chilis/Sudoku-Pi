@@ -73,22 +73,28 @@ pub fn menu_setup(
         ));
 
         // Spacer.
-        screen.spawn(FlexLeafBundle::from_style(FlexItemStyle::fixed_size(
-            Val::Percent(100.),
-            Val::Percent(50.),
-        )));
+        screen.spawn(FlexLeafBundle::from_style(
+            FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.))
+                .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
+        ));
 
         let buttons = make_button_builder(fonts, screen_sizing);
 
         // Main menu buttons.
-        build_button_section(screen, ScreenState::MainMenu, 0., |main_section| {
+        build_button_section(screen, ScreenState::MainMenu, 0., 2., |main_section| {
             spawn_main_menu_buttons(main_section, &buttons, fonts, game);
         });
 
         // Difficulty buttons.
-        build_button_section(screen, ScreenState::SelectDifficulty, -0.5 * PI, |parent| {
-            spawn_difficulty_menu_buttons(parent, &buttons);
-        });
+        build_button_section(
+            screen,
+            ScreenState::SelectDifficulty,
+            -0.5 * PI,
+            3.,
+            |parent| {
+                spawn_difficulty_menu_buttons(parent, &buttons);
+            },
+        );
     });
 }
 
@@ -107,6 +113,7 @@ fn build_button_section(
     screen: &mut ChildBuilder,
     screen_state: ScreenState,
     initial_rotation: f32,
+    z_index: f32,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
     screen
@@ -120,7 +127,7 @@ fn build_button_section(
                     .without_occupying_space()
                     .with_transform(Transform {
                         rotation: Quat::from_rotation_z(initial_rotation),
-                        translation: Vec3::new(0., -1., 2.),
+                        translation: Vec3::new(0., -1., z_index),
                         ..default()
                     }),
                 FlexContainerStyle::default().with_padding(Sides::all(Val::Vmin(10.))),

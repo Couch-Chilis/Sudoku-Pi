@@ -34,8 +34,8 @@ use sudoku::Game;
 use transition_events::{on_transition, TransitionEvent};
 use ui::*;
 
-const INITIAL_WIDTH: f32 = 768.;
-const INITIAL_HEIGHT: f32 = 1024.;
+const INITIAL_WIDTH: f32 = 390.;
+const INITIAL_HEIGHT: f32 = 845.;
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -101,7 +101,7 @@ impl Default for ScreenSizing {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
             top_padding: 0,
-            is_ipad: true,
+            is_ipad: false,
         }
     }
 }

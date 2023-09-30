@@ -1,5 +1,6 @@
 use crate::{constants::*, ui::*, utils::*, Fortune, Images, ScreenSizing, TransitionEvent};
 use crate::{Fonts, Game, Highscores, ScreenState};
+use bevy::sprite::Anchor;
 use bevy::text::Text2dBounds;
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
@@ -123,7 +124,8 @@ pub fn highscore_screen_setup(
                 ));
 
                 let _spacer = wall_section.spawn(FlexItemBundle::from_style(
-                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8)),
+                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8))
+                        .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
                 ));
 
                 let padding = if screen_sizing.is_ipad {
@@ -144,7 +146,8 @@ pub fn highscore_screen_setup(
                 let mut score_container = wall_section.spawn((
                     StatsContainer,
                     FlexBundle::new(
-                        FlexItemStyle::available_size(),
+                        FlexItemStyle::available_size()
+                            .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
                         FlexContainerStyle::column().with_padding(padding),
                     ),
                 ));
@@ -236,46 +239,7 @@ fn render_scores(
 ) {
     score_container.with_children(|container| {
         let mut create_row = |marker: StatTextMarker, label: &str| {
-            container
-                .spawn(FlexBundle::new(
-                    FlexItemStyle::available_size(),
-                    FlexContainerStyle::row(),
-                ))
-                .with_children(|row| {
-                    row.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                        .with_children(|top| {
-                            top.spawn(FlexTextBundle::from_text(
-                                Text::from_section(
-                                    label,
-                                    TextStyle {
-                                        font: fonts.medium.clone(),
-                                        font_size: 40.,
-                                        color: COLOR_MAIN_DARKER,
-                                    },
-                                )
-                                .with_alignment(TextAlignment::Right),
-                            ));
-                        });
-
-                    row.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                        .with_children(|top| {
-                            let value = get_stat_text(marker.kind, game, highscores);
-                            top.spawn((
-                                marker,
-                                FlexTextBundle::from_text(
-                                    Text::from_section(
-                                        value,
-                                        TextStyle {
-                                            font: fonts.medium.clone(),
-                                            font_size: 40.,
-                                            color: COLOR_POP_FOCUS,
-                                        },
-                                    )
-                                    .with_alignment(TextAlignment::Left),
-                                ),
-                            ));
-                        });
-                });
+            create_stat_row(container, fonts, game, highscores, marker, label);
         };
 
         create_row(StatTextMarker::new(StatKind::Score), "Score:");
@@ -285,55 +249,74 @@ fn render_scores(
 
         let _spacer = container.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
-        let mut create_bold_row = |marker: StatTextMarker, label: &str| {
-            container
-                .spawn(FlexBundle::new(
-                    FlexItemStyle::available_size(),
-                    FlexContainerStyle::row(),
-                ))
-                .with_children(|row| {
-                    row.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                        .with_children(|top| {
-                            top.spawn(FlexTextBundle::from_text(
-                                Text::from_section(
-                                    label,
-                                    TextStyle {
-                                        font: fonts.bold.clone(),
-                                        font_size: 40.,
-                                        color: COLOR_MAIN_DARKER,
-                                    },
-                                )
-                                .with_alignment(TextAlignment::Right),
-                            ));
-                        });
-
-                    row.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                        .with_children(|top| {
-                            let value = get_stat_text(marker.kind, game, highscores);
-                            top.spawn((
-                                marker,
-                                FlexTextBundle::from_text(
-                                    Text::from_section(
-                                        value,
-                                        TextStyle {
-                                            font: fonts.bold.clone(),
-                                            font_size: 40.,
-                                            color: COLOR_POP_FOCUS,
-                                        },
-                                    )
-                                    .with_alignment(TextAlignment::Left),
-                                ),
-                            ));
-                        });
-                });
+        let mut create_row = |marker: StatTextMarker, label: &str| {
+            create_stat_row(container, fonts, game, highscores, marker, label);
         };
 
-        create_bold_row(
+        create_row(
             StatTextMarker::new(StatKind::HighestScore),
             "Highest score:",
         );
-        create_bold_row(StatTextMarker::new(StatKind::BestTime), "Best time:");
+        create_row(StatTextMarker::new(StatKind::BestTime), "Best time:");
     });
+}
+
+fn create_stat_row(
+    container: &mut ChildBuilder,
+    fonts: &Fonts,
+    game: &Game,
+    highscores: &Highscores,
+    marker: StatTextMarker,
+    label: &str,
+) {
+    let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
+        fonts.bold.clone()
+    } else {
+        fonts.medium.clone()
+    };
+
+    container
+        .spawn(FlexBundle::new(
+            FlexItemStyle::available_size(),
+            FlexContainerStyle::row(),
+        ))
+        .with_children(|row| {
+            row.spawn(FlexBundle::from_item_style(FlexItemStyle::preferred_size(
+                Val::Percent(50.),
+                Val::Percent(100.),
+            )))
+            .with_children(|left| {
+                let style = TextStyle {
+                    font: font.clone(),
+                    font_size: 40.,
+                    color: COLOR_MAIN_DARKER,
+                };
+
+                left.spawn(
+                    FlexTextBundle::from_text(Text::from_section(label, style))
+                        .with_anchor(Anchor::CenterRight),
+                );
+            });
+
+            row.spawn(FlexBundle::from_item_style(
+                FlexItemStyle::preferred_size(Val::Percent(40.), Val::Percent(100.))
+                    .with_margin(Size::new(Val::Percent(5.), Val::None)),
+            ))
+            .with_children(|right| {
+                let value = get_stat_text(marker.kind, game, highscores);
+                let style = TextStyle {
+                    font,
+                    font_size: 40.,
+                    color: COLOR_POP_FOCUS,
+                };
+
+                right.spawn((
+                    marker,
+                    FlexTextBundle::from_text(Text::from_section(value, style))
+                        .with_anchor(Anchor::CenterLeft),
+                ));
+            });
+        });
 }
 
 pub fn on_fortune(
