@@ -10,6 +10,7 @@ use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::num::NonZeroU8;
 
 const NUMBER_FONT_SIZE: f32 = 80.;
+const NUMBER_FONT_SIZE_IPAD: f32 = 100.;
 const NOTE_FONT_SIZE: f32 = 30.;
 const NOTE_FONT_SIZE_IPAD: f32 = 40.;
 
@@ -67,7 +68,11 @@ fn spawn_cell(
         } else {
             fonts.bold.clone()
         },
-        font_size: NUMBER_FONT_SIZE,
+        font_size: if screen_sizing.is_ipad {
+            NUMBER_FONT_SIZE_IPAD
+        } else {
+            NUMBER_FONT_SIZE
+        },
         color: if n.is_some() {
             get_number_color(game, settings, x, y)
         } else {
@@ -354,6 +359,7 @@ pub(super) fn render_note_highlights(
     mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite)>,
     mut mistake_borders: Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
     screen: Res<State<ScreenState>>,
+    screen_sizing: Res<ScreenSizing>,
     highlights: Res<Highlights>,
     time: Res<Time>,
 ) {
@@ -383,6 +389,7 @@ pub(super) fn render_note_highlights(
                 &mut mistake_borders,
                 flex_item_style,
                 time.delta().as_secs_f32(),
+                &screen_sizing,
             );
         }
     }
@@ -393,6 +400,7 @@ fn animate_mistake(
     mistake_borders: &mut Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
     mut style: Mut<'_, FlexItemStyle>,
     delta: f32,
+    screen_sizing: &ScreenSizing,
 ) {
     let (ratio, show_borders) = get_mistake_animation_ratio(note.animation_timer);
 
@@ -414,7 +422,11 @@ fn animate_mistake(
     } else {
         note.animation_timer += delta;
 
-        let font_ratio = NUMBER_FONT_SIZE / NOTE_FONT_SIZE;
+        let font_ratio = if screen_sizing.is_ipad {
+            NUMBER_FONT_SIZE_IPAD / NOTE_FONT_SIZE_IPAD
+        } else {
+            NUMBER_FONT_SIZE / NOTE_FONT_SIZE
+        };
         let zoom = 1. + (1. - ratio) * (font_ratio - 1.);
         let scale = Vec3::new(zoom, zoom, 1.);
 

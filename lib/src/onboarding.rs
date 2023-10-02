@@ -385,9 +385,10 @@ pub fn how_to_play_notes_interaction(
 
 fn make_button_builder(fonts: &Fonts, screen_sizing: &ScreenSizing) -> ButtonBuilder {
     let button_size = if screen_sizing.is_ipad {
-        FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(5.))
+        FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
     } else {
         FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.))
     };
-    ButtonBuilder::new(fonts, button_size)
+    let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+    ButtonBuilder::new(fonts, button_size, font_size)
 }

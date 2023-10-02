@@ -1,5 +1,5 @@
 use super::{settings_toggle::*, ButtonBuilder};
-use crate::{ui::*, Fonts, Images, ScreenState, Settings, ScreenSizing};
+use crate::{ui::*, Fonts, Images, ScreenSizing, ScreenState, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
@@ -37,7 +37,7 @@ pub fn spawn_settings(
             FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
         ))
         .with_children(|parent| {
-            let mut toggles = SettingsToggleBuilder::new(fonts, images);
+            let mut toggles = SettingsToggleBuilder::new(fonts, images, screen_sizing);
             toggles.build_settings_toggle(parent, settings, "Wheel swipe aid", EnableWheelAid);
 
             toggles.build_settings_toggle(
@@ -64,11 +64,12 @@ pub fn spawn_settings(
         ))
         .with_children(|parent| {
             let button_size = if screen_sizing.is_ipad {
-                FlexItemStyle::fixed_size(Val::Vmin(25.), Val::Vmin(5.))
+                FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
             } else {
                 FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.))
             };
-            let buttons = ButtonBuilder::new(fonts, button_size);
+            let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+            let buttons = ButtonBuilder::new(fonts, button_size, font_size);
             buttons.build_secondary_with_text_and_action(parent, "Back", Back);
         });
 }

@@ -151,7 +151,7 @@ pub fn highscore_screen_setup(
                         FlexContainerStyle::column().with_padding(padding),
                     ),
                 ));
-                render_scores(&mut score_container, fonts, game, highscores);
+                render_scores(&mut score_container, fonts, game, highscores, screen_sizing);
             });
 
         screen
@@ -161,13 +161,14 @@ pub fn highscore_screen_setup(
             ))
             .with_children(|button_section| {
                 let button_style = if screen_sizing.is_ipad {
-                    FlexItemStyle::fixed_size(Val::Vmin(35.), Val::Vmin(5.))
+                    FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
                         .with_margin(Size::all(Val::Vmin(1.5)))
                 } else {
                     FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
                         .with_margin(Size::all(Val::Vmin(1.5)))
                 };
-                let buttons = ButtonBuilder::new(fonts, button_style);
+                let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+                let buttons = ButtonBuilder::new(fonts, button_style, font_size);
                 buttons.build_secondary_with_text_and_action(
                     button_section,
                     "Back to Menu",
@@ -236,10 +237,19 @@ fn render_scores(
     fonts: &Fonts,
     game: &Game,
     highscores: &Highscores,
+    screen_sizing: &ScreenSizing,
 ) {
     score_container.with_children(|container| {
         let mut create_row = |marker: StatTextMarker, label: &str| {
-            create_stat_row(container, fonts, game, highscores, marker, label);
+            create_stat_row(
+                container,
+                fonts,
+                game,
+                highscores,
+                screen_sizing,
+                marker,
+                label,
+            );
         };
 
         create_row(StatTextMarker::new(StatKind::Score), "Score:");
@@ -250,7 +260,15 @@ fn render_scores(
         let _spacer = container.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
         let mut create_row = |marker: StatTextMarker, label: &str| {
-            create_stat_row(container, fonts, game, highscores, marker, label);
+            create_stat_row(
+                container,
+                fonts,
+                game,
+                highscores,
+                screen_sizing,
+                marker,
+                label,
+            );
         };
 
         create_row(
@@ -266,9 +284,11 @@ fn create_stat_row(
     fonts: &Fonts,
     game: &Game,
     highscores: &Highscores,
+    screen_sizing: &ScreenSizing,
     marker: StatTextMarker,
     label: &str,
 ) {
+    let font_size = if screen_sizing.is_ipad { 50. } else { 40. };
     let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
         fonts.bold.clone()
     } else {
@@ -288,7 +308,7 @@ fn create_stat_row(
             .with_children(|left| {
                 let style = TextStyle {
                     font: font.clone(),
-                    font_size: 40.,
+                    font_size,
                     color: COLOR_MAIN_DARKER,
                 };
 
@@ -306,7 +326,7 @@ fn create_stat_row(
                 let value = get_stat_text(marker.kind, game, highscores);
                 let style = TextStyle {
                     font,
-                    font_size: 40.,
+                    font_size,
                     color: COLOR_POP_FOCUS,
                 };
 

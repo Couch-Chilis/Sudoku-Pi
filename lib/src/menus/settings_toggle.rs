@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Fonts, Images, Settings};
+use crate::{constants::*, ui::*, utils::*, Fonts, Images, ScreenSizing, Settings};
 use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
@@ -38,7 +38,7 @@ pub struct SettingsToggleBuilder<'a> {
 }
 
 impl<'a> SettingsToggleBuilder<'a> {
-    pub fn new(fonts: &Fonts, images: &'a Images) -> Self {
+    pub fn new(fonts: &Fonts, images: &'a Images, screen_sizing: &ScreenSizing) -> Self {
         let container_style = FlexItemStyle {
             flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
             margin: Size::all(Val::Vmin(2.)),
@@ -47,7 +47,7 @@ impl<'a> SettingsToggleBuilder<'a> {
 
         let text_style = TextStyle {
             font: fonts.medium.clone(),
-            font_size: 50.,
+            font_size: if screen_sizing.is_ipad { 72. } else { 50. },
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };
 

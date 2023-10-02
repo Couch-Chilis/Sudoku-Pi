@@ -100,13 +100,14 @@ pub fn menu_setup(
 
 fn make_button_builder(fonts: &Fonts, screen_sizing: &ScreenSizing) -> ButtonBuilder {
     let button_style = if screen_sizing.is_ipad {
-        FlexItemStyle::fixed_size(Val::Vmin(35.), Val::Vmin(5.))
+        FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
             .with_margin(Size::all(Val::Vmin(1.5)))
     } else {
         FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
             .with_margin(Size::all(Val::Vmin(1.5)))
     };
-    ButtonBuilder::new(fonts, button_style)
+    let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+    ButtonBuilder::new(fonts, button_style, font_size)
 }
 
 fn build_button_section(

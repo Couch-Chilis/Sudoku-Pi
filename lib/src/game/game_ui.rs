@@ -32,27 +32,25 @@ pub fn init_game_ui(
     build_button_row(game_screen, screen_sizing, |icon_row| {
         icon_row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
-        build_settings_icon(icon_row, images);
+        build_settings_icon(icon_row, images, screen_sizing);
     });
 
     build_timer_row(game_screen, |timer_row| {
-        build_timer(timer_row, fonts);
+        build_timer(timer_row, fonts, screen_sizing);
     });
 
     build_button_row(game_screen, screen_sizing, |button_row| {
-        let button_size = FlexItemStyle::fixed_size(
-            if screen_sizing.is_ipad {
-                Val::Pixel(120)
-            } else {
-                Val::Pixel(80)
-            },
-            Val::Pixel(35),
-        );
+        let button_size = if screen_sizing.is_ipad {
+            FlexItemStyle::fixed_size(Val::Pixel(133), Val::Pixel(60))
+        } else {
+            FlexItemStyle::fixed_size(Val::Pixel(80), Val::Pixel(35))
+        };
+        let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
 
-        let buttons = ButtonBuilder::new(fonts, button_size);
+        let buttons = ButtonBuilder::new(fonts, button_size, font_size);
         buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
 
-        build_score(button_row, fonts);
+        build_score(button_row, fonts, screen_sizing);
 
         buttons.build_secondary_with_text_and_action(button_row, "Hint", UiButtonAction::Hint);
     });
@@ -62,14 +60,20 @@ pub fn init_game_ui(
     build_mode_slider(game_screen, meshes, materials, fonts, images, screen_sizing);
 }
 
-fn build_settings_icon(screen: &mut ChildBuilder, images: &Images) {
+fn build_settings_icon(screen: &mut ChildBuilder, images: &Images, screen_sizing: &ScreenSizing) {
+    let cog_size = if screen_sizing.is_ipad {
+        Val::Pixel(40)
+    } else {
+        Val::Pixel(30)
+    };
+
     // Cog.
     screen.spawn((
         SettingsIcon,
         Interaction::None,
         UiButtonAction::GoToSettings,
         FlexItemBundle::from_style(
-            FlexItemStyle::fixed_size(Val::Pixel(30), Val::Pixel(30))
+            FlexItemStyle::fixed_size(cog_size.clone(), cog_size)
                 .with_alignment(Alignment::Start)
                 .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
         ),
@@ -91,14 +95,22 @@ fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut 
     });
 }
 
-fn build_timer(row: &mut ChildBuilder, fonts: &Fonts) {
-    let width = Val::Pixel(100);
-    let height = Val::Pixel(42);
+fn build_timer(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizing) {
+    let width = if screen_sizing.is_ipad {
+        Val::Pixel(150)
+    } else {
+        Val::Pixel(100)
+    };
+    let height = if screen_sizing.is_ipad {
+        Val::Pixel(64)
+    } else {
+        Val::Pixel(42)
+    };
     let line_height = Val::Pixel(1);
 
     let text_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 70.,
+        font_size: if screen_sizing.is_ipad { 105. } else { 70. },
         color: COLOR_TIMER_TEXT,
     };
 
@@ -154,16 +166,16 @@ pub fn build_button_row(
     });
 }
 
-fn build_score(row: &mut ChildBuilder, fonts: &Fonts) {
+fn build_score(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizing) {
     let text_style = TextStyle {
         font: fonts.medium.clone(),
-        font_size: 58.,
+        font_size: if screen_sizing.is_ipad { 86. } else { 58. },
         color: COLOR_SCORE_TEXT,
     };
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
-        Val::Pixel(100),
-        Val::Pixel(35),
+        Val::Pixel(if screen_sizing.is_ipad { 150 } else { 100 }),
+        Val::Pixel(if screen_sizing.is_ipad { 60 } else { 35 }),
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((

@@ -34,8 +34,12 @@ use sudoku::Game;
 use transition_events::{on_transition, TransitionEvent};
 use ui::*;
 
-const INITIAL_WIDTH: f32 = 390.;
-const INITIAL_HEIGHT: f32 = 845.;
+// iOS:
+//const INITIAL_WIDTH: f32 = 390.;
+//const INITIAL_HEIGHT: f32 = 845.;
+// iPad:
+const INITIAL_WIDTH: f32 = 768.;
+const INITIAL_HEIGHT: f32 = 1024.;
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -101,7 +105,7 @@ impl Default for ScreenSizing {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
             top_padding: 0,
-            is_ipad: false,
+            is_ipad: true,
         }
     }
 }
@@ -455,11 +459,17 @@ fn spawn_screen<'w, 's, 'a>(
         .with_padding(Sides {
             top: if screen == ScreenState::MainMenu {
                 Val::None
+            } else if screen_sizing.is_ipad && screen == ScreenState::Game {
+                Val::Auto
             } else {
                 Val::Pixel(screen_sizing.top_padding)
             },
             right: Val::None,
-            bottom: Val::None,
+            bottom: if screen_sizing.is_ipad && screen == ScreenState::Game {
+                Val::Auto
+            } else {
+                Val::None
+            },
             left: Val::None,
         }),
         ..default()
