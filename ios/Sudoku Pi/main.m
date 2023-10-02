@@ -1,10 +1,10 @@
 @import UIKit;
 
-void run_with_fixed_sizes(double, double, double, double, sint_32, bool);
+void run_with_fixed_sizes(double, double, double, double, SInt32, bool);
 
 int main(int argc, char *argv[]) {
     //CGSize statusBarSize = [[UIApplication sharedApplication] statusBarFrame].size;
-    sint_32 topPadding = 44;
+    SInt32 topPadding = 44;
 
     UIScreen *screen = [UIScreen mainScreen];
     CGFloat width = screen.bounds.size.width;
