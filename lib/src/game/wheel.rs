@@ -109,7 +109,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, sc
 
         let label_text_style = TextStyle {
             font: fonts.medium.clone(),
-            font_size: 40.,
+            font_size: 50.,
             color: COLOR_WHEEL_TOP_TEXT,
         };
 
@@ -128,7 +128,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, sc
                     TopLabelText,
                     Text2dBundle {
                         text: Text::from_section("", label_text_style),
-                        transform: Transform::default_2d(),
+                        transform: Transform::from_translation(Vec3::new(0., 8., 1.)),
                         ..default()
                     },
                 ));
