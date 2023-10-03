@@ -12,7 +12,6 @@ const COG_PRESSED: &[u8] = include_bytes!("../../assets/cog_pressed.png");
 const LAUNCH_SCREEN: &[u8] = include_bytes!("../../assets/launch_screen.png");
 const LAUNCH_SCREEN_IPAD: &[u8] = include_bytes!("../../assets/launch_screen_ipad.png");
 const MODE_SLIDER: &[u8] = include_bytes!("../../assets/mode_slider.png");
-const SCROLL: &[u8] = include_bytes!("../../assets/scroll.png");
 const SLICE_1: &[u8] = include_bytes!("../../assets/slice_1.png");
 const SLICE_2: &[u8] = include_bytes!("../../assets/slice_2.png");
 const SLICE_3: &[u8] = include_bytes!("../../assets/slice_3.png");
@@ -94,7 +93,6 @@ pub struct Images {
     pub launch_screen: Handle<Image>,
     pub launch_screen_ipad: Handle<Image>,
     pub mode_slider: Handle<Image>,
-    pub scroll: Handle<Image>,
     pub slice_active_1: Handle<Image>,
     pub slice_active_2: Handle<Image>,
     pub slice_active_3: Handle<Image>,
@@ -139,7 +137,6 @@ impl Images {
             launch_screen: images.add(load_png(LAUNCH_SCREEN)),
             launch_screen_ipad: images.add(load_png(LAUNCH_SCREEN_IPAD)),
             mode_slider: images.add(load_png(MODE_SLIDER)),
-            scroll: images.add(load_png(SCROLL)),
             slice_active_1: images.add(load_png(SLICE_1)),
             slice_active_2: images.add(load_png(SLICE_2)),
             slice_active_3: images.add(load_png(SLICE_3)),

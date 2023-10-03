@@ -14,7 +14,21 @@ pub enum HighscoreButtonAction {
 pub struct StatsContainer;
 
 #[derive(Component)]
-pub struct ScrollQuoteText;
+pub struct ScrollText {
+    kind: ScrollTextKind,
+}
+
+impl ScrollText {
+    fn new(kind: ScrollTextKind) -> Self {
+        Self { kind }
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ScrollTextKind {
+    Quote,
+    Author,
+}
 
 #[derive(Component)]
 pub struct StatTextMarker {
@@ -56,40 +70,80 @@ pub fn highscore_screen_setup(
             ))
             .with_children(|scroll_section| {
                 let item_style = if screen_sizing.is_ipad {
-                    FlexItemStyle::fixed_size(Val::Percent(45.), Val::CrossPercent(17.1))
+                    FlexItemStyle::fixed_size(Val::Pixel(700), Val::Pixel(190))
                 } else {
-                    FlexItemStyle::fixed_size(Val::Percent(90.), Val::CrossPercent(34.3))
+                    FlexItemStyle::fixed_size(Val::Pixel(342), Val::Pixel(92))
                 };
 
-                // Scroll.
-                scroll_section.spawn((
-                    FlexItemBundle::from_style(
-                        item_style
-                            .clone()
-                            .with_alignment(Alignment::Centered)
-                            .with_fixed_aspect_ratio()
-                            .without_occupying_space()
-                            .with_transform(Transform::from_2d_scale(1. / 1416., 1. / 537.)),
-                    ),
-                    SpriteBundle {
-                        texture: images.scroll.clone(),
-                        ..default()
-                    },
-                ));
+                let padding = if screen_sizing.is_ipad {
+                    Sides::new(Val::Pixel(30), Val::Pixel(22))
+                } else {
+                    Sides::new(Val::Pixel(16), Val::Pixel(10))
+                };
+
+                // "Scroll" containing the quotes.
+                scroll_section
+                    .spawn(
+                        FlexBundle::new(
+                            item_style
+                                .clone()
+                                .with_alignment(Alignment::Centered)
+                                .without_occupying_space(),
+                            FlexContainerStyle::default().with_padding(padding.clone()),
+                        )
+                        .with_background_color(COLOR_BOARD_LINE_THIN),
+                    )
+                    .with_children(|section| {
+                        section.spawn((
+                            FlexItemBundle::from_style(FlexItemStyle::available_size()),
+                            SpriteBundle {
+                                sprite: Sprite::from_color(COLOR_CREAM),
+                                ..default()
+                            },
+                        ));
+                    });
 
                 scroll_section
                     .spawn(FlexBundle::new(
                         item_style
-                            .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-                        FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(10.))),
+                            .clone()
+                            .with_transform(Transform::from_translation(Vec3::new(0., 0., 3.)))
+                            .without_occupying_space(),
+                        FlexContainerStyle::default().with_padding(padding.clone()),
                     ))
                     .with_children(|scroll_text_container| {
                         scroll_text_container.spawn((
-                            ScrollQuoteText,
+                            ScrollText::new(ScrollTextKind::Quote),
                             FlexTextBundle::from_text(Text::default()).with_bounds(Text2dBounds {
-                                size: Vec2::new(550., 200.),
+                                size: Vec2::new(
+                                    if screen_sizing.is_ipad { 1200. } else { 580. },
+                                    if screen_sizing.is_ipad { 400. } else { 200. },
+                                ),
                             }),
                         ));
+                    });
+
+                scroll_section
+                    .spawn(FlexBundle::new(
+                        item_style
+                            .with_transform(Transform::from_translation(Vec3::new(0., 0., 4.))),
+                        FlexContainerStyle::default().with_padding({
+                            let top = Val::Pixel(if screen_sizing.is_ipad { 155 } else { 65 });
+                            let right = padding.right.clone()
+                                + Val::Pixel(if screen_sizing.is_ipad { 15 } else { 10 });
+                            padding.with_top(top).with_right(right)
+                        }),
+                    ))
+                    .with_children(|scroll_author_wrapper| {
+                        scroll_author_wrapper
+                            .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
+                            .with_children(|scroll_author_container| {
+                                scroll_author_container.spawn((
+                                    ScrollText::new(ScrollTextKind::Author),
+                                    FlexTextBundle::from_text(Text::default())
+                                        .with_anchor(Anchor::BottomRight),
+                                ));
+                            });
                     });
             });
 
@@ -130,10 +184,10 @@ pub fn highscore_screen_setup(
 
                 let padding = if screen_sizing.is_ipad {
                     Sides {
-                        top: Val::Percent(35.),
-                        right: Val::Percent(30.),
-                        bottom: Val::Percent(15.),
-                        left: Val::Percent(30.),
+                        top: Val::Percent(32.),
+                        right: Val::Percent(27.),
+                        bottom: Val::Percent(12.),
+                        left: Val::Percent(27.),
                     }
                 } else {
                     Sides {
@@ -288,7 +342,7 @@ fn create_stat_row(
     marker: StatTextMarker,
     label: &str,
 ) {
-    let font_size = if screen_sizing.is_ipad { 50. } else { 40. };
+    let font_size = if screen_sizing.is_ipad { 60. } else { 44. };
     let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
         fonts.bold.clone()
     } else {
@@ -340,9 +394,10 @@ fn create_stat_row(
 }
 
 pub fn on_fortune(
-    mut scroll_quote: Query<&mut Text, With<ScrollQuoteText>>,
+    mut scroll_text: Query<(&mut Text, &ScrollText)>,
     fonts: Res<Fonts>,
     fortune: Res<Fortune>,
+    screen_sizing: Res<ScreenSizing>,
     screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() || screen_state.get() != &ScreenState::Highscores {
@@ -359,29 +414,34 @@ pub fn on_fortune(
         (line, "")
     };
 
-    let Ok(mut quote_text) = scroll_quote.get_single_mut() else {
-        return;
-    };
-
-    let quote_style = TextStyle {
-        font: fonts.scroll.clone(),
-        font_size: 35.,
-        color: Color::BLACK,
-    };
-
-    let author_style = TextStyle {
-        font: fonts.scroll.clone(),
-        font_size: 30.,
-        color: Color::BLACK,
-    };
-
-    *quote_text = Text::from_sections(if author.is_empty() {
-        vec![TextSection::new(quote, quote_style)]
-    } else {
-        vec![
-            TextSection::new(format!("{quote}\n"), quote_style),
-            TextSection::new(format!("— {author}"), author_style),
-        ]
-    })
-    .with_alignment(TextAlignment::Center);
+    for (mut text, ScrollText { kind }) in &mut scroll_text {
+        match kind {
+            ScrollTextKind::Quote => {
+                *text = Text::from_sections([TextSection::new(
+                    quote,
+                    TextStyle {
+                        font: fonts.scroll.clone(),
+                        font_size: if screen_sizing.is_ipad { 60. } else { 35. },
+                        color: Color::BLACK,
+                    },
+                )])
+                .with_alignment(if author.is_empty() {
+                    TextAlignment::Center
+                } else {
+                    TextAlignment::Left
+                })
+            }
+            ScrollTextKind::Author => {
+                *text = Text::from_sections([TextSection::new(
+                    author,
+                    TextStyle {
+                        font: fonts.scroll.clone(),
+                        font_size: if screen_sizing.is_ipad { 50. } else { 30. },
+                        color: Color::BLACK,
+                    },
+                )])
+                .with_alignment(TextAlignment::Right)
+            }
+        }
+    }
 }
