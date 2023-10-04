@@ -69,8 +69,7 @@ pub fn on_transition(
                     note_toggle: None,
                 };
                 mode_state.set(ModeState::Normal);
-                //screen_state.set(ScreenState::HowToPlayNumbers);
-                screen_state.set(ScreenState::Highscores);
+                screen_state.set(ScreenState::HowToPlayNumbers);
             }
             StartGame(difficulty) => {
                 *game = Game::generate(*difficulty).expect("Could not generate game");
