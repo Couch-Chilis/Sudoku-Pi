@@ -1,5 +1,5 @@
 use super::{settings_toggle::*, ButtonBuilder};
-use crate::{ui::*, Fonts, Images, ScreenState, Settings};
+use crate::{ui::*, Fonts, Images, ScreenSizing, ScreenState, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
@@ -11,10 +11,11 @@ pub fn settings_screen_setup(
     settings_screen: &mut EntityCommands,
     fonts: &Fonts,
     images: &Images,
+    screen_sizing: &ScreenSizing,
     settings: &Settings,
 ) {
     settings_screen.with_children(|screen| {
-        spawn_settings(screen, fonts, images, settings);
+        spawn_settings(screen, fonts, images, screen_sizing, settings);
     });
 }
 
@@ -22,6 +23,7 @@ pub fn spawn_settings(
     parent: &mut ChildBuilder,
     fonts: &Fonts,
     images: &Images,
+    screen_sizing: &ScreenSizing,
     settings: &Settings,
 ) {
     use SettingsButtonAction::*;
@@ -35,7 +37,7 @@ pub fn spawn_settings(
             FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
         ))
         .with_children(|parent| {
-            let mut toggles = SettingsToggleBuilder::new(fonts, images);
+            let mut toggles = SettingsToggleBuilder::new(fonts, images, screen_sizing);
             toggles.build_settings_toggle(parent, settings, "Wheel swipe aid", EnableWheelAid);
 
             toggles.build_settings_toggle(
@@ -61,8 +63,13 @@ pub fn spawn_settings(
             FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
         ))
         .with_children(|parent| {
-            let button_size = FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.));
-            let buttons = ButtonBuilder::new(fonts, button_size);
+            let button_size = if screen_sizing.is_ipad {
+                FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
+            } else {
+                FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.))
+            };
+            let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+            let buttons = ButtonBuilder::new(fonts, button_size, font_size);
             buttons.build_secondary_with_text_and_action(parent, "Back", Back);
         });
 }

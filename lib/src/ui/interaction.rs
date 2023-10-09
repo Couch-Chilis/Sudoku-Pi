@@ -136,7 +136,7 @@ pub fn pointer_interaction(
 ) {
     if wheel_query
         .iter()
-        .find_map(|wheel| (wheel.1 == screen.get()).then(|| wheel.0.is_open()))
+        .find_map(|wheel| (wheel.1 == screen.get()).then_some(wheel.0.is_open))
         .unwrap_or_default()
     {
         return;

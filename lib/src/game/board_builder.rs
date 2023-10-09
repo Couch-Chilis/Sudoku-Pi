@@ -1,5 +1,7 @@
 use super::{board_numbers::fill_numbers, wheel::init_wheel};
-use crate::{constants::*, sudoku::Game, ui::*, utils::*, Fonts, Images, ScreenState, Settings};
+use crate::{
+    constants::*, sudoku::Game, ui::*, utils::*, Fonts, Images, ScreenSizing, ScreenState, Settings,
+};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
@@ -23,17 +25,25 @@ pub fn build_board(
     fonts: &Fonts,
     game: &Game,
     images: &Images,
-    settings: &Settings,
     screen: ScreenState,
+    screen_sizing: &ScreenSizing,
+    settings: &Settings,
 ) {
     let mut board = parent.spawn((
         Board,
         screen,
         FlexBundle::new(
-            FlexItemStyle::preferred_and_minimum_size(
-                Size::all(Val::Vmin(90.)),
-                Size::all(Val::Vmin(50.)),
-            )
+            if screen_sizing.is_ipad {
+                FlexItemStyle::preferred_and_minimum_size(
+                    Size::all(Val::Vmin(80.)),
+                    Size::all(Val::Vmin(50.)),
+                )
+            } else {
+                FlexItemStyle::preferred_and_minimum_size(
+                    Size::all(Val::Vmin(90.)),
+                    Size::all(Val::Vmin(50.)),
+                )
+            }
             .with_fixed_aspect_ratio(),
             FlexContainerStyle::row(),
         ),
@@ -41,7 +51,7 @@ pub fn build_board(
 
     draw_lines(&mut board);
 
-    fill_numbers(&mut board, fonts, game, settings);
+    fill_numbers(&mut board, fonts, game, screen_sizing, settings);
 
     init_wheel(&mut board, images, fonts, screen);
 

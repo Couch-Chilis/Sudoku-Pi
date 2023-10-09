@@ -5,7 +5,7 @@ mod settings_menu;
 mod settings_toggle;
 
 use crate::{
-    sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenPadding, ScreenState,
+    sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenSizing, ScreenState,
 };
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
@@ -51,53 +51,70 @@ pub fn menu_setup(
     fonts: &Fonts,
     game: &Game,
     images: &Images,
-    padding: &ScreenPadding,
+    screen_sizing: &ScreenSizing,
 ) {
     main_screen.with_children(|screen| {
         // Logo.
-        screen
-            .spawn(FlexBundle::new(
-                FlexItemStyle::fixed_size(
-                    Val::Percent(100.),
-                    Val::Calc(Box::new(Expr::Binary {
-                        left: Val::Percent(50.),
-                        operator: Operator::Minus,
-                        right: Val::Pixel(padding.top),
-                    })),
-                ),
-                FlexContainerStyle::row().with_padding(Sides::new(Val::Auto, Val::Vmin(5.))),
-            ))
-            .with_children(|logo_section| {
-                // Logo.
-                logo_section.spawn((
-                    FlexItemBundle::from_style(
-                        FlexItemStyle::preferred_size(Val::CrossPercent(37.), Val::Percent(80.))
-                            .with_fixed_aspect_ratio()
-                            .with_transform(Transform::from_2d_scale(1. / 241., 1. / 513.)),
-                    ),
-                    SpriteBundle {
-                        texture: images.logo.clone(),
-                        ..default()
-                    },
-                ));
-            });
+        screen.spawn((
+            FlexItemBundle::from_style(
+                FlexItemStyle::fixed_size(Val::CrossPercent(46.19), Val::Percent(100.))
+                    .with_fixed_aspect_ratio()
+                    .without_occupying_space()
+                    .with_transform(Transform::from_2d_scale(1. / 1170., 1. / 2533.)),
+            ),
+            SpriteBundle {
+                texture: if screen_sizing.is_ipad {
+                    images.launch_screen_ipad.clone()
+                } else {
+                    images.launch_screen.clone()
+                },
+                ..default()
+            },
+        ));
+
+        // Spacer.
+        screen.spawn(FlexLeafBundle::from_style(
+            FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.))
+                .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
+        ));
+
+        let buttons = make_button_builder(fonts, screen_sizing);
 
         // Main menu buttons.
-        build_button_section(screen, ScreenState::MainMenu, 0., |main_section| {
-            spawn_main_menu_buttons(main_section, fonts, game);
+        build_button_section(screen, ScreenState::MainMenu, 0., 2., |main_section| {
+            spawn_main_menu_buttons(main_section, &buttons, fonts, game);
         });
 
         // Difficulty buttons.
-        build_button_section(screen, ScreenState::SelectDifficulty, -0.5 * PI, |parent| {
-            spawn_difficulty_menu_buttons(parent, fonts);
-        });
+        build_button_section(
+            screen,
+            ScreenState::SelectDifficulty,
+            -0.5 * PI,
+            3.,
+            |parent| {
+                spawn_difficulty_menu_buttons(parent, &buttons);
+            },
+        );
     });
+}
+
+fn make_button_builder(fonts: &Fonts, screen_sizing: &ScreenSizing) -> ButtonBuilder {
+    let button_style = if screen_sizing.is_ipad {
+        FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
+            .with_margin(Size::all(Val::Vmin(1.5)))
+    } else {
+        FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
+            .with_margin(Size::all(Val::Vmin(1.5)))
+    };
+    let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+    ButtonBuilder::new(fonts, button_style, font_size)
 }
 
 fn build_button_section(
     screen: &mut ChildBuilder,
     screen_state: ScreenState,
     initial_rotation: f32,
+    z_index: f32,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
     screen
@@ -111,7 +128,7 @@ fn build_button_section(
                     .without_occupying_space()
                     .with_transform(Transform {
                         rotation: Quat::from_rotation_z(initial_rotation),
-                        translation: Vec3::new(0., -1., 1.),
+                        translation: Vec3::new(0., -1., z_index),
                         ..default()
                     }),
                 FlexContainerStyle::default().with_padding(Sides::all(Val::Vmin(10.))),
@@ -140,6 +157,7 @@ fn on_screen_change(
     button_containers: Query<(Entity, &Children, &ScreenInteraction)>,
     fonts: Res<Fonts>,
     game: Res<Game>,
+    screen_sizing: Res<ScreenSizing>,
     screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
@@ -156,7 +174,8 @@ fn on_screen_change(
                 button_container.despawn_descendants();
                 button_container.remove_children(children);
                 button_container.with_children(|main_section| {
-                    spawn_main_menu_buttons(main_section, &fonts, &game);
+                    let buttons = make_button_builder(&fonts, &screen_sizing);
+                    spawn_main_menu_buttons(main_section, &buttons, &fonts, &game);
                 });
             }
         }
