@@ -330,7 +330,7 @@ pub(super) fn render_cell_highlights(
     use ScreenState::*;
     if !matches!(
         screen.get(),
-        Game | Highscores | HowToPlayNumbers | HowToPlayNotes
+        Game | Highscores | Welcome | HowToPlayNumbers | HowToPlayNotes
     ) {
         return;
     }
