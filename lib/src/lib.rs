@@ -327,20 +327,9 @@ fn on_exit(
     }
 }
 
-fn on_escape(
-    input: Res<Input<KeyCode>>,
-    current_state: Res<State<ScreenState>>,
-    mut next_state: ResMut<NextState<ScreenState>>,
-    mut app_exit_events: EventWriter<AppExit>,
-) {
+fn on_escape(input: Res<Input<KeyCode>>, mut transition_events: EventWriter<TransitionEvent>) {
     if input.just_pressed(KeyCode::Escape) {
-        if current_state.get() == &ScreenState::MainMenu {
-            app_exit_events.send(AppExit);
-        } else if current_state.get() == &ScreenState::Settings {
-            next_state.set(ScreenState::Game);
-        } else {
-            next_state.set(ScreenState::MainMenu);
-        }
+        transition_events.send(TransitionEvent::Exit);
     }
 }
 
