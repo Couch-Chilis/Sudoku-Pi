@@ -1,4 +1,4 @@
-use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, ScreenState, Selection};
+use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, Selection};
 use crate::{
     constants::*,
     sudoku::*,
@@ -349,16 +349,10 @@ pub(super) fn render_cell_highlights(
 pub(super) fn render_note_highlights(
     mut notes: Query<(&mut Note, &mut FlexItemStyle, &mut Sprite)>,
     mut mistake_borders: Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
-    screen: Res<State<ScreenState>>,
     screen_sizing: Res<ScreenSizing>,
     highlights: Res<Highlights>,
     time: Res<Time>,
 ) {
-    use ScreenState::*;
-    if !matches!(screen.get(), Game | HowToPlayNumbers | HowToPlayNotes) {
-        return;
-    }
-
     for (note, flex_item_style, mut sprite) in &mut notes {
         let highlight_kind = if highlights.selected_number == Some(note.n) {
             highlights.note_highlights[get_pos(note.x, note.y)]
