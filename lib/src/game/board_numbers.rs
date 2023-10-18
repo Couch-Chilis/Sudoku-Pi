@@ -324,17 +324,8 @@ pub(super) fn calculate_highlights(
 
 pub(super) fn render_cell_highlights(
     mut cells: Query<(&Number, &mut Sprite)>,
-    screen: Res<State<ScreenState>>,
     highlights: Res<Highlights>,
 ) {
-    use ScreenState::*;
-    if !matches!(
-        screen.get(),
-        Game | Highscores | HowToPlayNumbers | HowToPlayNotes
-    ) {
-        return;
-    }
-
     if !highlights.is_changed() {
         return;
     }
