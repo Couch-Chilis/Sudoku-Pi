@@ -227,8 +227,6 @@ fn setup(
     fonts: ResMut<Assets<Font>>,
     //mut framepace_settings: ResMut<FramepaceSettings>,
     images: ResMut<Assets<Image>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     settings: Res<Settings>,
     game: Res<Game>,
@@ -250,8 +248,6 @@ fn setup(
     let mut game_screen = spawn_screen(&mut commands, Game, &screen_sizing);
     board_setup(
         &mut game_screen,
-        &mut meshes,
-        &mut materials,
         &fonts,
         &game,
         &images,

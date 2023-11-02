@@ -48,9 +48,6 @@ pub const COLOR_SCORE_TEXT: Color = COLOR_POP_DARK;
 // Wheel colors.
 pub const COLOR_WHEEL_TOP_TEXT: Color = Color::WHITE;
 
-// Toggle colors.
-pub const COLOR_TOGGLE_ON: Color = COLOR_POP_DARK;
-
 // Hint color.
 pub const COLOR_HINT: Color = Color::rgb(163. / 255., 217. / 255., 1.);
 

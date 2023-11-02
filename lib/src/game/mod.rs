@@ -161,8 +161,6 @@ pub enum NoteToggleMode {
 
 pub fn board_setup(
     game_screen: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     game: &Game,
     images: &Images,
@@ -176,15 +174,7 @@ pub fn board_setup(
         });
     };
 
-    init_game_ui(
-        game_screen,
-        meshes,
-        materials,
-        fonts,
-        images,
-        screen_sizing,
-        board_builder,
-    );
+    init_game_ui(game_screen, fonts, images, screen_sizing, board_builder);
 }
 
 fn on_keyboard_input(
