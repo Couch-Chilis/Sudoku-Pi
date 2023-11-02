@@ -27,7 +27,6 @@ bevy = { version = "0.12.0-dev", default-features = false, features = [
     "bevy_text",
     "jpeg",
     "png",
-    "vorbis",
     "wayland",
     "x11",
 ] }

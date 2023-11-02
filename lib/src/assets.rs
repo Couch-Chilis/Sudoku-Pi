@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy::render::texture::{CompressedImageFormats, ImageType};
+use bevy::render::texture::{CompressedImageFormats, ImageSampler, ImageType};
 
 const BOLD_FONT: &[u8] = include_bytes!("../../assets/Poppins/Poppins-Bold.ttf");
 const MEDIUM_FONT: &[u8] = include_bytes!("../../assets/Poppins/Poppins-Medium.ttf");
@@ -181,6 +181,7 @@ fn load_png(bytes: &[u8]) -> Image {
         ImageType::Extension("png"),
         CompressedImageFormats::all(),
         true,
+        ImageSampler::Default,
     )
     .unwrap()
 }
