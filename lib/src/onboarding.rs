@@ -9,9 +9,7 @@ const PROCEED_NUMBER_INSTRUCTION: &str = "Great!\nLet's proceed to trying out no
 
 const INITIAL_NOTES_INSTRUCTION: &str =
     "Now it's time to try out some notes.\nTouch any open cell to \"draw\" notes.";
-const PROCEED_NOTES_INSTRUCTION: &str = "Great!\nYou're ready to start your first game!";
-const PROCEED_NOTES_INSTRUCTION_ALT: &str =
-    "Great!\nWhichever number is selected is the one you draw.";
+const PROCEED_NOTES_INSTRUCTION: &str = "Great!\nWhichever number is selected is the one you draw.";
 
 #[derive(Clone, Component, Copy, Eq, PartialEq)]
 pub enum OnboardingScreenAction {
@@ -345,7 +343,6 @@ pub fn how_to_play_notes_interaction(
     mut notes_hint_query: Query<&mut Visibility, With<OnboardingNotesHint>>,
     mut button_query: Query<(&mut Interaction, &OnboardingScreenAction)>,
     screen: Res<State<ScreenState>>,
-    settings: Res<Settings>,
     fonts: Res<Fonts>,
     game: Res<Game>,
 ) {
@@ -364,11 +361,7 @@ pub fn how_to_play_notes_interaction(
         }
     } else if game.is_changed() && game.has_notes() {
         for mut instruction_text in &mut notes_instruction_query {
-            instruction_text.sections[0].value = if settings.onboarding_finished {
-                PROCEED_NOTES_INSTRUCTION_ALT.to_owned()
-            } else {
-                PROCEED_NOTES_INSTRUCTION.to_owned()
-            };
+            instruction_text.sections[0].value = PROCEED_NOTES_INSTRUCTION.to_owned();
             instruction_text.sections[0].style.font = fonts.bold.clone();
             instruction_text.sections[0].style.color = COLOR_POP_FOCUS;
         }
