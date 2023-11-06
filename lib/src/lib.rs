@@ -21,7 +21,7 @@ use bevy::app::AppExit;
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
-//use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
+use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
 use highscores::Highscores;
@@ -201,7 +201,7 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
             ..default()
         }))
         .add_plugins((
-            //FramepacePlugin,
+            FramepacePlugin,
             TweeningPlugin,
             UiPlugin,
             game::GamePlugin,
@@ -225,7 +225,7 @@ fn add_steamworks_plugin(_app: &mut App) {}
 fn setup(
     mut commands: Commands,
     fonts: ResMut<Assets<Font>>,
-    //mut framepace_settings: ResMut<FramepaceSettings>,
+    mut framepace_settings: ResMut<FramepaceSettings>,
     images: ResMut<Assets<Image>>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     settings: Res<Settings>,
@@ -235,7 +235,7 @@ fn setup(
 ) {
     commands.spawn(Camera2dBundle::default());
 
-    //framepace_settings.limiter = Limiter::from_framerate(60.0);
+    framepace_settings.limiter = Limiter::from_framerate(60.0);
 
     let fonts = Fonts::load(fonts);
     let fortune = Fortune::load();

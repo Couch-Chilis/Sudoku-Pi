@@ -289,11 +289,6 @@ pub fn render_slider_knobs(
         ModeState::Notes => width,
     };
 
-    println!(
-        "{:?}: Animating from {knob_start} to {knob_end} across {width}",
-        mode.get()
-    );
-
     let animator = Animator::new(Tween::new(
         EaseFunction::QuadraticInOut,
         ANIMATION_DURATION,
