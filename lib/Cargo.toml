@@ -13,7 +13,7 @@ dynamic_linking = ["bevy/dynamic_linking"]
 
 [dependencies]
 anyhow = "1"
-bevy = { version = "0.11", default-features = false, features = [
+bevy = { version = "0.12", default-features = false, features = [
     "animation",
     "bevy_asset",
     "bevy_gilrs",
@@ -27,11 +27,10 @@ bevy = { version = "0.11", default-features = false, features = [
     "bevy_text",
     "jpeg",
     "png",
-    "vorbis",
     "wayland",
     "x11",
 ] }
-bevy_framepace = { version = "0.13" }
+bevy_framepace = { version = "0.14" }
 #bevy-steamworks = { optional = true, version = "0.8" }
 bevy_tweening = { version = "0.8", default-features = false, features = [
     "bevy_asset",

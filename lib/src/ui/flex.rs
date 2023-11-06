@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use crate::{utils::*, ScreenInteraction, ScreenState};
-use bevy::{prelude::*, render::texture::DEFAULT_IMAGE_HANDLE, sprite::Anchor, text::Text2dBounds};
+use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;
 use std::ops::{Add, Mul, Sub};
 
@@ -59,7 +59,8 @@ pub struct FlexContainerBundle {
     pub global_transform: GlobalTransform,
     pub texture: Handle<Image>,
     pub visibility: Visibility,
-    pub computed_visibility: ComputedVisibility,
+    pub inherited_visibility: InheritedVisibility,
+    pub view_visibility: ViewVisibility,
 }
 
 impl Default for FlexContainerBundle {
@@ -69,9 +70,10 @@ impl Default for FlexContainerBundle {
             background: Sprite::from_color(Color::NONE),
             transform: Transform::default_2d(),
             global_transform: Default::default(),
-            texture: DEFAULT_IMAGE_HANDLE.typed(),
+            texture: Default::default(),
             visibility: Default::default(),
-            computed_visibility: Default::default(),
+            inherited_visibility: Default::default(),
+            view_visibility: Default::default(),
         }
     }
 }
@@ -333,7 +335,8 @@ pub struct FlexLeafBundle {
     pub global_transform: GlobalTransform,
     pub texture: Handle<Image>,
     pub visibility: Visibility,
-    pub computed_visibility: ComputedVisibility,
+    pub inherited_visibility: InheritedVisibility,
+    pub view_visibility: ViewVisibility,
 }
 
 impl FlexLeafBundle {

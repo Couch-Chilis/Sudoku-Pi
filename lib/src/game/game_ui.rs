@@ -22,8 +22,6 @@ pub struct Timer;
 
 pub fn init_game_ui(
     game_screen: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     images: &Images,
     screen_sizing: &ScreenSizing,
@@ -57,7 +55,7 @@ pub fn init_game_ui(
 
     board_builder(game_screen);
 
-    build_mode_slider(game_screen, meshes, materials, fonts, images, screen_sizing);
+    build_mode_slider(game_screen, fonts, images, screen_sizing);
 }
 
 fn build_settings_icon(screen: &mut ChildBuilder, images: &Images, screen_sizing: &ScreenSizing) {

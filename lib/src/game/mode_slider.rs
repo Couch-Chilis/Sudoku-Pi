@@ -8,6 +8,7 @@ use std::time::Duration;
 const ACTIVE_KNOB_Z: f32 = INACTIVE_KNOB_Z + 2.;
 const INACTIVE_KNOB_Z: f32 = 2.;
 const ANIMATION_DURATION: Duration = Duration::from_millis(300);
+const KNOB_SCALE: f32 = 0.013;
 
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, States)]
 pub enum ModeState {
@@ -29,8 +30,6 @@ pub struct OppositeSliderKnob;
 
 pub fn build_mode_slider(
     parent: &mut EntityCommands,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
     fonts: &Fonts,
     images: &Images,
     screen_sizing: &ScreenSizing,
@@ -62,7 +61,7 @@ pub fn build_mode_slider(
                     ))
                     .with_children(|row| {
                         build_background(row, images);
-                        build_knobs(row, meshes, materials);
+                        build_knobs(row, images);
                     });
 
                     build_label(
@@ -92,7 +91,7 @@ pub fn build_mode_slider(
                         ))
                         .with_children(|row| {
                             build_background(row, images);
-                            build_knobs(row, meshes, materials);
+                            build_knobs(row, images);
                         });
 
                     column
@@ -136,26 +135,18 @@ fn build_background(row: &mut ChildBuilder, images: &Images) {
     ));
 }
 
-fn build_knobs(
-    row: &mut ChildBuilder,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
-) {
+fn build_knobs(row: &mut ChildBuilder, images: &Images) {
     build_knob(
         row,
-        meshes,
-        materials,
+        &images.pop_dark_circle,
         ModeSliderKnob,
-        COLOR_TOGGLE_ON,
         0.,
         ACTIVE_KNOB_Z,
     );
     build_knob(
         row,
-        meshes,
-        materials,
+        &images.board_line_thin_circle,
         OppositeSliderKnob,
-        COLOR_BOARD_LINE_THIN,
         0.91,
         INACTIVE_KNOB_Z,
     );
@@ -163,28 +154,27 @@ fn build_knobs(
 
 fn build_knob(
     row: &mut ChildBuilder,
-    meshes: &mut Assets<Mesh>,
-    materials: &mut Assets<ColorMaterial>,
+    image: &Handle<Image>,
     knob: impl Component,
-    color: Color,
     x: f32,
     z_index: f32,
 ) {
     row.spawn((
         knob,
-        FlexLeafBundle::from_style(
+        FlexItemBundle::from_style(
             FlexItemStyle::fixed_size(Val::CrossPercent(100.), Val::Percent(100.))
                 .without_occupying_space()
-                .with_transform(Transform::from_translation(Vec3::new(x, 0., z_index))),
+                .with_transform(Transform {
+                    scale: Vec3::new(KNOB_SCALE, KNOB_SCALE, 1.),
+                    translation: Vec3::new(x, 0., z_index),
+                    ..default()
+                }),
         ),
-    ))
-    .with_children(|knob_container| {
-        knob_container.spawn(MaterialMesh2dBundle {
-            mesh: meshes.add(shape::Circle::new(0.6).into()).into(),
-            material: materials.add(ColorMaterial::from(color)),
+        SpriteBundle {
+            texture: image.clone(),
             ..default()
-        });
-    });
+        },
+    ));
 }
 
 fn build_label(
@@ -247,24 +237,25 @@ pub fn slider_interaction(
 
 pub fn render_slider_knobs(
     mut commands: Commands,
-    slider_position_query: Query<&ComputedPosition, With<ModeSlider>>,
-    slider_query: Query<&ModeSlider>,
+    slider_query: Query<(&ModeSlider, &ComputedPosition)>,
     mode: Res<State<ModeState>>,
     knob_query: Query<(Entity, &ComputedPosition), With<ModeSliderKnob>>,
     opposite_knob_query: Query<Entity, With<OppositeSliderKnob>>,
     pointer_query: PointerQuery,
     screen_sizing: Res<ScreenSizing>,
 ) {
-    let slider_active = slider_query.get_single().is_ok_and(|slider| slider.active);
+    let Ok((slider_active, slider_position)) = slider_query
+        .get_single()
+        .map(|(slider, position)| (slider.active, position))
+    else {
+        return;
+    };
+
     if mode.is_added() || !mode.is_changed() && !slider_active {
         return;
     }
 
     let Ok((knob, knob_position)) = knob_query.get_single() else {
-        return;
-    };
-
-    let Ok(slider_position) = slider_position_query.get_single() else {
         return;
     };
 
@@ -338,7 +329,7 @@ impl Lens<FlexItemStyle> for TransformTranslateKnobLens {
     fn lerp(&mut self, target: &mut FlexItemStyle, ratio: f32) {
         let x = self.start + (self.end - self.start) * ratio;
         let distance_from_center = ((x - self.center) / self.center).abs();
-        let scale = 0.25 + 0.75 * distance_from_center;
+        let scale = (0.25 + 0.75 * distance_from_center) * KNOB_SCALE;
         target.transform.scale = Vec3::new(scale, scale, 1.);
         target.transform.translation.x = x;
     }
