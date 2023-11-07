@@ -14,7 +14,6 @@
                     <imageView key="view" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Launch-screen" id="jTH-ah-1Ur">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                        <variation key="heightClass=regular-widthClass=compact" image="Launch-screen 1"/>
                     </imageView>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -24,6 +23,5 @@
     </scenes>
     <resources>
         <image name="Launch-screen" width="390" height="844.33331298828125"/>
-        <image name="Launch-screen 1" width="1024" height="1366"/>
     </resources>
 </document>

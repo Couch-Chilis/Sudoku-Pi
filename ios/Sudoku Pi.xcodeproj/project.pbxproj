@@ -11,8 +11,6 @@
 		95317E5A2A4CD0F800F6DEB0 /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95317E592A4CD0F800F6DEB0 /* Resources.xcassets */; };
 		95F989692A421E860028C43B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F989682A421E860028C43B /* main.m */; };
 		95F989832A422BB00028C43B /* libsudoku_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F989822A422B990028C43B /* libsudoku_lib.a */; };
-		95F989842A422BC40028C43B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F9897C2A4229BA0028C43B /* AudioToolbox.framework */; };
-		95F989862A422BC40028C43B /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F9897B2A4229BA0028C43B /* CoreAudio.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,9 +20,6 @@
 		95F989682A421E860028C43B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		95F989732A42247B0028C43B /* libsudoku_lib.d */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.dtrace; name = libsudoku_lib.d; path = "../target/aarch64-apple-ios/release/libsudoku_lib.d"; sourceTree = "<group>"; };
 		95F989762A4225710028C43B /* Sudoku Pi */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Sudoku Pi"; sourceTree = "<group>"; };
-		95F9897B2A4229BA0028C43B /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		95F9897C2A4229BA0028C43B /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
-		95F9897D2A4229BA0028C43B /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		95F989812A422B710028C43B /* Frameworks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Frameworks; path = "Sudoku Pi/Frameworks"; sourceTree = "<group>"; };
 		95F989822A422B990028C43B /* libsudoku_lib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsudoku_lib.a; path = "Sudoku Pi/Frameworks/libsudoku_lib.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -35,8 +30,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				95F989832A422BB00028C43B /* libsudoku_lib.a in Frameworks */,
-				95F989842A422BC40028C43B /* AudioToolbox.framework in Frameworks */,
-				95F989862A422BC40028C43B /* CoreAudio.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,9 +68,6 @@
 			children = (
 				95F989822A422B990028C43B /* libsudoku_lib.a */,
 				95F989812A422B710028C43B /* Frameworks */,
-				95F9897C2A4229BA0028C43B /* AudioToolbox.framework */,
-				95F9897D2A4229BA0028C43B /* AudioUnit.framework */,
-				95F9897B2A4229BA0028C43B /* CoreAudio.framework */,
 				95F989762A4225710028C43B /* Sudoku Pi */,
 				95F989732A42247B0028C43B /* libsudoku_lib.d */,
 			);
@@ -307,7 +297,7 @@
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "nl.couch-chilis.Sudoku-Pi";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -344,7 +334,7 @@
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.0;
+				MARKETING_VERSION = 0.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "nl.couch-chilis.Sudoku-Pi";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

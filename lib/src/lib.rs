@@ -18,6 +18,8 @@ mod utils;
 
 use assets::*;
 use bevy::app::AppExit;
+use bevy::asset::io::memory::MemoryAssetReader;
+use bevy::asset::io::{AssetSourceBuilders, AssetSourceId, AssetSourceBuilder};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
@@ -147,6 +149,18 @@ extern "C" fn run_with_fixed_sizes(
     )
 }
 
+/// Plugin that disables all the asset loaders, since we load all assets manually.
+struct AssetConfiguratorPlugin {}
+
+impl Plugin for AssetConfiguratorPlugin {
+    fn build(&self, app: &mut App) {
+        let mut sources = app
+                .world
+                .get_resource_or_insert_with::<AssetSourceBuilders>(Default::default);
+        sources.insert(AssetSourceId::Default, AssetSourceBuilder::default().with_reader(|| Box::<MemoryAssetReader>::default()));
+    }
+}
+
 fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
     let settings = Settings::load();
     let game = if settings.onboarding_finished {
@@ -191,6 +205,7 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
                 on_transition,
             ),
         )
+        .add_plugins(AssetConfiguratorPlugin {})
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Sudoku Pi".to_owned(),
