@@ -21,6 +21,6 @@ identifier = "nl.couch-chilis.sudoku-pi"
 sudoku-lib = { path = "lib" }
 
 [patch.crates-io]
-bevy_tweening = { path = "../bevy_tweening" }
+#bevy_tweening = { path = "../bevy_tweening" }
 #bevy-steamworks = { path = "../bevy-steamworks" }
 winit = { path = "../winit" }
