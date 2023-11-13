@@ -1,7 +1,5 @@
 use super::{board_numbers::fill_numbers, wheel::init_wheel};
-use crate::{
-    constants::*, sudoku::Game, ui::*, utils::*, Fonts, Images, ScreenSizing, ScreenState, Settings,
-};
+use crate::{constants::*, sudoku::Game, ui::*, utils::*, ResourceBag, ScreenState, Settings};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::SpriteBundle};
 
 #[derive(Component)]
@@ -22,18 +20,16 @@ pub struct MistakeCellBordersBundle {
 
 pub fn build_board(
     parent: &mut ChildBuilder,
-    fonts: &Fonts,
     game: &Game,
-    images: &Images,
+    resources: &ResourceBag,
     screen: ScreenState,
-    screen_sizing: &ScreenSizing,
     settings: &Settings,
 ) {
     let mut board = parent.spawn((
         Board,
         screen,
         FlexBundle::new(
-            if screen_sizing.is_ipad {
+            if resources.screen_sizing.is_ipad {
                 FlexItemStyle::preferred_and_minimum_size(
                     Size::all(Val::Vmin(80.)),
                     Size::all(Val::Vmin(50.)),
@@ -51,9 +47,9 @@ pub fn build_board(
 
     draw_lines(&mut board);
 
-    fill_numbers(&mut board, fonts, game, screen_sizing, settings);
+    fill_numbers(&mut board, game, resources, settings);
 
-    init_wheel(&mut board, images, fonts, screen);
+    init_wheel(&mut board, resources, screen);
 
     init_mistake_borders(&mut board);
 }

@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Fonts, Images, ScreenSizing, Settings};
+use crate::{constants::*, ui::*, utils::*, Images, ResourceBag, Settings};
 use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
@@ -33,12 +33,12 @@ impl SettingsToggle {
 
 pub struct SettingsToggleBuilder<'a> {
     container_style: FlexItemStyle,
-    images: &'a Images,
+    resources: &'a ResourceBag<'a>,
     text_style: TextStyle,
 }
 
 impl<'a> SettingsToggleBuilder<'a> {
-    pub fn new(fonts: &Fonts, images: &'a Images, screen_sizing: &ScreenSizing) -> Self {
+    pub fn new(resources: &'a ResourceBag<'a>) -> Self {
         let container_style = FlexItemStyle {
             flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
             margin: Size::all(Val::Vmin(2.)),
@@ -46,14 +46,18 @@ impl<'a> SettingsToggleBuilder<'a> {
         };
 
         let text_style = TextStyle {
-            font: fonts.medium.clone(),
-            font_size: if screen_sizing.is_ipad { 72. } else { 50. },
+            font: resources.fonts.medium.clone(),
+            font_size: if resources.screen_sizing.is_ipad {
+                72.
+            } else {
+                50.
+            },
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };
 
         Self {
             container_style,
-            images,
+            resources,
             text_style,
         }
     }
@@ -100,9 +104,9 @@ impl<'a> SettingsToggleBuilder<'a> {
                     ),
                     SpriteBundle {
                         texture: if is_enabled {
-                            self.images.toggle_selected.clone()
+                            self.resources.images.toggle_selected.clone()
                         } else {
-                            self.images.toggle_deselected.clone()
+                            self.resources.images.toggle_deselected.clone()
                         },
                         ..default()
                     },

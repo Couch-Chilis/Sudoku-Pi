@@ -1,6 +1,7 @@
 use super::ButtonBuilder;
-use crate::{constants::*, game::*, ui::*, ScreenSizing};
-use crate::{Fonts, Game, Images, ScreenState, Settings, TransitionEvent};
+use crate::resource_bag::ResourceBag;
+use crate::{constants::*, game::*, ui::*};
+use crate::{Fonts, Game, ScreenState, Settings, TransitionEvent};
 use bevy::{ecs::system::EntityCommands, prelude::*};
 
 const INITIAL_NUMBER_INSTRUCTION: &str =
@@ -30,11 +31,7 @@ pub struct OnboardingNotesInstruction;
 #[derive(Component)]
 pub struct OnboardingNotesHint;
 
-pub fn welcome_screen_setup(
-    screen: &mut EntityCommands,
-    fonts: &Fonts,
-    screen_sizing: &ScreenSizing,
-) {
+pub fn welcome_screen_setup(screen: &mut EntityCommands, resources: &ResourceBag) {
     screen.with_children(|parent| {
         parent
             .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
@@ -43,7 +40,7 @@ pub fn welcome_screen_setup(
                     Text::from_section(
                         "Welcome to\nSudoku Pi",
                         TextStyle {
-                            font: fonts.bold.clone(),
+                            font: resources.fonts.bold.clone(),
                             font_size: 80.,
                             color: COLOR_MAIN_DARKER,
                         },
@@ -67,7 +64,7 @@ pub fn welcome_screen_setup(
                         Text::from_section(
                             "You are about to\nexperience a new way\nto play Sudoku.",
                             TextStyle {
-                                font: fonts.medium.clone(),
+                                font: resources.fonts.medium.clone(),
                                 font_size: 50.,
                                 color: COLOR_MAIN_DARKER,
                             },
@@ -85,7 +82,7 @@ pub fn welcome_screen_setup(
                         Text::from_section(
                             "But first, let us show you\nhow to play.",
                             TextStyle {
-                                font: fonts.medium.clone(),
+                                font: resources.fonts.medium.clone(),
                                 font_size: 40.,
                                 color: COLOR_MAIN_DARKER,
                             },
@@ -102,7 +99,7 @@ pub fn welcome_screen_setup(
             ))
             .with_children(|footer| {
                 use OnboardingScreenAction::*;
-                let buttons = make_button_builder(fonts, screen_sizing);
+                let buttons = make_button_builder(resources);
                 buttons.build_selected_with_text_and_action(footer, "Next", HowToPlayNumbers);
             });
     });
@@ -110,10 +107,8 @@ pub fn welcome_screen_setup(
 
 pub fn how_to_play_numbers_screen_setup(
     screen: &mut EntityCommands,
-    fonts: &Fonts,
     game: &Game,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     settings: &Settings,
 ) {
     screen.with_children(|parent| {
@@ -124,7 +119,7 @@ pub fn how_to_play_numbers_screen_setup(
                     Text::from_section(
                         "A New Way\nto Fill In Numbers",
                         TextStyle {
-                            font: fonts.bold.clone(),
+                            font: resources.fonts.bold.clone(),
                             font_size: 80.,
                             color: COLOR_MAIN_DARKER,
                         },
@@ -145,7 +140,7 @@ pub fn how_to_play_numbers_screen_setup(
                         Text::from_section(
                             INITIAL_NUMBER_INSTRUCTION,
                             TextStyle {
-                                font: fonts.medium.clone(),
+                                font: resources.fonts.medium.clone(),
                                 font_size: 40.,
                                 color: COLOR_MAIN_DARKER,
                             },
@@ -155,8 +150,7 @@ pub fn how_to_play_numbers_screen_setup(
                 ));
             });
 
-        use ScreenState::*;
-        build_board(parent, fonts, game, images, HowToPlayNumbers, screen_sizing, settings);
+        build_board(parent, game, resources, ScreenState::HowToPlayNumbers, settings);
 
         parent
             .spawn(FlexBundle::new(
@@ -168,7 +162,7 @@ pub fn how_to_play_numbers_screen_setup(
                     Text::from_section(
                         "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
                         TextStyle {
-                            font: fonts.medium.clone(),
+                            font: resources.fonts.medium.clone(),
                             font_size: 36.,
                             color: COLOR_MAIN_DARKER,
                         },
@@ -184,7 +178,7 @@ pub fn how_to_play_numbers_screen_setup(
             ))
             .with_children(|footer| {
                 use OnboardingScreenAction::*;
-                let buttons = make_button_builder(fonts, screen_sizing);
+                let buttons = make_button_builder(resources);
                 buttons.build_with_text_and_action(footer, "Next", HowToPlayNotes);
             });
     });
@@ -192,10 +186,8 @@ pub fn how_to_play_numbers_screen_setup(
 
 pub fn how_to_play_notes_screen_setup(
     screen: &mut EntityCommands,
-    fonts: &Fonts,
     game: &Game,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     settings: &Settings,
 ) {
     screen.with_children(|parent| {
@@ -206,7 +198,7 @@ pub fn how_to_play_notes_screen_setup(
                     Text::from_section(
                         "A New Way\nto Draw Notes",
                         TextStyle {
-                            font: fonts.bold.clone(),
+                            font: resources.fonts.bold.clone(),
                             font_size: 80.,
                             color: COLOR_MAIN_DARKER,
                         },
@@ -227,7 +219,7 @@ pub fn how_to_play_notes_screen_setup(
                         Text::from_section(
                             INITIAL_NOTES_INSTRUCTION,
                             TextStyle {
-                                font: fonts.medium.clone(),
+                                font: resources.fonts.medium.clone(),
                                 font_size: 40.,
                                 color: COLOR_MAIN_DARKER,
                             },
@@ -237,8 +229,7 @@ pub fn how_to_play_notes_screen_setup(
                 ));
             });
 
-        use ScreenState::*;
-        build_board(parent, fonts, game, images, HowToPlayNotes, screen_sizing, settings);
+        build_board(parent, game, resources, ScreenState::HowToPlayNotes, settings);
 
         parent
             .spawn(FlexBundle::new(
@@ -250,7 +241,7 @@ pub fn how_to_play_notes_screen_setup(
                     Text::from_section(
                         "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
                         TextStyle {
-                            font: fonts.medium.clone(),
+                            font: resources.fonts.medium.clone(),
                             font_size: 36.,
                             color: COLOR_MAIN_DARKER,
                         },
@@ -271,7 +262,7 @@ pub fn how_to_play_notes_screen_setup(
                 } else {
                     "Start Game"
                 };
-                let buttons = make_button_builder(fonts, screen_sizing);
+                let buttons = make_button_builder(resources);
                 buttons.build_with_text_and_action(footer, button_text, FinishOnboarding);
             });
     });
@@ -376,12 +367,16 @@ pub fn how_to_play_notes_interaction(
     }
 }
 
-fn make_button_builder(fonts: &Fonts, screen_sizing: &ScreenSizing) -> ButtonBuilder {
-    let button_size = if screen_sizing.is_ipad {
+fn make_button_builder(resources: &ResourceBag) -> ButtonBuilder {
+    let button_size = if resources.screen_sizing.is_ipad {
         FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
     } else {
         FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.))
     };
-    let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
-    ButtonBuilder::new(fonts, button_size, font_size)
+    let font_size = if resources.screen_sizing.is_ipad {
+        66.
+    } else {
+        44.
+    };
+    ButtonBuilder::new(resources, button_size, font_size)
 }

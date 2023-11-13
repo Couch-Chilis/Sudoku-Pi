@@ -1,5 +1,5 @@
 use super::{flex::*, InitialSelection, Interaction};
-use crate::{constants::*, Fonts};
+use crate::{constants::*, ResourceBag};
 use bevy::prelude::*;
 
 const BORDER_THICKNESS: Val = Val::Pixel(1);
@@ -52,17 +52,17 @@ pub struct ButtonBuilder {
 }
 
 impl ButtonBuilder {
-    pub fn new(fonts: &Fonts, button_style: FlexItemStyle, font_size: f32) -> Self {
+    pub fn new(resources: &ResourceBag, button_style: FlexItemStyle, font_size: f32) -> Self {
         // Text styling for primary buttons.
         let text_style = TextStyle {
-            font: fonts.medium.clone(),
+            font: resources.fonts.medium.clone(),
             font_size,
             color: COLOR_BUTTON_TEXT,
         };
 
         // Text styling for secondary buttons.
         let secondary_text_style = TextStyle {
-            font: fonts.medium.clone(),
+            font: resources.fonts.medium.clone(),
             font_size,
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };

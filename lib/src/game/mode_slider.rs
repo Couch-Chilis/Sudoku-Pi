@@ -1,6 +1,5 @@
-use crate::{
-    constants::*, pointer_query::*, ui::*, utils::TransformExt, Fonts, Images, ScreenSizing,
-};
+use crate::{constants::*, pointer_query::*, ui::*};
+use crate::{utils::TransformExt, ResourceBag, ScreenSizing};
 use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
@@ -28,14 +27,9 @@ pub struct ModeSliderKnob;
 #[derive(Component)]
 pub struct OppositeSliderKnob;
 
-pub fn build_mode_slider(
-    parent: &mut EntityCommands,
-    fonts: &Fonts,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
-) {
+pub fn build_mode_slider(parent: &mut EntityCommands, resources: &ResourceBag) {
     parent.with_children(|parent| {
-        if screen_sizing.is_ipad {
+        if resources.screen_sizing.is_ipad {
             parent
                 .spawn((
                     ModeSlider { active: false },
@@ -46,13 +40,7 @@ pub fn build_mode_slider(
                     ),
                 ))
                 .with_children(|row| {
-                    build_label(
-                        row,
-                        fonts,
-                        screen_sizing,
-                        "Normal\nmode",
-                        Anchor::CenterLeft,
-                    );
+                    build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
 
                     row.spawn(FlexBundle::new(
                         FlexItemStyle::fixed_size(Val::Percent(66.), Val::CrossPercent(6.))
@@ -60,17 +48,11 @@ pub fn build_mode_slider(
                         FlexContainerStyle::row(),
                     ))
                     .with_children(|row| {
-                        build_background(row, images);
-                        build_knobs(row, images);
+                        build_background(row, resources);
+                        build_knobs(row, resources);
                     });
 
-                    build_label(
-                        row,
-                        fonts,
-                        screen_sizing,
-                        "Notes\nmode",
-                        Anchor::CenterRight,
-                    );
+                    build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
                 });
         } else {
             parent
@@ -90,8 +72,8 @@ pub fn build_mode_slider(
                             FlexContainerStyle::row(),
                         ))
                         .with_children(|row| {
-                            build_background(row, images);
-                            build_knobs(row, images);
+                            build_background(row, resources);
+                            build_knobs(row, resources);
                         });
 
                     column
@@ -100,27 +82,15 @@ pub fn build_mode_slider(
                             FlexContainerStyle::row(),
                         ))
                         .with_children(|row| {
-                            build_label(
-                                row,
-                                fonts,
-                                screen_sizing,
-                                "Normal\nmode",
-                                Anchor::CenterLeft,
-                            );
-                            build_label(
-                                row,
-                                fonts,
-                                screen_sizing,
-                                "Notes\nmode",
-                                Anchor::CenterRight,
-                            );
+                            build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
+                            build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
                         });
                 });
         }
     });
 }
 
-fn build_background(row: &mut ChildBuilder, images: &Images) {
+fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {
     row.spawn((
         FlexItemBundle::from_style(
             FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.))
@@ -129,23 +99,23 @@ fn build_background(row: &mut ChildBuilder, images: &Images) {
                 .with_transform(Transform::from_2d_scale(1. / 1282., 1. / 118.)),
         ),
         SpriteBundle {
-            texture: images.mode_slider.clone(),
+            texture: resources.images.mode_slider.clone(),
             ..default()
         },
     ));
 }
 
-fn build_knobs(row: &mut ChildBuilder, images: &Images) {
+fn build_knobs(row: &mut ChildBuilder, resources: &ResourceBag) {
     build_knob(
         row,
-        &images.pop_dark_circle,
+        &resources.images.pop_dark_circle,
         ModeSliderKnob,
         0.,
         ACTIVE_KNOB_Z,
     );
     build_knob(
         row,
-        &images.board_line_thin_circle,
+        &resources.images.board_line_thin_circle,
         OppositeSliderKnob,
         0.91,
         INACTIVE_KNOB_Z,
@@ -177,16 +147,14 @@ fn build_knob(
     ));
 }
 
-fn build_label(
-    row: &mut ChildBuilder,
-    fonts: &Fonts,
-    screen_sizing: &ScreenSizing,
-    text: &str,
-    anchor: Anchor,
-) {
+fn build_label(row: &mut ChildBuilder, resources: &ResourceBag, text: &str, anchor: Anchor) {
     let text_style = TextStyle {
-        font: fonts.medium.clone(),
-        font_size: if screen_sizing.is_ipad { 64. } else { 48. },
+        font: resources.fonts.medium.clone(),
+        font_size: if resources.screen_sizing.is_ipad {
+            64.
+        } else {
+            48.
+        },
         color: COLOR_MAIN_DARKER,
     };
 

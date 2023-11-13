@@ -1,6 +1,7 @@
 use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, Selection};
 use crate::{
     constants::*,
+    resource_bag::ResourceBag,
     sudoku::*,
     ui::*,
     utils::{SpriteExt, TransformExt},
@@ -30,9 +31,8 @@ pub(super) enum NoteHighlightKind {
 
 pub fn fill_numbers(
     board: &mut EntityCommands,
-    fonts: &Fonts,
     game: &Game,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     settings: &Settings,
 ) {
     board.with_children(|board| {
@@ -44,7 +44,7 @@ pub fn fill_numbers(
                 ))
                 .with_children(|column| {
                     for y in 0..9 {
-                        spawn_cell(column, fonts, game, screen_sizing, settings, x, y);
+                        spawn_cell(column, game, resources, settings, x, y);
                     }
                 });
         }
@@ -53,9 +53,8 @@ pub fn fill_numbers(
 
 fn spawn_cell(
     parent: &mut ChildBuilder,
-    fonts: &Fonts,
     game: &Game,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     settings: &Settings,
     x: u8,
     y: u8,
@@ -64,11 +63,11 @@ fn spawn_cell(
 
     let number_style = TextStyle {
         font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
-            fonts.light.clone()
+            resources.fonts.light.clone()
         } else {
-            fonts.bold.clone()
+            resources.fonts.bold.clone()
         },
-        font_size: if screen_sizing.is_ipad {
+        font_size: if resources.screen_sizing.is_ipad {
             NUMBER_FONT_SIZE_IPAD
         } else {
             NUMBER_FONT_SIZE
@@ -81,8 +80,8 @@ fn spawn_cell(
     };
 
     let note_style = TextStyle {
-        font: fonts.bold.clone(),
-        font_size: if screen_sizing.is_ipad {
+        font: resources.fonts.bold.clone(),
+        font_size: if resources.screen_sizing.is_ipad {
             NOTE_FONT_SIZE_IPAD
         } else {
             NOTE_FONT_SIZE

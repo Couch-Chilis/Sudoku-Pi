@@ -1,5 +1,6 @@
 use super::ButtonBuilder;
-use crate::{constants::*, sudoku::*, transition_events::*, ui::*, Fonts, ScreenState};
+use crate::resource_bag::ResourceBag;
+use crate::{constants::*, sudoku::*, transition_events::*, ui::*, ScreenState};
 use bevy::{app::AppExit, prelude::*, sprite::Anchor};
 
 #[derive(Component)]
@@ -14,8 +15,8 @@ pub enum MainScreenButtonAction {
 pub fn spawn_main_menu_buttons(
     main_section: &mut ChildBuilder,
     buttons: &ButtonBuilder,
-    fonts: &Fonts,
     game: &Game,
+    resources: &ResourceBag,
 ) {
     use MainScreenButtonAction::*;
 
@@ -56,7 +57,7 @@ pub fn spawn_main_menu_buttons(
                 FlexTextBundle::from_text(Text::from_section(
                     "© 2023 Couch Chilis",
                     TextStyle {
-                        font: fonts.medium.clone(),
+                        font: resources.fonts.medium.clone(),
                         font_size: 30.,
                         color: COLOR_BOARD_LINE_MEDIUM,
                     },

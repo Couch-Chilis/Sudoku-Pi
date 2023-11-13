@@ -11,6 +11,7 @@ mod pointer_query;
 mod settings;
 //#[cfg(feature = "steam")]
 //mod steam;
+mod resource_bag;
 mod sudoku;
 mod transition_events;
 mod ui;
@@ -19,7 +20,7 @@ mod utils;
 use assets::*;
 use bevy::app::AppExit;
 use bevy::asset::io::memory::MemoryAssetReader;
-use bevy::asset::io::{AssetSourceBuilders, AssetSourceId, AssetSourceBuilder};
+use bevy::asset::io::{AssetSourceBuilder, AssetSourceBuilders, AssetSourceId};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
@@ -29,6 +30,7 @@ use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
 use highscores::Highscores;
 use menus::{menu_setup, settings_screen_setup, SettingsToggleTimer};
 use onboarding::*;
+use resource_bag::ResourceBag;
 use settings::Settings;
 use smallvec::SmallVec;
 use std::time::Duration;
@@ -155,9 +157,12 @@ struct AssetConfiguratorPlugin {}
 impl Plugin for AssetConfiguratorPlugin {
     fn build(&self, app: &mut App) {
         let mut sources = app
-                .world
-                .get_resource_or_insert_with::<AssetSourceBuilders>(Default::default);
-        sources.insert(AssetSourceId::Default, AssetSourceBuilder::default().with_reader(|| Box::<MemoryAssetReader>::default()));
+            .world
+            .get_resource_or_insert_with::<AssetSourceBuilders>(Default::default);
+        sources.insert(
+            AssetSourceId::Default,
+            AssetSourceBuilder::default().with_reader(|| Box::<MemoryAssetReader>::default()),
+        );
     }
 }
 
@@ -256,61 +261,33 @@ fn setup(
     let fortune = Fortune::load();
     let images = Images::load(images);
 
+    let resources = ResourceBag {
+        fonts: &fonts,
+        images: &images,
+        screen_sizing: &screen_sizing,
+    };
+
     use ScreenState::*;
-    let mut main_screen = spawn_screen(&mut commands, MainMenu, &screen_sizing);
-    menu_setup(&mut main_screen, &fonts, &game, &images, &screen_sizing);
+    let mut main_screen = spawn_screen(&mut commands, MainMenu, &resources);
+    menu_setup(&mut main_screen, &game, &resources);
 
-    let mut game_screen = spawn_screen(&mut commands, Game, &screen_sizing);
-    board_setup(
-        &mut game_screen,
-        &fonts,
-        &game,
-        &images,
-        &screen_sizing,
-        &settings,
-    );
+    let mut game_screen = spawn_screen(&mut commands, Game, &resources);
+    board_setup(&mut game_screen, &game, &resources, &settings);
 
-    let mut highscore_screen = spawn_screen(&mut commands, Highscores, &screen_sizing);
-    highscore_screen_setup(
-        &mut highscore_screen,
-        &fonts,
-        &game,
-        &highscores,
-        &images,
-        &screen_sizing,
-    );
+    let mut highscore_screen = spawn_screen(&mut commands, Highscores, &resources);
+    highscore_screen_setup(&mut highscore_screen, &game, &highscores, &resources);
 
-    let mut settings_screen = spawn_screen(&mut commands, Settings, &screen_sizing);
-    settings_screen_setup(
-        &mut settings_screen,
-        &fonts,
-        &images,
-        &screen_sizing,
-        &settings,
-    );
+    let mut settings_screen = spawn_screen(&mut commands, Settings, &resources);
+    settings_screen_setup(&mut settings_screen, &resources, &settings);
 
-    let mut welcome_screen = spawn_screen(&mut commands, Welcome, &screen_sizing);
-    welcome_screen_setup(&mut welcome_screen, &fonts, &screen_sizing);
+    let mut welcome_screen = spawn_screen(&mut commands, Welcome, &resources);
+    welcome_screen_setup(&mut welcome_screen, &resources);
 
-    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &screen_sizing);
-    how_to_play_numbers_screen_setup(
-        &mut how_to_play_screen_1,
-        &fonts,
-        &game,
-        &images,
-        &screen_sizing,
-        &settings,
-    );
+    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &resources);
+    how_to_play_numbers_screen_setup(&mut how_to_play_screen_1, &game, &resources, &settings);
 
-    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &screen_sizing);
-    how_to_play_notes_screen_setup(
-        &mut how_to_play_screen_2,
-        &fonts,
-        &game,
-        &images,
-        &screen_sizing,
-        &settings,
-    );
+    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &resources);
+    how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &game, &resources, &settings);
 
     if !settings.onboarding_finished {
         screen_state.set(Welcome);
@@ -440,8 +417,10 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
 fn spawn_screen<'w, 's, 'a>(
     commands: &'a mut Commands<'w, 's>,
     screen: ScreenState,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
 ) -> EntityCommands<'w, 's, 'a> {
+    let screen_sizing = resources.screen_sizing;
+
     let (tile_x, tile_y) = get_tile_offset_for_screen(screen);
     let flex_container = FlexContainerBundle {
         background: Sprite::default(),

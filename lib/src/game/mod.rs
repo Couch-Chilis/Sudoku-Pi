@@ -5,9 +5,10 @@ mod highscore_screen;
 mod mode_slider;
 mod wheel;
 
+use crate::pointer_query::*;
 use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
-use crate::{pointer_query::*, ScreenSizing};
-use crate::{ui::*, Fonts, GameTimer, Images, ScreenState, Settings};
+use crate::ui::*;
+use crate::{GameTimer, ResourceBag, ScreenState, Settings};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use board_builder::{Board, MistakeCellBorders};
@@ -161,20 +162,17 @@ pub enum NoteToggleMode {
 
 pub fn board_setup(
     game_screen: &mut EntityCommands,
-    fonts: &Fonts,
     game: &Game,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     settings: &Settings,
 ) {
     let board_builder = |parent: &mut EntityCommands| {
         parent.with_children(|parent| {
-            use ScreenState::*;
-            build_board(parent, fonts, game, images, Game, screen_sizing, settings);
+            build_board(parent, game, resources, ScreenState::Game, settings);
         });
     };
 
-    init_game_ui(game_screen, fonts, images, screen_sizing, board_builder);
+    init_game_ui(game_screen, resources, board_builder);
 }
 
 fn on_keyboard_input(

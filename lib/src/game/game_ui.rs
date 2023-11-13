@@ -1,8 +1,7 @@
-use crate::{constants::*, ui::*, utils::*, Images, ScreenSizing};
-use crate::{Fonts, Game, GameTimer, Highscores, ScreenState};
-use bevy::{ecs::system::EntityCommands, prelude::*};
-
 use super::mode_slider::build_mode_slider;
+use crate::{constants::*, ui::*, utils::*};
+use crate::{Game, GameTimer, Highscores, Images, ResourceBag, ScreenState};
+use bevy::{ecs::system::EntityCommands, prelude::*};
 
 #[derive(Component)]
 pub enum UiButtonAction {
@@ -22,44 +21,46 @@ pub struct Timer;
 
 pub fn init_game_ui(
     game_screen: &mut EntityCommands,
-    fonts: &Fonts,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     board_builder: impl FnOnce(&mut EntityCommands),
 ) {
-    build_button_row(game_screen, screen_sizing, |icon_row| {
+    build_button_row(game_screen, resources, |icon_row| {
         icon_row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
-        build_settings_icon(icon_row, images, screen_sizing);
+        build_settings_icon(icon_row, resources);
     });
 
     build_timer_row(game_screen, |timer_row| {
-        build_timer(timer_row, fonts, screen_sizing);
+        build_timer(timer_row, resources);
     });
 
-    build_button_row(game_screen, screen_sizing, |button_row| {
-        let button_size = if screen_sizing.is_ipad {
+    build_button_row(game_screen, resources, |button_row| {
+        let button_size = if resources.screen_sizing.is_ipad {
             FlexItemStyle::fixed_size(Val::Pixel(133), Val::Pixel(60))
         } else {
             FlexItemStyle::fixed_size(Val::Pixel(80), Val::Pixel(35))
         };
-        let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
+        let font_size = if resources.screen_sizing.is_ipad {
+            66.
+        } else {
+            44.
+        };
 
-        let buttons = ButtonBuilder::new(fonts, button_size, font_size);
+        let buttons = ButtonBuilder::new(resources, button_size, font_size);
         buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
 
-        build_score(button_row, fonts, screen_sizing);
+        build_score(button_row, resources);
 
         buttons.build_secondary_with_text_and_action(button_row, "Hint", UiButtonAction::Hint);
     });
 
     board_builder(game_screen);
 
-    build_mode_slider(game_screen, fonts, images, screen_sizing);
+    build_mode_slider(game_screen, resources);
 }
 
-fn build_settings_icon(screen: &mut ChildBuilder, images: &Images, screen_sizing: &ScreenSizing) {
-    let cog_size = if screen_sizing.is_ipad {
+fn build_settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
+    let cog_size = if resources.screen_sizing.is_ipad {
         Val::Pixel(40)
     } else {
         Val::Pixel(30)
@@ -76,7 +77,7 @@ fn build_settings_icon(screen: &mut ChildBuilder, images: &Images, screen_sizing
                 .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
         ),
         SpriteBundle {
-            texture: images.cog.clone(),
+            texture: resources.images.cog.clone(),
             ..default()
         },
     ));
@@ -93,13 +94,13 @@ fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut 
     });
 }
 
-fn build_timer(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizing) {
-    let width = if screen_sizing.is_ipad {
+fn build_timer(row: &mut ChildBuilder, resources: &ResourceBag) {
+    let width = if resources.screen_sizing.is_ipad {
         Val::Pixel(150)
     } else {
         Val::Pixel(100)
     };
-    let height = if screen_sizing.is_ipad {
+    let height = if resources.screen_sizing.is_ipad {
         Val::Pixel(64)
     } else {
         Val::Pixel(42)
@@ -107,8 +108,12 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizi
     let line_height = Val::Pixel(1);
 
     let text_style = TextStyle {
-        font: fonts.medium.clone(),
-        font_size: if screen_sizing.is_ipad { 105. } else { 70. },
+        font: resources.fonts.medium.clone(),
+        font_size: if resources.screen_sizing.is_ipad {
+            105.
+        } else {
+            70.
+        },
         color: COLOR_TIMER_TEXT,
     };
 
@@ -147,14 +152,18 @@ fn build_timer(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizi
 
 pub fn build_button_row(
     screen: &mut EntityCommands,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
     screen.with_children(|screen| {
         screen
             .spawn(FlexBundle::new(
                 FlexItemStyle::preferred_size(
-                    Val::Vmin(if screen_sizing.is_ipad { 80. } else { 90. }),
+                    Val::Vmin(if resources.screen_sizing.is_ipad {
+                        80.
+                    } else {
+                        90.
+                    }),
                     Val::Pixel(35),
                 )
                 .with_margin(Size::new(Val::None, Val::Pixel(15))),
@@ -164,16 +173,28 @@ pub fn build_button_row(
     });
 }
 
-fn build_score(row: &mut ChildBuilder, fonts: &Fonts, screen_sizing: &ScreenSizing) {
+fn build_score(row: &mut ChildBuilder, resources: &ResourceBag) {
     let text_style = TextStyle {
-        font: fonts.medium.clone(),
-        font_size: if screen_sizing.is_ipad { 86. } else { 58. },
+        font: resources.fonts.medium.clone(),
+        font_size: if resources.screen_sizing.is_ipad {
+            86.
+        } else {
+            58.
+        },
         color: COLOR_SCORE_TEXT,
     };
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
-        Val::Pixel(if screen_sizing.is_ipad { 150 } else { 100 }),
-        Val::Pixel(if screen_sizing.is_ipad { 60 } else { 35 }),
+        Val::Pixel(if resources.screen_sizing.is_ipad {
+            150
+        } else {
+            100
+        }),
+        Val::Pixel(if resources.screen_sizing.is_ipad {
+            60
+        } else {
+            35
+        }),
     )))
     .with_children(|text_leaf| {
         text_leaf.spawn((

@@ -1,13 +1,11 @@
-use super::{
-    fill_number, get_board_x_and_y, mode_slider::ModeState, toggle_note, Board, InputKind, Note,
-    Selection,
-};
+use super::mode_slider::ModeState;
+use super::{fill_number, get_board_x_and_y, toggle_note, Board, InputKind, Note, Selection};
 use crate::{
     constants::*,
     pointer_query::{PointerQuery, PointerQueryExt},
     settings::Settings,
     utils::*,
-    ComputedPosition, Fonts, Game, GameTimer, Images, ScreenSizing, ScreenState,
+    ComputedPosition, Game, GameTimer, Images, ResourceBag, ScreenSizing, ScreenState,
 };
 use bevy::{ecs::system::EntityCommands, prelude::*};
 use std::{f32::consts::PI, num::NonZeroU8};
@@ -70,8 +68,8 @@ impl ActiveSliceHandles {
     }
 }
 
-pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, screen: ScreenState) {
-    let disabled_slice_handles = get_disabled_slice_handles(images);
+pub fn init_wheel(board: &mut EntityCommands, resources: &ResourceBag, screen: ScreenState) {
+    let disabled_slice_handles = get_disabled_slice_handles(resources.images);
 
     board.with_children(|board| {
         board
@@ -79,7 +77,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, sc
                 Wheel::default(),
                 screen,
                 SpriteBundle {
-                    texture: images.wheel.clone(),
+                    texture: resources.images.wheel.clone(),
                     transform: Transform::from_2d_scale(0., 0.),
                     ..default()
                 },
@@ -108,7 +106,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, sc
         ));
 
         let label_text_style = TextStyle {
-            font: fonts.medium.clone(),
+            font: resources.fonts.medium.clone(),
             font_size: 50.,
             color: COLOR_WHEEL_TOP_TEXT,
         };
@@ -118,7 +116,7 @@ pub fn init_wheel(board: &mut EntityCommands, images: &Images, fonts: &Fonts, sc
                 TopLabel,
                 screen,
                 SpriteBundle {
-                    texture: images.top_label.clone(),
+                    texture: resources.images.top_label.clone(),
                     transform: Transform::from_2d_scale(0., 0.),
                     ..default()
                 },

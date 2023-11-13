@@ -4,9 +4,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{
-    sudoku::*, ui::*, utils::*, Fonts, Images, ScreenInteraction, ScreenSizing, ScreenState,
-};
+use crate::{sudoku::*, ui::*, utils::*, ScreenInteraction, ScreenState};
 use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
@@ -18,6 +16,7 @@ use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
+use crate::resource_bag::{ResourceBag, ResourceTuple};
 pub use settings_menu::settings_screen_setup;
 pub use settings_toggle::SettingsToggleTimer;
 
@@ -46,13 +45,7 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_setup(
-    main_screen: &mut EntityCommands,
-    fonts: &Fonts,
-    game: &Game,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
-) {
+pub fn menu_setup(main_screen: &mut EntityCommands, game: &Game, resources: &ResourceBag) {
     main_screen.with_children(|screen| {
         // Logo.
         screen.spawn((
@@ -63,10 +56,10 @@ pub fn menu_setup(
                     .with_transform(Transform::from_2d_scale(1. / 1170., 1. / 2533.)),
             ),
             SpriteBundle {
-                texture: if screen_sizing.is_ipad {
-                    images.launch_screen_ipad.clone()
+                texture: if resources.screen_sizing.is_ipad {
+                    resources.images.launch_screen_ipad.clone()
                 } else {
-                    images.launch_screen.clone()
+                    resources.images.launch_screen.clone()
                 },
                 ..default()
             },
@@ -78,11 +71,11 @@ pub fn menu_setup(
                 .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
         ));
 
-        let buttons = make_button_builder(fonts, screen_sizing);
+        let buttons = make_button_builder(resources);
 
         // Main menu buttons.
         build_button_section(screen, ScreenState::MainMenu, 0., 2., |main_section| {
-            spawn_main_menu_buttons(main_section, &buttons, fonts, game);
+            spawn_main_menu_buttons(main_section, &buttons, game, resources);
         });
 
         // Difficulty buttons.
@@ -98,16 +91,20 @@ pub fn menu_setup(
     });
 }
 
-fn make_button_builder(fonts: &Fonts, screen_sizing: &ScreenSizing) -> ButtonBuilder {
-    let button_style = if screen_sizing.is_ipad {
+fn make_button_builder(resources: &ResourceBag) -> ButtonBuilder {
+    let button_style = if resources.screen_sizing.is_ipad {
         FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
             .with_margin(Size::all(Val::Vmin(1.5)))
     } else {
         FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
             .with_margin(Size::all(Val::Vmin(1.5)))
     };
-    let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
-    ButtonBuilder::new(fonts, button_style, font_size)
+    let font_size = if resources.screen_sizing.is_ipad {
+        66.
+    } else {
+        44.
+    };
+    ButtonBuilder::new(resources, button_style, font_size)
 }
 
 fn build_button_section(
@@ -155,14 +152,15 @@ fn on_screen_change(
     mut commands: Commands,
     mut button_sections: Query<(Entity, &mut ButtonSection)>,
     button_containers: Query<(Entity, &Children, &ScreenInteraction)>,
-    fonts: Res<Fonts>,
     game: Res<Game>,
-    screen_sizing: Res<ScreenSizing>,
+    resources: ResourceTuple,
     screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
         return;
     }
+
+    let resources = ResourceBag::from_tuple(&resources);
 
     use ScreenState::*;
     if screen_state.get() == &MainMenu {
@@ -174,8 +172,8 @@ fn on_screen_change(
                 button_container.despawn_descendants();
                 button_container.remove_children(children);
                 button_container.with_children(|main_section| {
-                    let buttons = make_button_builder(&fonts, &screen_sizing);
-                    spawn_main_menu_buttons(main_section, &buttons, &fonts, &game);
+                    let buttons = make_button_builder(&resources);
+                    spawn_main_menu_buttons(main_section, &buttons, &game, &resources);
                 });
             }
         }

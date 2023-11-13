@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Fortune, Images, ScreenSizing, TransitionEvent};
+use crate::{constants::*, ui::*, utils::*, Fortune, ResourceBag, ScreenSizing, TransitionEvent};
 use crate::{Fonts, Game, Highscores, ScreenState};
 use bevy::sprite::Anchor;
 use bevy::text::Text2dBounds;
@@ -56,11 +56,9 @@ pub struct BestTimeText;
 
 pub fn highscore_screen_setup(
     highscore_screen: &mut EntityCommands,
-    fonts: &Fonts,
     game: &Game,
     highscores: &Highscores,
-    images: &Images,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
 ) {
     highscore_screen.with_children(|screen| {
         screen
@@ -69,13 +67,13 @@ pub fn highscore_screen_setup(
                 FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(5.))),
             ))
             .with_children(|scroll_section| {
-                let item_style = if screen_sizing.is_ipad {
+                let item_style = if resources.screen_sizing.is_ipad {
                     FlexItemStyle::fixed_size(Val::Pixel(700), Val::Pixel(190))
                 } else {
                     FlexItemStyle::fixed_size(Val::Pixel(342), Val::Pixel(92))
                 };
 
-                let padding = if screen_sizing.is_ipad {
+                let padding = if resources.screen_sizing.is_ipad {
                     Sides::new(Val::Pixel(30), Val::Pixel(22))
                 } else {
                     Sides::new(Val::Pixel(16), Val::Pixel(10))
@@ -116,8 +114,16 @@ pub fn highscore_screen_setup(
                             ScrollText::new(ScrollTextKind::Quote),
                             FlexTextBundle::from_text(Text::default()).with_bounds(Text2dBounds {
                                 size: Vec2::new(
-                                    if screen_sizing.is_ipad { 1200. } else { 580. },
-                                    if screen_sizing.is_ipad { 400. } else { 200. },
+                                    if resources.screen_sizing.is_ipad {
+                                        1200.
+                                    } else {
+                                        580.
+                                    },
+                                    if resources.screen_sizing.is_ipad {
+                                        400.
+                                    } else {
+                                        200.
+                                    },
                                 ),
                             }),
                         ));
@@ -128,9 +134,17 @@ pub fn highscore_screen_setup(
                         item_style
                             .with_transform(Transform::from_translation(Vec3::new(0., 0., 4.))),
                         FlexContainerStyle::default().with_padding({
-                            let top = Val::Pixel(if screen_sizing.is_ipad { 155 } else { 65 });
+                            let top = Val::Pixel(if resources.screen_sizing.is_ipad {
+                                155
+                            } else {
+                                65
+                            });
                             let right = padding.right.clone()
-                                + Val::Pixel(if screen_sizing.is_ipad { 15 } else { 10 });
+                                + Val::Pixel(if resources.screen_sizing.is_ipad {
+                                    15
+                                } else {
+                                    10
+                                });
                             padding.with_top(top).with_right(right)
                         }),
                     ))
@@ -151,7 +165,11 @@ pub fn highscore_screen_setup(
             .spawn(FlexBundle::new(
                 FlexItemStyle::fixed_size(
                     Val::Percent(100.),
-                    Val::CrossPercent(if screen_sizing.is_ipad { 59.8 } else { 102.5 }),
+                    Val::CrossPercent(if resources.screen_sizing.is_ipad {
+                        59.8
+                    } else {
+                        102.5
+                    }),
                 ),
                 FlexContainerStyle::row(),
             ))
@@ -161,17 +179,17 @@ pub fn highscore_screen_setup(
                     FlexItemBundle::from_style(
                         FlexItemStyle::available_size()
                             .without_occupying_space()
-                            .with_transform(if screen_sizing.is_ipad {
+                            .with_transform(if resources.screen_sizing.is_ipad {
                                 Transform::from_2d_scale(1. / 2503., 1. / 1497.)
                             } else {
                                 Transform::from_2d_scale(1. / 780., 1. / 797.)
                             }),
                     ),
                     SpriteBundle {
-                        texture: if screen_sizing.is_ipad {
-                            images.wall_ipad.clone()
+                        texture: if resources.screen_sizing.is_ipad {
+                            resources.images.wall_ipad.clone()
                         } else {
-                            images.wall.clone()
+                            resources.images.wall.clone()
                         },
                         ..default()
                     },
@@ -182,7 +200,7 @@ pub fn highscore_screen_setup(
                         .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
                 ));
 
-                let padding = if screen_sizing.is_ipad {
+                let padding = if resources.screen_sizing.is_ipad {
                     Sides {
                         top: Val::Percent(32.),
                         right: Val::Percent(27.),
@@ -205,7 +223,7 @@ pub fn highscore_screen_setup(
                         FlexContainerStyle::column().with_padding(padding),
                     ),
                 ));
-                render_scores(&mut score_container, fonts, game, highscores, screen_sizing);
+                render_scores(&mut score_container, game, highscores, resources);
             });
 
         screen
@@ -214,15 +232,19 @@ pub fn highscore_screen_setup(
                 FlexContainerStyle::column().with_padding(Sides::new(Val::None, Val::Auto)),
             ))
             .with_children(|button_section| {
-                let button_style = if screen_sizing.is_ipad {
+                let button_style = if resources.screen_sizing.is_ipad {
                     FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
                         .with_margin(Size::all(Val::Vmin(1.5)))
                 } else {
                     FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
                         .with_margin(Size::all(Val::Vmin(1.5)))
                 };
-                let font_size = if screen_sizing.is_ipad { 66. } else { 44. };
-                let buttons = ButtonBuilder::new(fonts, button_style, font_size);
+                let font_size = if resources.screen_sizing.is_ipad {
+                    66.
+                } else {
+                    44.
+                };
+                let buttons = ButtonBuilder::new(resources, button_style, font_size);
                 buttons.build_secondary_with_text_and_action(
                     button_section,
                     "Back to Menu",
@@ -288,22 +310,13 @@ fn get_stat_text(kind: StatKind, game: &Game, highscores: &Highscores) -> String
 
 fn render_scores(
     score_container: &mut EntityCommands,
-    fonts: &Fonts,
     game: &Game,
     highscores: &Highscores,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
 ) {
     score_container.with_children(|container| {
         let mut create_row = |marker: StatTextMarker, label: &str| {
-            create_stat_row(
-                container,
-                fonts,
-                game,
-                highscores,
-                screen_sizing,
-                marker,
-                label,
-            );
+            create_stat_row(container, game, highscores, resources, marker, label);
         };
 
         create_row(StatTextMarker::new(StatKind::Score), "Score:");
@@ -314,15 +327,7 @@ fn render_scores(
         let _spacer = container.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
         let mut create_row = |marker: StatTextMarker, label: &str| {
-            create_stat_row(
-                container,
-                fonts,
-                game,
-                highscores,
-                screen_sizing,
-                marker,
-                label,
-            );
+            create_stat_row(container, game, highscores, resources, marker, label);
         };
 
         create_row(
@@ -335,18 +340,21 @@ fn render_scores(
 
 fn create_stat_row(
     container: &mut ChildBuilder,
-    fonts: &Fonts,
     game: &Game,
     highscores: &Highscores,
-    screen_sizing: &ScreenSizing,
+    resources: &ResourceBag,
     marker: StatTextMarker,
     label: &str,
 ) {
-    let font_size = if screen_sizing.is_ipad { 60. } else { 44. };
-    let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
-        fonts.bold.clone()
+    let font_size = if resources.screen_sizing.is_ipad {
+        60.
     } else {
-        fonts.medium.clone()
+        44.
+    };
+    let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
+        resources.fonts.bold.clone()
+    } else {
+        resources.fonts.medium.clone()
     };
 
     container
