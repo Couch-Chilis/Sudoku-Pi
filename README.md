@@ -23,6 +23,13 @@ In addition, this source code repository provides free access to Sudoku Pi under
 an open-source license that grants you the right to make copies and make
 modifications, so long as your copies are made available under the same terms.
 
+# Community
+
+Please feel free to follow us or reach out to us!
+
+* Mastodon: https://mastodon.gamedev.place/@couchchilis
+* Spicy Lobster Discord: https://discord.gg/MTvGFhQWPK (look for the #sudoku-pi channel!)
+
 # Contributing
 
 Feel free to open [issues](https://github.com/Couch-Chilis/Sudoku-Pi/issues) or
