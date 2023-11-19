@@ -224,7 +224,14 @@ pub fn on_wheel_input(
                 let selected_number = get_selected_number(&wheel);
                 let may_select_number = !settings.enable_wheel_aid
                     || match selected_number {
-                        Some(n) => game.current.may_set(wheel.cell.0, wheel.cell.1, n),
+                        Some(n) => {
+                            let sudoku = if settings.show_mistakes {
+                                &game.current
+                            } else {
+                                &game.start
+                            };
+                            sudoku.may_set(wheel.cell.0, wheel.cell.1, n)
+                        }
                         None => true, // It should always be allowed to deselect.
                     };
                 if may_select_number && selected_number != wheel.selected_number {
