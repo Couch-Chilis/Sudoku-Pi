@@ -1,5 +1,4 @@
-use super::ButtonBuilder;
-use crate::{sudoku::Difficulty, ui::*, ScreenState, TransitionEvent};
+use crate::{sudoku::Difficulty, ui::*, ResourceBag, TransitionEvent};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -8,25 +7,39 @@ pub enum DifficultyScreenButtonAction {
     StartGameAtDifficulty(Difficulty),
 }
 
-pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, buttons: &ButtonBuilder) {
+pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, resources: &ResourceBag) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
 
-    buttons.build_secondary_with_text_and_action_and_custom_margin(
-        parent,
-        "Back",
+    parent.spawn_with_children(secondary_button(
         BackToMain,
-        Size::new(Val::Vmin(1.5), Val::Vmin(5.)),
-    );
-    buttons.build_with_text_and_action(parent, "Easy", StartGameAtDifficulty(Easy));
-    buttons.build_selected_with_text_and_action(parent, "Medium", StartGameAtDifficulty(Medium));
-    buttons.build_with_text_and_action(parent, "Hard", StartGameAtDifficulty(Advanced));
-    buttons.build_with_text_and_action(parent, "Extreme", StartGameAtDifficulty(Expert));
+        (button_size_main(resources), button_margin_extra_height),
+        text("Back", button_text(resources)),
+    ));
+    parent.spawn_with_children(primary_button(
+        StartGameAtDifficulty(Easy),
+        (button_size_main(resources), button_margin),
+        text("Easy", button_text(resources)),
+    ));
+    parent.spawn_with_children(primary_button(
+        StartGameAtDifficulty(Medium),
+        (button_size_main(resources), button_margin),
+        text("Medium", button_text(resources)),
+    ));
+    parent.spawn_with_children(primary_button(
+        StartGameAtDifficulty(Advanced),
+        (button_size_main(resources), button_margin),
+        text("Hard", button_text(resources)),
+    ));
+    parent.spawn_with_children(primary_button(
+        StartGameAtDifficulty(Expert),
+        (button_size_main(resources), button_margin),
+        text("Extreme", button_text(resources)),
+    ));
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.
 pub fn difficulty_screen_button_actions(
-    mut screen_state: ResMut<NextState<ScreenState>>,
     mut transition_events: EventWriter<TransitionEvent>,
     interaction_query: Query<
         (&Interaction, &DifficultyScreenButtonAction),
@@ -37,7 +50,7 @@ pub fn difficulty_screen_button_actions(
         if *interaction == Interaction::Pressed {
             use DifficultyScreenButtonAction::*;
             match action {
-                BackToMain => screen_state.set(ScreenState::MainMenu),
+                BackToMain => transition_events.send(TransitionEvent::Exit),
                 StartGameAtDifficulty(difficulty) => {
                     transition_events.send(TransitionEvent::StartGame(*difficulty))
                 }

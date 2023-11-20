@@ -71,11 +71,9 @@ pub fn menu_setup(main_screen: &mut EntityCommands, game: &Game, resources: &Res
                 .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
         ));
 
-        let buttons = make_button_builder(resources);
-
         // Main menu buttons.
         build_button_section(screen, ScreenState::MainMenu, 0., 2., |main_section| {
-            spawn_main_menu_buttons(main_section, &buttons, game, resources);
+            spawn_main_menu_buttons(main_section, game, resources);
         });
 
         // Difficulty buttons.
@@ -85,26 +83,10 @@ pub fn menu_setup(main_screen: &mut EntityCommands, game: &Game, resources: &Res
             -0.5 * PI,
             3.,
             |parent| {
-                spawn_difficulty_menu_buttons(parent, &buttons);
+                spawn_difficulty_menu_buttons(parent, resources);
             },
         );
     });
-}
-
-fn make_button_builder(resources: &ResourceBag) -> ButtonBuilder {
-    let button_style = if resources.screen_sizing.is_ipad {
-        FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
-            .with_margin(Size::all(Val::Vmin(1.5)))
-    } else {
-        FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
-            .with_margin(Size::all(Val::Vmin(1.5)))
-    };
-    let font_size = if resources.screen_sizing.is_ipad {
-        66.
-    } else {
-        44.
-    };
-    ButtonBuilder::new(resources, button_style, font_size)
 }
 
 fn build_button_section(
@@ -172,8 +154,7 @@ fn on_screen_change(
                 button_container.despawn_descendants();
                 button_container.remove_children(children);
                 button_container.with_children(|main_section| {
-                    let buttons = make_button_builder(&resources);
-                    spawn_main_menu_buttons(main_section, &buttons, &game, &resources);
+                    spawn_main_menu_buttons(main_section, &game, &resources);
                 });
             }
         }

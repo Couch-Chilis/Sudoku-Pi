@@ -2,7 +2,7 @@ use super::{flex::*, InitialSelection, Interaction};
 use crate::{constants::*, ResourceBag};
 use bevy::prelude::*;
 
-const BORDER_THICKNESS: Val = Val::Pixel(1);
+pub const BORDER_THICKNESS: Val = Val::Pixel(1);
 
 /// Marker for buttons.
 #[derive(Clone, Component, Default)]
@@ -47,7 +47,6 @@ pub struct ButtonBuilder {
     button_style: FlexItemStyle,
     text_style: TextStyle,
     secondary_text_style: TextStyle,
-    ternary_text_style: TextStyle,
     alternative_background_style: FlexItemStyle,
 }
 
@@ -67,12 +66,6 @@ impl ButtonBuilder {
             color: COLOR_SECONDARY_BUTTON_TEXT,
         };
 
-        // Text styling for ternary buttons.
-        let ternary_text_style = TextStyle {
-            color: COLOR_TERNARY_BUTTON_TEXT,
-            ..secondary_text_style.clone()
-        };
-
         // Background style for secondary and ternary buttons.
         let alternative_background_style =
             FlexItemStyle::available_size().without_occupying_space();
@@ -81,7 +74,6 @@ impl ButtonBuilder {
             button_style,
             text_style,
             secondary_text_style,
-            ternary_text_style,
             alternative_background_style,
         }
     }
@@ -132,41 +124,11 @@ impl ButtonBuilder {
         text: &str,
         action: impl Component,
     ) {
-        self.build_secondary_with_text_and_action_and_button_style(
-            parent,
-            text,
-            action,
-            self.button_style.clone(),
-        );
-    }
-
-    pub fn build_secondary_with_text_and_action_and_custom_margin(
-        &self,
-        parent: &mut ChildBuilder,
-        text: &str,
-        action: impl Component,
-        margin: Size,
-    ) {
-        self.build_secondary_with_text_and_action_and_button_style(
-            parent,
-            text,
-            action,
-            self.button_style.clone().with_margin(margin),
-        );
-    }
-
-    fn build_secondary_with_text_and_action_and_button_style(
-        &self,
-        parent: &mut ChildBuilder,
-        text: &str,
-        action: impl Component,
-        button_style: FlexItemStyle,
-    ) {
         parent
             .spawn((
                 ButtonBundle {
                     flex: FlexBundle::new(
-                        button_style,
+                        self.button_style.clone(),
                         FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
                     )
                     .with_background_color(COLOR_SECONDARY_BUTTON_BORDER),
@@ -189,44 +151,6 @@ impl ButtonBuilder {
                         background.spawn(FlexTextBundle::from_text(Text::from_section(
                             text,
                             self.secondary_text_style.clone(),
-                        )));
-                    });
-            });
-    }
-
-    pub fn build_ternary_with_text_and_action(
-        &self,
-        parent: &mut ChildBuilder,
-        text: &str,
-        action: impl Component,
-    ) {
-        parent
-            .spawn((
-                ButtonBundle {
-                    flex: FlexBundle::new(
-                        self.button_style.clone(),
-                        FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
-                    )
-                    .with_background_color(COLOR_TERNARY_BUTTON_BORDER),
-                    ..default()
-                },
-                ButtonType::Ternary,
-                action,
-            ))
-            .with_children(|border| {
-                border
-                    .spawn((
-                        ButtonBackground,
-                        FlexBundle::new(
-                            self.alternative_background_style.clone(),
-                            FlexContainerStyle::row(),
-                        )
-                        .with_background_color(COLOR_TERNARY_BUTTON_BACKGROUND),
-                    ))
-                    .with_children(|background| {
-                        background.spawn(FlexTextBundle::from_text(Text::from_section(
-                            text,
-                            self.ternary_text_style.clone(),
                         )));
                     });
             });

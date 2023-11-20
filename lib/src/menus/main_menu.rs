@@ -1,4 +1,3 @@
-use super::ButtonBuilder;
 use crate::resource_bag::ResourceBag;
 use crate::{constants::*, sudoku::*, transition_events::*, ui::*, ScreenState};
 use bevy::{app::AppExit, prelude::*, sprite::Anchor};
@@ -14,37 +13,48 @@ pub enum MainScreenButtonAction {
 
 pub fn spawn_main_menu_buttons(
     main_section: &mut ChildBuilder,
-    buttons: &ButtonBuilder,
     game: &Game,
     resources: &ResourceBag,
 ) {
     use MainScreenButtonAction::*;
 
     if cfg!(not(target_os = "ios")) {
-        buttons.build_ternary_with_text_and_action(
-            main_section,
-            "Quit",
-            MainScreenButtonAction::Quit,
-        );
-    }
-    buttons.build_secondary_with_text_and_action_and_custom_margin(
-        main_section,
-        "How to Play",
-        GoToHowToPlay,
-        if cfg!(target_os = "ios") {
-            Size::new(Val::Vmin(1.5), Val::Vmin(5.))
-        } else {
-            Size::all(Val::Vmin(1.5))
-        },
-    );
-    if game.may_continue() {
-        buttons.build_secondary_with_text_and_action(main_section, "New Game", GoToNewGame);
-        buttons.build_selected_with_text_and_action(main_section, "Continue", ContinueGame);
-    } else {
-        buttons.build_selected_with_text_and_action(main_section, "New Game", GoToNewGame);
+        main_section.spawn_with_children(ternary_button(
+            Quit,
+            (button_size_main(resources), button_margin),
+            text("Quit", button_text(resources)),
+        ));
     }
 
-    main_section.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
+    main_section.spawn_with_children(secondary_button(
+        GoToHowToPlay,
+        (
+            button_size_main(resources),
+            button_margin_extra_height_on_ios,
+        ),
+        text("How to Play", button_text(resources)),
+    ));
+
+    if game.may_continue() {
+        main_section.spawn_with_children(secondary_button(
+            GoToNewGame,
+            (button_size_main(resources), button_margin),
+            text("New Game", button_text(resources)),
+        ));
+        main_section.spawn_with_children(selected_button(
+            ContinueGame,
+            (button_size_main(resources), button_margin),
+            text("Continue", button_text(resources)),
+        ));
+    } else {
+        main_section.spawn_with_children(selected_button(
+            GoToNewGame,
+            (button_size_main(resources), button_margin),
+            text("New Game", button_text(resources)),
+        ));
+    }
+
+    main_section.spawn(leaf(available_size));
 
     main_section
         .spawn(FlexBundle::new(
