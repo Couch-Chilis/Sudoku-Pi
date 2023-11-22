@@ -1,13 +1,7 @@
 use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, Selection};
-use crate::{
-    constants::*,
-    resource_bag::ResourceBag,
-    sudoku::*,
-    ui::*,
-    utils::{SpriteExt, TransformExt},
-    Fonts, ScreenSizing, Settings,
-};
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use crate::{constants::*, sudoku::*, ui::*, utils::*};
+use crate::{Fonts, ScreenSizing, Settings};
+use bevy::prelude::*;
 use std::num::NonZeroU8;
 
 const NUMBER_FONT_SIZE: f32 = 80.;
@@ -29,101 +23,94 @@ pub(super) enum NoteHighlightKind {
     Mistake,
 }
 
-pub fn fill_numbers(
-    board: &mut EntityCommands,
-    game: &Game,
-    resources: &ResourceBag,
-    settings: &Settings,
-) {
-    board.with_children(|board| {
-        for x in 0..9 {
-            board
-                .spawn(FlexBundle::new(
-                    FlexItemStyle::available_size(),
-                    FlexContainerStyle::column(),
-                ))
-                .with_children(|column| {
-                    for y in 0..9 {
-                        spawn_cell(column, game, resources, settings, x, y);
-                    }
-                });
-        }
-    });
-}
-
-fn spawn_cell(
-    parent: &mut ChildBuilder,
-    game: &Game,
-    resources: &ResourceBag,
-    settings: &Settings,
-    x: u8,
-    y: u8,
-) {
-    let n = game.current.get(x, y);
-
-    let number_style = TextStyle {
-        font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
-            resources.fonts.light.clone()
-        } else {
-            resources.fonts.bold.clone()
-        },
-        font_size: if resources.screen_sizing.is_ipad {
-            NUMBER_FONT_SIZE_IPAD
-        } else {
-            NUMBER_FONT_SIZE
-        },
-        color: if n.is_some() {
-            get_number_color(game, settings, x, y)
-        } else {
-            Color::NONE
-        },
-    };
-
-    let note_style = TextStyle {
-        font: resources.fonts.bold.clone(),
-        font_size: if resources.screen_sizing.is_ipad {
-            NOTE_FONT_SIZE_IPAD
-        } else {
-            NOTE_FONT_SIZE
-        },
-        color: Color::NONE,
-    };
-
-    parent
-        .spawn((
-            Number(x, y),
-            Interaction::None,
-            FlexBundle::new(FlexItemStyle::available_size(), FlexContainerStyle::row()),
+pub fn board_numbers(props: &Props, cb: &mut ChildBuilder) {
+    for x in 0..9 {
+        cb.spawn(FlexBundle::new(
+            FlexItemStyle::available_size(),
+            FlexContainerStyle::column(),
         ))
-        .with_children(|cell| {
-            cell.spawn(build_number(x, y, n, number_style));
-
-            for note_x in 1..=3 {
-                cell.spawn(FlexBundle::new(
-                    FlexItemStyle::available_size(),
-                    FlexContainerStyle::default(),
-                ))
-                .with_children(|note_column| {
-                    for note_y in 0..3 {
-                        let n = NonZeroU8::new(note_x + 3 * note_y).unwrap();
-                        note_column
-                            .spawn((
-                                Note::new(x, y, n),
-                                FlexBundle::new(
-                                    FlexItemStyle::available_size(),
-                                    FlexContainerStyle::default(),
-                                ),
-                            ))
-                            .with_children(|note_cell| {
-                                note_cell.spawn(build_note(x, y, n, note_style.clone()));
-                            });
-                    }
-                });
+        .with_children(|column| {
+            for y in 0..9 {
+                column.spawn_with_children(props, cell(x, y));
             }
         });
+    }
 }
 
-fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundle {
+fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    let bundle = (
+        Number(x, y),
+        Interaction::None,
+        FlexBundle::new(FlexItemStyle::available_size(), FlexContainerStyle::row()),
+    );
+
+    let spawn_children = move |props: &Props, cb: &mut ChildBuilder| {
+        let Props {
+            game,
+            resources,
+            settings,
+        } = props;
+
+        let n = game.current.get(x, y);
+
+        let number_style = TextStyle {
+            font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
+                resources.fonts.light.clone()
+            } else {
+                resources.fonts.bold.clone()
+            },
+            font_size: if resources.screen_sizing.is_ipad {
+                NUMBER_FONT_SIZE_IPAD
+            } else {
+                NUMBER_FONT_SIZE
+            },
+            color: if n.is_some() {
+                get_number_color(game, settings, x, y)
+            } else {
+                Color::NONE
+            },
+        };
+
+        let note_style = TextStyle {
+            font: resources.fonts.bold.clone(),
+            font_size: if resources.screen_sizing.is_ipad {
+                NOTE_FONT_SIZE_IPAD
+            } else {
+                NOTE_FONT_SIZE
+            },
+            color: Color::NONE,
+        };
+
+        cb.spawn(board_number(x, y, n, number_style));
+
+        for note_x in 1..=3 {
+            cb.spawn(FlexBundle::new(
+                FlexItemStyle::available_size(),
+                FlexContainerStyle::default(),
+            ))
+            .with_children(|note_column| {
+                for note_y in 0..3 {
+                    let n = NonZeroU8::new(note_x + 3 * note_y).unwrap();
+                    note_column
+                        .spawn((
+                            Note::new(x, y, n),
+                            FlexBundle::new(
+                                FlexItemStyle::available_size(),
+                                FlexContainerStyle::default(),
+                            ),
+                        ))
+                        .with_children(|note_cell| {
+                            note_cell.spawn(note(x, y, n, note_style.clone()));
+                        });
+                }
+            });
+        }
+    };
+
+    (bundle, spawn_children)
+}
+
+fn board_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundle {
     (
         Number(x, y),
         FlexTextBundle::from_text(Text::from_section(
@@ -133,7 +120,7 @@ fn build_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundl
     )
 }
 
-fn build_note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
+fn note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
     (
         Note::new(x, y, n),
         FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style)),

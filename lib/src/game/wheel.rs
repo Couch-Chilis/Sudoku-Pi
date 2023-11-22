@@ -1,13 +1,8 @@
-use super::mode_slider::ModeState;
+use super::mode_slider::*;
 use super::{fill_number, get_board_x_and_y, toggle_note, Board, InputKind, Note, Selection};
-use crate::{
-    constants::*,
-    pointer_query::{PointerQuery, PointerQueryExt},
-    settings::Settings,
-    utils::*,
-    ComputedPosition, Game, GameTimer, Images, ResourceBag, ScreenSizing, ScreenState,
-};
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use crate::{constants::*, pointer_query::*, ui::*, utils::*};
+use crate::{ComputedPosition, Game, GameTimer, Images, ScreenSizing, ScreenState, Settings};
+use bevy::prelude::*;
 use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
@@ -68,35 +63,35 @@ impl ActiveSliceHandles {
     }
 }
 
-pub fn init_wheel(board: &mut EntityCommands, resources: &ResourceBag, screen: ScreenState) {
-    let disabled_slice_handles = get_disabled_slice_handles(resources.images);
+pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    move |props, cb| {
+        cb.spawn((
+            Wheel::default(),
+            screen,
+            SpriteBundle {
+                texture: props.resources.images.wheel.clone(),
+                transform: Transform::from_2d_scale(0., 0.),
+                ..default()
+            },
+        ))
+        .with_children(|wheel| {
+            for (i, disabled_slice) in get_disabled_slice_handles(props.resources.images)
+                .into_iter()
+                .enumerate()
+            {
+                wheel.spawn((
+                    DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
+                    SpriteBundle {
+                        texture: disabled_slice.clone(),
+                        transform: Transform::default_2d(),
+                        visibility: Visibility::Hidden,
+                        ..default()
+                    },
+                ));
+            }
+        });
 
-    board.with_children(|board| {
-        board
-            .spawn((
-                Wheel::default(),
-                screen,
-                SpriteBundle {
-                    texture: resources.images.wheel.clone(),
-                    transform: Transform::from_2d_scale(0., 0.),
-                    ..default()
-                },
-            ))
-            .with_children(|wheel| {
-                for (i, disabled_slice) in disabled_slice_handles.into_iter().enumerate() {
-                    wheel.spawn((
-                        DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
-                        SpriteBundle {
-                            texture: disabled_slice.clone(),
-                            transform: Transform::default_2d(),
-                            visibility: Visibility::Hidden,
-                            ..default()
-                        },
-                    ));
-                }
-            });
-
-        board.spawn((
+        cb.spawn((
             Slice,
             screen,
             SpriteBundle {
@@ -106,32 +101,31 @@ pub fn init_wheel(board: &mut EntityCommands, resources: &ResourceBag, screen: S
         ));
 
         let label_text_style = TextStyle {
-            font: resources.fonts.medium.clone(),
+            font: props.resources.fonts.medium.clone(),
             font_size: 50.,
             color: COLOR_WHEEL_TOP_TEXT,
         };
 
-        board
-            .spawn((
-                TopLabel,
-                screen,
-                SpriteBundle {
-                    texture: resources.images.top_label.clone(),
-                    transform: Transform::from_2d_scale(0., 0.),
+        cb.spawn((
+            TopLabel,
+            screen,
+            SpriteBundle {
+                texture: props.resources.images.top_label.clone(),
+                transform: Transform::from_2d_scale(0., 0.),
+                ..default()
+            },
+        ))
+        .with_children(|center_label| {
+            center_label.spawn((
+                TopLabelText,
+                Text2dBundle {
+                    text: Text::from_section("", label_text_style),
+                    transform: Transform::from_translation(Vec3::new(0., 8., 1.)),
                     ..default()
                 },
-            ))
-            .with_children(|center_label| {
-                center_label.spawn((
-                    TopLabelText,
-                    Text2dBundle {
-                        text: Text::from_section("", label_text_style),
-                        transform: Transform::from_translation(Vec3::new(0., 8., 1.)),
-                        ..default()
-                    },
-                ));
-            });
-    });
+            ));
+        });
+    }
 }
 
 fn get_disabled_slice_handles(images: &Images) -> [&Handle<Image>; 9] {

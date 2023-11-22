@@ -4,8 +4,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{sudoku::*, ui::*, utils::*, ScreenInteraction, ScreenState};
-use bevy::ecs::system::EntityCommands;
+use crate::{ui::*, utils::*, ScreenInteraction, ScreenState};
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
 use difficulty_menu::*;
@@ -16,7 +15,6 @@ use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
-use crate::resource_bag::{ResourceBag, ResourceTuple};
 pub use settings_menu::settings_screen_setup;
 pub use settings_toggle::SettingsToggleTimer;
 
@@ -45,59 +43,57 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_setup(main_screen: &mut EntityCommands, game: &Game, resources: &ResourceBag) {
-    main_screen.with_children(|screen| {
-        // Logo.
-        screen.spawn((
-            FlexItemBundle::from_style(
-                FlexItemStyle::fixed_size(Val::CrossPercent(46.19), Val::Percent(100.))
-                    .with_fixed_aspect_ratio()
-                    .without_occupying_space()
-                    .with_transform(Transform::from_2d_scale(1. / 1170., 1. / 2533.)),
-            ),
-            SpriteBundle {
-                texture: if resources.screen_sizing.is_ipad {
-                    resources.images.launch_screen_ipad.clone()
-                } else {
-                    resources.images.launch_screen.clone()
-                },
-                ..default()
+pub fn menu_setup(props: &Props, cb: &mut ChildBuilder) {
+    // Logo.
+    cb.spawn((
+        FlexItemBundle::from_style(
+            FlexItemStyle::fixed_size(Val::CrossPercent(46.19), Val::Percent(100.))
+                .with_fixed_aspect_ratio()
+                .without_occupying_space()
+                .with_transform(Transform::from_2d_scale(1. / 1170., 1. / 2533.)),
+        ),
+        SpriteBundle {
+            texture: if props.resources.screen_sizing.is_ipad {
+                props.resources.images.launch_screen_ipad.clone()
+            } else {
+                props.resources.images.launch_screen.clone()
             },
-        ));
+            ..default()
+        },
+    ));
 
-        // Spacer.
-        screen.spawn(FlexLeafBundle::from_style(
-            FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.))
-                .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-        ));
+    // Spacer.
+    cb.spawn(FlexLeafBundle::from_style(
+        FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.))
+            .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
+    ));
 
-        // Main menu buttons.
-        build_button_section(screen, ScreenState::MainMenu, 0., 2., |main_section| {
-            spawn_main_menu_buttons(main_section, game, resources);
-        });
+    // Main menu buttons.
+    cb.spawn_with_children(
+        props,
+        button_section(ScreenState::MainMenu, 0., 2., main_menu_buttons),
+    );
 
-        // Difficulty buttons.
-        build_button_section(
-            screen,
+    // Difficulty buttons.
+    cb.spawn_with_children(
+        props,
+        button_section(
             ScreenState::SelectDifficulty,
             -0.5 * PI,
             3.,
-            |parent| {
-                spawn_difficulty_menu_buttons(parent, resources);
-            },
-        );
-    });
+            difficulty_menu_buttons,
+        ),
+    );
 }
 
-fn build_button_section(
-    screen: &mut ChildBuilder,
+fn button_section(
     screen_state: ScreenState,
     initial_rotation: f32,
     z_index: f32,
-    child_builder: impl FnOnce(&mut ChildBuilder),
-) {
-    screen
-        .spawn((
+    children: impl FnOnce(&Props, &mut ChildBuilder),
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    move |props, cb| {
+        cb.spawn((
             ButtonSection {
                 initial_rotation,
                 current_rotation: initial_rotation,
@@ -126,23 +122,23 @@ fn build_button_section(
                         },
                     )),
                 ))
-                .with_children(child_builder);
+                .with_children(|cb| children(props, cb));
         });
+    }
 }
 
 fn on_screen_change(
     mut commands: Commands,
     mut button_sections: Query<(Entity, &mut ButtonSection)>,
     button_containers: Query<(Entity, &Children, &ScreenInteraction)>,
-    game: Res<Game>,
-    resources: ResourceTuple,
+    props: PropsTuple,
     screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() || screen_state.is_added() {
         return;
     }
 
-    let resources = ResourceBag::from_tuple(&resources);
+    let props = Props::from_tuple(&props);
 
     use ScreenState::*;
     if screen_state.get() == &MainMenu {
@@ -153,9 +149,7 @@ fn on_screen_change(
                 let mut button_container = commands.entity(container_entity);
                 button_container.despawn_descendants();
                 button_container.remove_children(children);
-                button_container.with_children(|main_section| {
-                    spawn_main_menu_buttons(main_section, &game, &resources);
-                });
+                button_container.with_children(|cb| main_menu_buttons(&props, cb));
             }
         }
     }

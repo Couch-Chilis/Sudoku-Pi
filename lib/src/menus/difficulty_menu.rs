@@ -1,4 +1,4 @@
-use crate::{sudoku::Difficulty, ui::*, ResourceBag, TransitionEvent};
+use crate::{sudoku::Difficulty, ui::*, TransitionEvent};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -7,35 +7,41 @@ pub enum DifficultyScreenButtonAction {
     StartGameAtDifficulty(Difficulty),
 }
 
-pub fn spawn_difficulty_menu_buttons(parent: &mut ChildBuilder, resources: &ResourceBag) {
+pub fn difficulty_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
 
-    parent.spawn_with_children(secondary_button(
-        BackToMain,
-        (button_size_main(resources), button_margin_extra_height),
-        text("Back", button_text(resources)),
-    ));
-    parent.spawn_with_children(primary_button(
-        StartGameAtDifficulty(Easy),
-        (button_size_main(resources), button_margin),
-        text("Easy", button_text(resources)),
-    ));
-    parent.spawn_with_children(primary_button(
-        StartGameAtDifficulty(Medium),
-        (button_size_main(resources), button_margin),
-        text("Medium", button_text(resources)),
-    ));
-    parent.spawn_with_children(primary_button(
-        StartGameAtDifficulty(Advanced),
-        (button_size_main(resources), button_margin),
-        text("Hard", button_text(resources)),
-    ));
-    parent.spawn_with_children(primary_button(
-        StartGameAtDifficulty(Expert),
-        (button_size_main(resources), button_margin),
-        text("Extreme", button_text(resources)),
-    ));
+    let resources = &props.resources;
+
+    fragment5(
+        props,
+        cb,
+        secondary_button(
+            BackToMain,
+            (button_size_main(resources), button_margin_extra_height),
+            text("Back", button_text(resources)),
+        ),
+        primary_button(
+            StartGameAtDifficulty(Easy),
+            (button_size_main(resources), button_margin),
+            text("Easy", button_text(resources)),
+        ),
+        primary_button(
+            StartGameAtDifficulty(Medium),
+            (button_size_main(resources), button_margin),
+            text("Medium", button_text(resources)),
+        ),
+        primary_button(
+            StartGameAtDifficulty(Advanced),
+            (button_size_main(resources), button_margin),
+            text("Hard", button_text(resources)),
+        ),
+        primary_button(
+            StartGameAtDifficulty(Expert),
+            (button_size_main(resources), button_margin),
+            text("Extreme", button_text(resources)),
+        ),
+    )
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.

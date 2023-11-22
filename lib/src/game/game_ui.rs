@@ -1,7 +1,7 @@
 use super::mode_slider::build_mode_slider;
 use crate::{constants::*, ui::*, utils::*};
 use crate::{Game, GameTimer, Highscores, Images, ResourceBag, ScreenState};
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub enum UiButtonAction {
@@ -20,21 +20,23 @@ pub struct SettingsIcon;
 pub struct Timer;
 
 pub fn init_game_ui(
-    game_screen: &mut EntityCommands,
-    resources: &ResourceBag,
-    board_builder: impl FnOnce(&mut EntityCommands),
+    props: &Props,
+    cb: &mut ChildBuilder,
+    board_builder: impl FnOnce(&Props, &mut ChildBuilder) + 'static,
 ) {
-    build_button_row(game_screen, resources, |icon_row| {
+    let resources = &props.resources;
+
+    build_button_row(cb, resources, |icon_row| {
         icon_row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
 
         build_settings_icon(icon_row, resources);
     });
 
-    build_timer_row(game_screen, |timer_row| {
+    build_timer_row(cb, |timer_row| {
         build_timer(timer_row, resources);
     });
 
-    build_button_row(game_screen, resources, |button_row| {
+    build_button_row(cb, resources, |button_row| {
         let button_size = if resources.screen_sizing.is_ipad {
             FlexItemStyle::fixed_size(Val::Pixel(133), Val::Pixel(60))
         } else {
@@ -54,9 +56,9 @@ pub fn init_game_ui(
         buttons.build_secondary_with_text_and_action(button_row, "Hint", UiButtonAction::Hint);
     });
 
-    board_builder(game_screen);
+    cb.spawn_with_children(props, board_builder);
 
-    build_mode_slider(game_screen, resources);
+    build_mode_slider(cb, resources);
 }
 
 fn build_settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
@@ -83,15 +85,12 @@ fn build_settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
     ));
 }
 
-fn build_timer_row(screen: &mut EntityCommands, child_builder: impl FnOnce(&mut ChildBuilder)) {
-    screen.with_children(|screen| {
-        screen
-            .spawn(FlexBundle::from_item_style(
-                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(42))
-                    .with_margin(Size::all(Val::Pixel(15))),
-            ))
-            .with_children(child_builder);
-    });
+fn build_timer_row(cb: &mut ChildBuilder, children: impl FnOnce(&mut ChildBuilder)) {
+    cb.spawn(FlexBundle::from_item_style(
+        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(42))
+            .with_margin(Size::all(Val::Pixel(15))),
+    ))
+    .with_children(children);
 }
 
 fn build_timer(row: &mut ChildBuilder, resources: &ResourceBag) {
@@ -151,26 +150,23 @@ fn build_timer(row: &mut ChildBuilder, resources: &ResourceBag) {
 }
 
 pub fn build_button_row(
-    screen: &mut EntityCommands,
+    cb: &mut ChildBuilder,
     resources: &ResourceBag,
     child_builder: impl FnOnce(&mut ChildBuilder),
 ) {
-    screen.with_children(|screen| {
-        screen
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(
-                    Val::Vmin(if resources.screen_sizing.is_ipad {
-                        80.
-                    } else {
-                        90.
-                    }),
-                    Val::Pixel(35),
-                )
-                .with_margin(Size::new(Val::None, Val::Pixel(15))),
-                FlexContainerStyle::row().with_gap(Val::Auto),
-            ))
-            .with_children(child_builder);
-    });
+    cb.spawn(FlexBundle::new(
+        FlexItemStyle::preferred_size(
+            Val::Vmin(if resources.screen_sizing.is_ipad {
+                80.
+            } else {
+                90.
+            }),
+            Val::Pixel(35),
+        )
+        .with_margin(Size::new(Val::None, Val::Pixel(15))),
+        FlexContainerStyle::row().with_gap(Val::Auto),
+    ))
+    .with_children(child_builder);
 }
 
 fn build_score(row: &mut ChildBuilder, resources: &ResourceBag) {

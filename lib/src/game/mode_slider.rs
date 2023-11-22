@@ -1,6 +1,6 @@
 use crate::{constants::*, pointer_query::*, ui::*};
 use crate::{utils::TransformExt, ResourceBag, ScreenSizing};
-use bevy::{ecs::system::EntityCommands, prelude::*, sprite::*};
+use bevy::{prelude::*, sprite::*};
 use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
 use std::time::Duration;
 
@@ -27,67 +27,63 @@ pub struct ModeSliderKnob;
 #[derive(Component)]
 pub struct OppositeSliderKnob;
 
-pub fn build_mode_slider(parent: &mut EntityCommands, resources: &ResourceBag) {
-    parent.with_children(|parent| {
-        if resources.screen_sizing.is_ipad {
-            parent
-                .spawn((
-                    ModeSlider { active: false },
-                    FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Vmin(80.), Val::Pixel(105))
-                            .with_margin(Size::new(Val::None, Val::Pixel(15))),
-                        FlexContainerStyle::row(),
-                    ),
+pub fn build_mode_slider(cb: &mut ChildBuilder, resources: &ResourceBag) {
+    if resources.screen_sizing.is_ipad {
+        cb.spawn((
+            ModeSlider { active: false },
+            FlexBundle::new(
+                FlexItemStyle::preferred_size(Val::Vmin(80.), Val::Pixel(105))
+                    .with_margin(Size::new(Val::None, Val::Pixel(15))),
+                FlexContainerStyle::row(),
+            ),
+        ))
+        .with_children(|row| {
+            build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
+
+            row.spawn(FlexBundle::new(
+                FlexItemStyle::fixed_size(Val::Percent(66.), Val::CrossPercent(6.))
+                    .with_fixed_aspect_ratio(),
+                FlexContainerStyle::row(),
+            ))
+            .with_children(|row| {
+                build_background(row, resources);
+                build_knobs(row, resources);
+            });
+
+            build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
+        });
+    } else {
+        cb.spawn((
+            ModeSlider { active: false },
+            FlexBundle::new(
+                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(105))
+                    .with_margin(Size::new(Val::None, Val::Pixel(15))),
+                FlexContainerStyle::column(),
+            ),
+        ))
+        .with_children(|column| {
+            column
+                .spawn(FlexBundle::new(
+                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
+                        .with_fixed_aspect_ratio(),
+                    FlexContainerStyle::row(),
+                ))
+                .with_children(|row| {
+                    build_background(row, resources);
+                    build_knobs(row, resources);
+                });
+
+            column
+                .spawn(FlexBundle::new(
+                    FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(70)),
+                    FlexContainerStyle::row(),
                 ))
                 .with_children(|row| {
                     build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
-
-                    row.spawn(FlexBundle::new(
-                        FlexItemStyle::fixed_size(Val::Percent(66.), Val::CrossPercent(6.))
-                            .with_fixed_aspect_ratio(),
-                        FlexContainerStyle::row(),
-                    ))
-                    .with_children(|row| {
-                        build_background(row, resources);
-                        build_knobs(row, resources);
-                    });
-
                     build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
                 });
-        } else {
-            parent
-                .spawn((
-                    ModeSlider { active: false },
-                    FlexBundle::new(
-                        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(105))
-                            .with_margin(Size::new(Val::None, Val::Pixel(15))),
-                        FlexContainerStyle::column(),
-                    ),
-                ))
-                .with_children(|column| {
-                    column
-                        .spawn(FlexBundle::new(
-                            FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
-                                .with_fixed_aspect_ratio(),
-                            FlexContainerStyle::row(),
-                        ))
-                        .with_children(|row| {
-                            build_background(row, resources);
-                            build_knobs(row, resources);
-                        });
-
-                    column
-                        .spawn(FlexBundle::new(
-                            FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(70)),
-                            FlexContainerStyle::row(),
-                        ))
-                        .with_children(|row| {
-                            build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
-                            build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
-                        });
-                });
-        }
-    });
+        });
+    }
 }
 
 fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {

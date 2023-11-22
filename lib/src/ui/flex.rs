@@ -371,6 +371,11 @@ impl FlexTextBundle {
         }
     }
 
+    pub fn with_alignment(mut self, alignment: TextAlignment) -> Self {
+        self.text.text.alignment = alignment;
+        self
+    }
+
     pub fn with_anchor(mut self, anchor: Anchor) -> Self {
         self.text.text_anchor = anchor;
         self

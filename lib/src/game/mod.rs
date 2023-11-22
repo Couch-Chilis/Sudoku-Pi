@@ -1,17 +1,14 @@
-mod board_builder;
+mod board;
 mod board_numbers;
 mod game_ui;
 mod highscore_screen;
 mod mode_slider;
 mod wheel;
 
-use crate::pointer_query::*;
-use crate::sudoku::{self, get_pos, get_x_and_y_from_pos, Game, Notes, SetNumberOptions};
-use crate::ui::*;
-use crate::{GameTimer, ResourceBag, ScreenState, Settings};
-use bevy::ecs::system::EntityCommands;
+use crate::{pointer_query::*, sudoku::*, ui::*};
+use crate::{GameTimer, ScreenState, Settings};
 use bevy::prelude::*;
-use board_builder::{Board, MistakeCellBorders};
+use board::{Board, MistakeCellBorders};
 use board_numbers::*;
 use game_ui::{
     init_game_ui, on_score_changed, on_time_changed, settings_icon_interaction, UiButtonAction,
@@ -25,7 +22,7 @@ use wheel::{
     NOTES_MODE_OPEN_DELAY,
 };
 
-pub use board_builder::build_board;
+pub use board::board;
 pub use highscore_screen::highscore_screen_setup;
 pub use mode_slider::ModeState;
 pub use wheel::{ActiveSliceHandles, Wheel};
@@ -160,19 +157,12 @@ pub enum NoteToggleMode {
     Unset,
 }
 
-pub fn board_setup(
-    game_screen: &mut EntityCommands,
-    game: &Game,
-    resources: &ResourceBag,
-    settings: &Settings,
-) {
-    let board_builder = |parent: &mut EntityCommands| {
-        parent.with_children(|parent| {
-            build_board(parent, game, resources, ScreenState::Game, settings);
-        });
+pub fn board_setup(props: &Props, cb: &mut ChildBuilder) {
+    let board_builder = |props: &Props, cb: &mut ChildBuilder| {
+        cb.spawn_with_children(props, board(props, ScreenState::Game));
     };
 
-    init_game_ui(game_screen, resources, board_builder);
+    init_game_ui(props, cb, board_builder);
 }
 
 fn on_keyboard_input(
@@ -488,7 +478,7 @@ fn give_hint(
         if let Some(n) = game.solution.get(x, y) {
             fill_number(game, timer, selection, notes, false, true, x, y, n);
         }
-    } else if let Some(sudoku::Hint { x, y }) = game.get_hint() {
+    } else if let Some(Hint { x, y }) = game.get_hint() {
         selection.hint = Some((x, y));
     }
 }

@@ -4,6 +4,8 @@ mod components;
 mod flex;
 mod interaction;
 mod layout;
+mod props;
+mod style_enhancers;
 mod styles;
 
 use bevy::{prelude::*, transform::TransformSystem};
@@ -14,6 +16,8 @@ pub use child_builder_ext::*;
 pub use components::*;
 pub use flex::*;
 pub use interaction::*;
+pub use props::*;
+pub use style_enhancers::*;
 pub use styles::*;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, SystemSet)]

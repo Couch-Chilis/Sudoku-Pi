@@ -1,8 +1,6 @@
-use super::ButtonBuilder;
-use crate::resource_bag::ResourceBag;
 use crate::{constants::*, game::*, ui::*};
 use crate::{Fonts, Game, ScreenState, Settings, TransitionEvent};
-use bevy::{ecs::system::EntityCommands, prelude::*};
+use bevy::prelude::*;
 
 const INITIAL_NUMBER_INSTRUCTION: &str =
     "Go on and fill in the blue cell.\nTap and hold to open the wheel.";
@@ -31,241 +29,141 @@ pub struct OnboardingNotesInstruction;
 #[derive(Component)]
 pub struct OnboardingNotesHint;
 
-pub fn welcome_screen_setup(screen: &mut EntityCommands, resources: &ResourceBag) {
-    screen.with_children(|parent| {
-        parent
-            .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-            .with_children(|header| {
-                header.spawn(FlexTextBundle::from_text(
-                    Text::from_section(
-                        "Welcome to\nSudoku Pi",
-                        TextStyle {
-                            font: resources.fonts.bold.clone(),
-                            font_size: 80.,
-                            color: COLOR_MAIN_DARKER,
-                        },
-                    )
-                    .with_alignment(TextAlignment::Center),
-                ));
-            });
+pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
+    let resources = &props.resources;
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Percent(50.)),
-                FlexContainerStyle::column(),
-            ))
-            .with_children(|main| {
-                main.spawn(FlexBundle::new(
-                    FlexItemStyle::available_size(),
-                    FlexContainerStyle::default(),
-                ))
-                .with_children(|top| {
-                    top.spawn(FlexTextBundle::from_text(
-                        Text::from_section(
-                            "You are about to\nexperience a new way\nto play Sudoku.",
-                            TextStyle {
-                                font: resources.fonts.medium.clone(),
-                                font_size: 50.,
-                                color: COLOR_MAIN_DARKER,
-                            },
-                        )
-                        .with_alignment(TextAlignment::Center),
-                    ));
-                });
-
-                main.spawn(FlexBundle::new(
-                    FlexItemStyle::available_size(),
-                    FlexContainerStyle::default(),
-                ))
-                .with_children(|bottom| {
-                    bottom.spawn(FlexTextBundle::from_text(
-                        Text::from_section(
-                            "But first, let us show you\nhow to play.",
-                            TextStyle {
-                                font: resources.fonts.medium.clone(),
-                                font_size: 40.,
-                                color: COLOR_MAIN_DARKER,
-                            },
-                        )
-                        .with_alignment(TextAlignment::Center),
-                    ));
-                });
-            });
-
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::available_size(),
-                FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
-            ))
-            .with_children(|footer| {
-                use OnboardingScreenAction::*;
-                let buttons = make_button_builder(resources);
-                buttons.build_selected_with_text_and_action(footer, "Next", HowToPlayNumbers);
-            });
-    });
+    fragment4(props, cb,
+        column(
+            available_size,
+            (),
+            center_text(
+                "Welcome to\nSudoku Pi",
+                (
+                    font_bold(resources),
+                    font_size(80.),
+                    text_color(COLOR_MAIN_DARKER),
+                ),
+            ),
+        ),
+                column(
+                    available_size,
+                    (),
+                    center_text(
+                        "You are about to\nexperience a new way\nto play Sudoku.",
+                        (
+                            font_medium(resources),
+                            font_size(50.),
+                            text_color(COLOR_MAIN_DARKER),
+                        ),
+                    ),
+                ),
+                column(
+                    available_size,
+                    (),
+                    center_text(
+                        "But first, let us show you\nhow to play.",
+                        (
+                            font_medium(resources),
+                            font_size(40.),
+                            text_color(COLOR_MAIN_DARKER),
+                        ),
+                    ),
+                ),
+        column(
+            available_size,
+            padding(Sides::vertical(Val::Auto)),
+            primary_button(
+                OnboardingScreenAction::HowToPlayNumbers,
+                button_size_onboarding(resources),
+                text("Next", button_text(resources)),
+            ),
+        ),
+    )
 }
 
-pub fn how_to_play_numbers_screen_setup(
-    screen: &mut EntityCommands,
-    game: &Game,
-    resources: &ResourceBag,
-    settings: &Settings,
-) {
-    screen.with_children(|parent| {
-        parent
-            .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-            .with_children(|header| {
-                header.spawn(FlexTextBundle::from_text(
-                    Text::from_section(
-                        "A New Way\nto Fill In Numbers",
-                        TextStyle {
-                            font: resources.fonts.bold.clone(),
-                            font_size: 80.,
-                            color: COLOR_MAIN_DARKER,
-                        },
-                    )
-                    .with_alignment(TextAlignment::Center),
-                ));
-            });
+pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
+    let resources = &props.resources;
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
-                FlexContainerStyle::default(),
-            ))
-            .with_children(|top| {
-                top.spawn((
-                    OnboardingNumberInstruction,
-                    FlexTextBundle::from_text(
-                        Text::from_section(
-                            INITIAL_NUMBER_INSTRUCTION,
-                            TextStyle {
-                                font: resources.fonts.medium.clone(),
-                                font_size: 40.,
-                                color: COLOR_MAIN_DARKER,
-                            },
-                        )
-                        .with_alignment(TextAlignment::Center),
-                    ),
-                ));
-            });
+    fragment5(props, cb, 
+        column(
+            available_size,
+            (),
+            center_text(
+                "A New Way\nto Fill In Numbers",
+                (font_bold(resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
+            ),
+        ),
 
-        build_board(parent, game, resources, ScreenState::HowToPlayNumbers, settings);
+        column(
+            preferred_size(Val::Percent(100.), Val::Pixel(80)),
+            (),
+            (
+                OnboardingNumberInstruction,
+                center_text(
+                    INITIAL_NUMBER_INSTRUCTION,
+                    (font_medium(resources), font_size(40.), text_color(COLOR_MAIN_DARKER)),
+                ),
+            ),
+        ),
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
-                FlexContainerStyle::default(),
-            ))
-            .with_children(|bottom| {
-                bottom.spawn((OnboardingNumberHint, FlexTextBundle::from_text(
-                    Text::from_section(
-                        "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
-                        TextStyle {
-                            font: resources.fonts.medium.clone(),
-                            font_size: 36.,
-                            color: COLOR_MAIN_DARKER,
-                        },
-                    )
-                    .with_alignment(TextAlignment::Center),
-                )));
-            });
+        board(props, ScreenState::HowToPlayNumbers),
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::available_size(),
-                FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
-            ))
-            .with_children(|footer| {
-                use OnboardingScreenAction::*;
-                let buttons = make_button_builder(resources);
-                buttons.build_with_text_and_action(footer, "Next", HowToPlayNotes);
-            });
-    });
+        column(preferred_size(Val::Percent(100.), Val::Pixel(80)), (), (
+            OnboardingNumberHint,
+            center_text(
+                "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
+                (font_medium(resources), font_size(36.), text_color(COLOR_MAIN_DARKER))
+            )
+        )),
+
+        column(
+            available_size,
+            padding(Sides::vertical(Val::Auto)),
+            primary_button(
+                OnboardingScreenAction::HowToPlayNotes,
+                button_size_onboarding(resources),
+                text("Next", button_text(resources)),
+            ),
+        )
+    )
 }
 
-pub fn how_to_play_notes_screen_setup(
-    screen: &mut EntityCommands,
-    game: &Game,
-    resources: &ResourceBag,
-    settings: &Settings,
-) {
-    screen.with_children(|parent| {
-        parent
-            .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-            .with_children(|header| {
-                header.spawn(FlexTextBundle::from_text(
-                    Text::from_section(
-                        "A New Way\nto Draw Notes",
-                        TextStyle {
-                            font: resources.fonts.bold.clone(),
-                            font_size: 80.,
-                            color: COLOR_MAIN_DARKER,
-                        },
-                    )
-                    .with_alignment(TextAlignment::Center),
-                ));
-            });
+pub fn how_to_play_notes_screen_setup(props: &Props, cb: &mut ChildBuilder) {
+    let resources = &props.resources;
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
-                FlexContainerStyle::default(),
-            ))
-            .with_children(|top| {
-                top.spawn((
-                    OnboardingNotesInstruction,
-                    FlexTextBundle::from_text(
-                        Text::from_section(
-                            INITIAL_NOTES_INSTRUCTION,
-                            TextStyle {
-                                font: resources.fonts.medium.clone(),
-                                font_size: 40.,
-                                color: COLOR_MAIN_DARKER,
-                            },
-                        )
-                        .with_alignment(TextAlignment::Center),
-                    ),
-                ));
-            });
+    fragment5(props, cb,
+        column(available_size, (), center_text(
+            "A New Way\nto Draw Notes",
+            (font_bold(resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
+        )),
 
-        build_board(parent, game, resources, ScreenState::HowToPlayNotes, settings);
+        column(preferred_size(Val::Percent(100.), Val::Pixel(80)), (), (
+            OnboardingNotesInstruction,
+            center_text(
+                INITIAL_NOTES_INSTRUCTION,
+                (font_medium(resources), font_size(40.), text_color(COLOR_MAIN_DARKER)),
+            ),
+        )),
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(80)),
-                FlexContainerStyle::default(),
-            ))
-            .with_children(|bottom| {
-                bottom.spawn((OnboardingNotesHint, FlexTextBundle::from_text(
-                    Text::from_section(
-                        "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
-                        TextStyle {
-                            font: resources.fonts.medium.clone(),
-                            font_size: 36.,
-                            color: COLOR_MAIN_DARKER,
-                        },
-                    )
-                    .with_alignment(TextAlignment::Center),
-                )));
-            });
+        board(props, ScreenState::HowToPlayNotes),
 
-        parent
-            .spawn(FlexBundle::new(
-                FlexItemStyle::available_size(),
-                FlexContainerStyle::column().with_padding(Sides::vertical(Val::Auto)),
-            ))
-            .with_children(|footer| {
-                use OnboardingScreenAction::*;
-                let button_text = if settings.onboarding_finished {
-                    "Return to Menu"
-                } else {
-                    "Start Game"
-                };
-                let buttons = make_button_builder(resources);
-                buttons.build_with_text_and_action(footer, button_text, FinishOnboarding);
-            });
-    });
+        column(preferred_size(Val::Percent(100.), Val::Pixel(80)), (), (
+            OnboardingNotesHint,
+            center_text(
+                "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
+                (font_medium(resources), font_size(36.), text_color(COLOR_MAIN_DARKER)),
+            )
+        )),
+
+        column(available_size, padding(Sides::vertical(Val::Auto)), primary_button(
+            OnboardingScreenAction::FinishOnboarding,
+            button_size_onboarding(resources),
+            text(
+                if props.settings.onboarding_finished { "Return to Menu" } else { "Start Game" },
+                button_text(resources)
+            )
+        )),
+    )
 }
 
 pub fn onboarding_screen_button_interaction(
@@ -365,18 +263,4 @@ pub fn how_to_play_notes_interaction(
             }
         }
     }
-}
-
-fn make_button_builder(resources: &ResourceBag) -> ButtonBuilder {
-    let button_size = if resources.screen_sizing.is_ipad {
-        FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
-    } else {
-        FlexItemStyle::fixed_size(Val::Vmin(50.), Val::Vmin(10.))
-    };
-    let font_size = if resources.screen_sizing.is_ipad {
-        66.
-    } else {
-        44.
-    };
-    ButtonBuilder::new(resources, button_size, font_size)
 }

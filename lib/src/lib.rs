@@ -261,33 +261,37 @@ fn setup(
     let fortune = Fortune::load();
     let images = Images::load(images);
 
-    let resources = ResourceBag {
-        fonts: &fonts,
-        images: &images,
-        screen_sizing: &screen_sizing,
+    let props = Props {
+        game: &game,
+        resources: ResourceBag {
+            fonts: &fonts,
+            images: &images,
+            screen_sizing: &screen_sizing,
+        },
+        settings: &settings,
     };
 
+    let resources = &props.resources;
+
     use ScreenState::*;
-    let mut main_screen = spawn_screen(&mut commands, MainMenu, &resources);
-    menu_setup(&mut main_screen, &game, &resources);
+    spawn_screen(&mut commands, MainMenu, resources).with_children(|cb| menu_setup(&props, cb));
 
-    let mut game_screen = spawn_screen(&mut commands, Game, &resources);
-    board_setup(&mut game_screen, &game, &resources, &settings);
+    spawn_screen(&mut commands, Game, resources).with_children(|cb| board_setup(&props, cb));
 
-    let mut highscore_screen = spawn_screen(&mut commands, Highscores, &resources);
-    highscore_screen_setup(&mut highscore_screen, &game, &highscores, &resources);
+    let mut highscore_screen = spawn_screen(&mut commands, Highscores, resources);
+    highscore_screen_setup(&mut highscore_screen, &game, &highscores, resources);
 
-    let mut settings_screen = spawn_screen(&mut commands, Settings, &resources);
-    settings_screen_setup(&mut settings_screen, &resources, &settings);
+    let mut settings_screen = spawn_screen(&mut commands, Settings, resources);
+    settings_screen_setup(&mut settings_screen, resources, &settings);
 
-    let mut welcome_screen = spawn_screen(&mut commands, Welcome, &resources);
-    welcome_screen_setup(&mut welcome_screen, &resources);
+    spawn_screen(&mut commands, Welcome, resources)
+        .with_children(|cb| welcome_screen_setup(&props, cb));
 
-    let mut how_to_play_screen_1 = spawn_screen(&mut commands, HowToPlayNumbers, &resources);
-    how_to_play_numbers_screen_setup(&mut how_to_play_screen_1, &game, &resources, &settings);
+    spawn_screen(&mut commands, HowToPlayNumbers, resources)
+        .with_children(|cb| how_to_play_numbers_screen_setup(&props, cb));
 
-    let mut how_to_play_screen_2 = spawn_screen(&mut commands, HowToPlayNotes, &resources);
-    how_to_play_notes_screen_setup(&mut how_to_play_screen_2, &game, &resources, &settings);
+    spawn_screen(&mut commands, HowToPlayNotes, resources)
+        .with_children(|cb| how_to_play_notes_screen_setup(&props, cb));
 
     if !settings.onboarding_finished {
         screen_state.set(Welcome);
