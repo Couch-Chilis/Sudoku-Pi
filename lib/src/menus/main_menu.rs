@@ -70,23 +70,25 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
 
     cb.spawn_with_children(props, leaf(available_size));
 
-    cb.spawn(FlexBundle::new(
-        FlexItemStyle::fixed_size(Val::Percent(50.), Val::Vmin(6.)).with_alignment(Alignment::End),
-        FlexContainerStyle::row(),
-    ))
-    .with_children(|parent| {
-        parent.spawn(
-            FlexTextBundle::from_text(Text::from_section(
+    cb.spawn_with_children(
+        props,
+        row(
+            (
+                fixed_size(Val::Percent(50.), Val::Vmin(6.)),
+                align_self(Alignment::End),
+            ),
+            (),
+            text(
                 "© 2023 Couch Chilis",
-                TextStyle {
-                    font: resources.fonts.medium.clone(),
-                    font_size: 30.,
-                    color: COLOR_BOARD_LINE_MEDIUM,
-                },
-            ))
+                (
+                    font_medium(resources),
+                    font_size(30.),
+                    text_color(COLOR_BOARD_LINE_MEDIUM),
+                ),
+            )
             .with_anchor(Anchor::CenterRight),
-        );
-    });
+        ),
+    );
 }
 
 pub fn main_menu_button_actions(

@@ -1,8 +1,13 @@
 use super::flex::*;
 use crate::constants::COLOR_BUTTON_TEXT;
 use crate::resource_bag::ResourceBag;
-use bevy::render::color::Color;
-use bevy::text::TextStyle;
+use bevy::prelude::*;
+
+pub fn align_self(align_self: Alignment) -> impl FnOnce(&mut FlexItemStyle) {
+    move |style: &mut FlexItemStyle| {
+        style.align_self = align_self;
+    }
+}
 
 pub fn available_size(style: &mut FlexItemStyle) {
     style.flex_grow = 1.;
@@ -79,6 +84,12 @@ pub fn font_medium(resources: &ResourceBag) -> impl FnOnce(&mut TextStyle) {
     }
 }
 
+pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
+    move |style: &mut FlexItemStyle| {
+        style.flex_base = Size::new(width, height);
+    }
+}
+
 pub fn font_size(font_size: f32) -> impl FnOnce(&mut TextStyle) {
     move |style: &mut TextStyle| {
         style.font_size = font_size;
@@ -101,6 +112,12 @@ pub fn preferred_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle
 pub fn text_color(color: Color) -> impl FnOnce(&mut TextStyle) {
     move |style: &mut TextStyle| {
         style.color = color;
+    }
+}
+
+pub fn translation(translation: Vec3) -> impl FnOnce(&mut FlexItemStyle) {
+    move |style: &mut FlexItemStyle| {
+        style.transform = Transform::from_translation(translation);
     }
 }
 

@@ -63,10 +63,13 @@ pub fn menu_setup(props: &Props, cb: &mut ChildBuilder) {
     ));
 
     // Spacer.
-    cb.spawn(FlexLeafBundle::from_style(
-        FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(50.))
-            .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-    ));
+    cb.spawn_with_children(
+        props,
+        leaf((
+            fixed_size(Val::Percent(100.), Val::Percent(50.)),
+            translation(Vec3::new(0., 0., 2.)),
+        )),
+    );
 
     // Main menu buttons.
     cb.spawn_with_children(
