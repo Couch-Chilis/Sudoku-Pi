@@ -2,6 +2,7 @@ use super::flex::*;
 use crate::constants::COLOR_BUTTON_TEXT;
 use crate::resource_bag::ResourceBag;
 use bevy::prelude::*;
+use std::sync::Arc;
 
 pub fn align_self(align_self: Alignment) -> impl FnOnce(&mut FlexItemStyle) {
     move |style: &mut FlexItemStyle| {
@@ -29,19 +30,21 @@ pub fn button_margin_extra_height_on_ios(style: &mut FlexItemStyle) {
     };
 }
 
-pub fn button_size_main(resources: &ResourceBag) -> impl FnOnce(&mut FlexItemStyle) {
-    let flex_base = if resources.screen_sizing.is_ipad {
-        Size::new(Val::Pixel(600), Val::Pixel(60))
-    } else {
-        Size::new(Val::Vmin(70.), Val::Vmin(10.))
-    };
+pub fn button_size_main(style: &mut FlexItemStyle) {
+    style.dynamic_style = Some(Arc::new(
+        |style: &mut FlexItemStyle, resources: &ResourceBag| {
+            let screen_sizing = &resources.screen_sizing;
 
-    move |style: &mut FlexItemStyle| {
-        style.flex_base = flex_base;
-    }
+            let ratio = screen_sizing.height / (1.6 * screen_sizing.width);
+            let base = 10. * ratio.clamp(0.5, 0.8);
+            let ratio = 10. * ratio.clamp(0.7, 1.);
+
+            style.flex_base = Size::new(Val::Vmin(ratio * base), Val::Vmin(base));
+        },
+    ));
 }
 
-pub fn button_size_onboarding(resources: &ResourceBag) -> impl FnOnce(&mut FlexItemStyle) {
+pub fn button_size_settings(resources: &ResourceBag) -> impl FnOnce(&mut FlexItemStyle) {
     let flex_base = if resources.screen_sizing.is_ipad {
         Size::new(Val::Pixel(600), Val::Pixel(60))
     } else {

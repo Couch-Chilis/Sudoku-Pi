@@ -281,8 +281,8 @@ fn setup(
     let mut highscore_screen = spawn_screen(&mut commands, Highscores, resources);
     highscore_screen_setup(&mut highscore_screen, &game, &highscores, resources);
 
-    let mut settings_screen = spawn_screen(&mut commands, Settings, resources);
-    settings_screen_setup(&mut settings_screen, resources, &settings);
+    spawn_screen(&mut commands, Settings, resources)
+        .with_children(|cb| settings_screen_setup(&props, cb));
 
     spawn_screen(&mut commands, Welcome, resources)
         .with_children(|cb| welcome_screen_setup(&props, cb));

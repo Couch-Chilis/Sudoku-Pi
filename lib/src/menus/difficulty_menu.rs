@@ -14,34 +14,32 @@ pub fn difficulty_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
     let resources = &props.resources;
 
     fragment5(
-        props,
-        cb,
         secondary_button(
             BackToMain,
-            (button_size_main(resources), button_margin_extra_height),
+            (button_size_main, button_margin_extra_height),
             text("Back", button_text(resources)),
         ),
         primary_button(
             StartGameAtDifficulty(Easy),
-            (button_size_main(resources), button_margin),
+            (button_size_main, button_margin),
             text("Easy", button_text(resources)),
         ),
         primary_button(
             StartGameAtDifficulty(Medium),
-            (button_size_main(resources), button_margin),
+            (button_size_main, button_margin),
             text("Medium", button_text(resources)),
         ),
         primary_button(
             StartGameAtDifficulty(Advanced),
-            (button_size_main(resources), button_margin),
+            (button_size_main, button_margin),
             text("Hard", button_text(resources)),
         ),
         primary_button(
             StartGameAtDifficulty(Expert),
-            (button_size_main(resources), button_margin),
+            (button_size_main, button_margin),
             text("Extreme", button_text(resources)),
         ),
-    )
+    )(props, cb)
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.

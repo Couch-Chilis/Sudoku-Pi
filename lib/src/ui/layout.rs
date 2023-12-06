@@ -1,7 +1,9 @@
 use super::flex::*;
+use crate::resource_bag::{ResourceBag, ResourceTuple};
 use crate::{Screen, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use smallvec::smallvec;
+use std::borrow::Cow;
 use std::{collections::BTreeMap, ops::DerefMut};
 
 type FlexEntity<'a> = (
@@ -22,16 +24,17 @@ pub(crate) fn layout_system(
     mut flex_query: FlexQuery,
     changed_containers: Query<Entity, Changed<FlexContainerStyle>>,
     changed_items: Query<Entity, Changed<FlexItemStyle>>,
+    resource_tuple: ResourceTuple,
     events: EventReader<WindowResized>,
 ) {
     if !changed_containers.is_empty() || !changed_items.is_empty() || !events.is_empty() {
-        layout(&mut flex_query);
+        layout(&mut flex_query, &resource_tuple);
     }
 }
 
-fn layout(flex_query: &mut FlexQuery) {
+fn layout(flex_query: &mut FlexQuery, resource_tuple: &ResourceTuple) {
     let mut layout_info = LayoutInfo::from_query(flex_query);
-    layout_info.apply();
+    layout_info.apply(&ResourceBag::from_tuple(resource_tuple));
 }
 
 struct LayoutInfo<'a> {
@@ -46,7 +49,15 @@ struct LayoutInfo<'a> {
             Option<&'a ScreenInteraction>,
         ),
     >,
-    text_map: BTreeMap<Entity, (&'a Anchor, Mut<'a, Text>, Mut<'a, Transform>, Mut<'a, ComputedPosition>)>,
+    text_map: BTreeMap<
+        Entity,
+        (
+            &'a Anchor,
+            Mut<'a, Text>,
+            Mut<'a, Transform>,
+            Mut<'a, ComputedPosition>,
+        ),
+    >,
 }
 
 impl<'a> LayoutInfo<'a> {
@@ -101,7 +112,7 @@ impl<'a> LayoutInfo<'a> {
         }
     }
 
-    fn apply(&mut self) {
+    fn apply(&mut self, resources: &ResourceBag) {
         for (entity, screen_state, width, height) in self.screens.clone() {
             let position = ComputedPosition {
                 width,
@@ -110,7 +121,7 @@ impl<'a> LayoutInfo<'a> {
                 x: 0.,
                 y: 0.,
             };
-            self.apply_container(entity, position, (width, height));
+            self.apply_container(entity, position, resources, (width, height));
         }
     }
 
@@ -118,6 +129,7 @@ impl<'a> LayoutInfo<'a> {
         &mut self,
         entity: Entity,
         position: ComputedPosition,
+        resources: &ResourceBag,
         screen_size: (f32, f32),
     ) {
         let Some((children, container_style)) = self.container_map.remove(&entity) else {
@@ -226,6 +238,14 @@ impl<'a> LayoutInfo<'a> {
                 self.item_map.remove(item_entity)
             else {
                 continue;
+            };
+
+            let item_style = if let Some(factory) = item_style.dynamic_style.as_ref() {
+                let mut item_style = item_style.clone();
+                factory(&mut item_style, resources);
+                Cow::Owned(item_style)
+            } else {
+                Cow::Borrowed(item_style)
             };
 
             // Start by assuming the base size.
@@ -397,7 +417,7 @@ impl<'a> LayoutInfo<'a> {
             }
 
             // Apply recursively in case the child item is also a container.
-            self.apply_container(*item_entity, item_position, screen_size);
+            self.apply_container(*item_entity, item_position, resources, screen_size);
         }
     }
 }

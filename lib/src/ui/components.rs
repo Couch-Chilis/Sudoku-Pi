@@ -149,74 +149,64 @@ where
     (bundle, spawn_children)
 }
 
-pub fn fragment<B1, B2>(
-    props: &Props,
-    cb: &mut ChildBuilder,
-    child1: impl Into<BundleWithChildren<B1>>,
-    child2: impl Into<BundleWithChildren<B2>>,
-) where
-    B1: Bundle,
-    B2: Bundle,
-{
-    cb.spawn_with_children(props, child1);
-    cb.spawn_with_children(props, child2);
-}
-
 pub fn fragment3<B1, B2, B3>(
-    props: &Props,
-    cb: &mut ChildBuilder,
     child1: impl Into<BundleWithChildren<B1>>,
     child2: impl Into<BundleWithChildren<B2>>,
     child3: impl Into<BundleWithChildren<B3>>,
-) where
+) -> impl FnOnce(&Props, &mut ChildBuilder)
+where
     B1: Bundle,
     B2: Bundle,
     B3: Bundle,
 {
-    cb.spawn_with_children(props, child1);
-    cb.spawn_with_children(props, child2);
-    cb.spawn_with_children(props, child3);
+    |props, cb| {
+        cb.spawn_with_children(props, child1);
+        cb.spawn_with_children(props, child2);
+        cb.spawn_with_children(props, child3);
+    }
 }
 
 pub fn fragment4<B1, B2, B3, B4>(
-    props: &Props,
-    cb: &mut ChildBuilder,
     child1: impl Into<BundleWithChildren<B1>>,
     child2: impl Into<BundleWithChildren<B2>>,
     child3: impl Into<BundleWithChildren<B3>>,
     child4: impl Into<BundleWithChildren<B4>>,
-) where
+) -> impl FnOnce(&Props, &mut ChildBuilder)
+where
     B1: Bundle,
     B2: Bundle,
     B3: Bundle,
     B4: Bundle,
 {
-    cb.spawn_with_children(props, child1);
-    cb.spawn_with_children(props, child2);
-    cb.spawn_with_children(props, child3);
-    cb.spawn_with_children(props, child4);
+    |props, cb| {
+        cb.spawn_with_children(props, child1);
+        cb.spawn_with_children(props, child2);
+        cb.spawn_with_children(props, child3);
+        cb.spawn_with_children(props, child4);
+    }
 }
 
 pub fn fragment5<B1, B2, B3, B4, B5>(
-    props: &Props,
-    cb: &mut ChildBuilder,
     child1: impl Into<BundleWithChildren<B1>>,
     child2: impl Into<BundleWithChildren<B2>>,
     child3: impl Into<BundleWithChildren<B3>>,
     child4: impl Into<BundleWithChildren<B4>>,
     child5: impl Into<BundleWithChildren<B5>>,
-) where
+) -> impl FnOnce(&Props, &mut ChildBuilder)
+where
     B1: Bundle,
     B2: Bundle,
     B3: Bundle,
     B4: Bundle,
     B5: Bundle,
 {
-    cb.spawn_with_children(props, child1);
-    cb.spawn_with_children(props, child2);
-    cb.spawn_with_children(props, child3);
-    cb.spawn_with_children(props, child4);
-    cb.spawn_with_children(props, child5);
+    |props, cb| {
+        cb.spawn_with_children(props, child1);
+        cb.spawn_with_children(props, child2);
+        cb.spawn_with_children(props, child3);
+        cb.spawn_with_children(props, child4);
+        cb.spawn_with_children(props, child5);
+    }
 }
 
 pub fn leaf(styles: impl FlexItemStyleEnhancer) -> FlexLeafBundle {

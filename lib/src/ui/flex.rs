@@ -1,9 +1,11 @@
 #![allow(dead_code)]
 
+use crate::resource_bag::ResourceBag;
 use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;
 use std::ops::{Add, Mul, Sub};
+use std::sync::Arc;
 
 /// Marker for any flex entity, be it an item or a container.
 #[derive(Clone, Component, Default)]
@@ -217,6 +219,9 @@ pub struct FlexItemStyle {
     /// take this transform into account, so if interaction is required inside
     /// this item, there may be a mismatch in coordinates.
     pub transform: Transform,
+
+    /// Optional factory that allows for determining style fields at runtime.
+    pub dynamic_style: Option<Arc<dyn Fn(&mut FlexItemStyle, &ResourceBag) + Send + Sync>>,
 }
 
 impl FlexItemStyle {
@@ -322,6 +327,7 @@ impl Default for FlexItemStyle {
             occupies_space: true,
             preserve_aspect_ratio: false,
             transform: Default::default(),
+            dynamic_style: None,
         }
     }
 }

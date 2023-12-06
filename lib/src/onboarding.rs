@@ -32,7 +32,7 @@ pub struct OnboardingNotesHint;
 pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
     let resources = &props.resources;
 
-    fragment4(props, cb,
+    fragment4(
         column(
             available_size,
             (),
@@ -45,46 +45,46 @@ pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
                 ),
             ),
         ),
-                column(
-                    available_size,
-                    (),
-                    center_text(
-                        "You are about to\nexperience a new way\nto play Sudoku.",
-                        (
-                            font_medium(resources),
-                            font_size(50.),
-                            text_color(COLOR_MAIN_DARKER),
-                        ),
-                    ),
+        column(
+            available_size,
+            (),
+            center_text(
+                "You are about to\nexperience a new way\nto play Sudoku.",
+                (
+                    font_medium(resources),
+                    font_size(50.),
+                    text_color(COLOR_MAIN_DARKER),
                 ),
-                column(
-                    available_size,
-                    (),
-                    center_text(
-                        "But first, let us show you\nhow to play.",
-                        (
-                            font_medium(resources),
-                            font_size(40.),
-                            text_color(COLOR_MAIN_DARKER),
-                        ),
-                    ),
+            ),
+        ),
+        column(
+            available_size,
+            (),
+            center_text(
+                "But first, let us show you\nhow to play.",
+                (
+                    font_medium(resources),
+                    font_size(40.),
+                    text_color(COLOR_MAIN_DARKER),
                 ),
+            ),
+        ),
         column(
             available_size,
             padding(Sides::vertical(Val::Auto)),
             primary_button(
                 OnboardingScreenAction::HowToPlayNumbers,
-                button_size_onboarding(resources),
+                button_size_settings(resources),
                 text("Next", button_text(resources)),
             ),
         ),
-    )
+    )(props, cb)
 }
 
 pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
     let resources = &props.resources;
 
-    fragment5(props, cb, 
+    fragment5(
         column(
             available_size,
             (),
@@ -121,17 +121,17 @@ pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             padding(Sides::vertical(Val::Auto)),
             primary_button(
                 OnboardingScreenAction::HowToPlayNotes,
-                button_size_onboarding(resources),
+                button_size_settings(resources),
                 text("Next", button_text(resources)),
             ),
         )
-    )
+    )(props, cb)
 }
 
 pub fn how_to_play_notes_screen_setup(props: &Props, cb: &mut ChildBuilder) {
     let resources = &props.resources;
 
-    fragment5(props, cb,
+    fragment5(
         column(available_size, (), center_text(
             "A New Way\nto Draw Notes",
             (font_bold(resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
@@ -157,13 +157,13 @@ pub fn how_to_play_notes_screen_setup(props: &Props, cb: &mut ChildBuilder) {
 
         column(available_size, padding(Sides::vertical(Val::Auto)), primary_button(
             OnboardingScreenAction::FinishOnboarding,
-            button_size_onboarding(resources),
+            button_size_settings(resources),
             text(
                 if props.settings.onboarding_finished { "Return to Menu" } else { "Start Game" },
                 button_text(resources)
             )
         )),
-    )
+    )(props, cb)
 }
 
 pub fn onboarding_screen_button_interaction(

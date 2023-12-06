@@ -22,7 +22,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             props,
             ternary_button(
                 Quit,
-                (button_size_main(resources), button_margin),
+                (button_size_main, button_margin),
                 text("Quit", button_text(resources)),
             ),
         );
@@ -32,10 +32,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
         props,
         secondary_button(
             GoToHowToPlay,
-            (
-                button_size_main(resources),
-                button_margin_extra_height_on_ios,
-            ),
+            (button_size_main, button_margin_extra_height_on_ios),
             text("How to Play", button_text(resources)),
         ),
     );
@@ -45,7 +42,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             props,
             secondary_button(
                 GoToNewGame,
-                (button_size_main(resources), button_margin),
+                (button_size_main, button_margin),
                 text("New Game", button_text(resources)),
             ),
         );
@@ -53,7 +50,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             props,
             selected_button(
                 ContinueGame,
-                (button_size_main(resources), button_margin),
+                (button_size_main, button_margin),
                 text("Continue", button_text(resources)),
             ),
         );
@@ -62,7 +59,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             props,
             selected_button(
                 GoToNewGame,
-                (button_size_main(resources), button_margin),
+                (button_size_main, button_margin),
                 text("New Game", button_text(resources)),
             ),
         );

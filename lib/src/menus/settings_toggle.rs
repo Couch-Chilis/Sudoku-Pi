@@ -31,93 +31,81 @@ impl SettingsToggle {
     }
 }
 
-pub struct SettingsToggleBuilder<'a> {
-    container_style: FlexItemStyle,
-    resources: &'a ResourceBag<'a>,
-    text_style: TextStyle,
+pub fn settings_toggle(
+    text: impl Into<String>,
+    toggle: SettingsToggle,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    let style = FlexItemStyle {
+        flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
+        margin: Size::all(Val::Vmin(2.)),
+        ..default()
+    };
+
+    let bundle = (
+        Interaction::None,
+        FlexBundle::new(
+            style,
+            FlexContainerStyle::row()
+                .with_gap(Val::Vmin(2.))
+                .with_padding(Sides::all(Val::Vmin(2.))),
+        ),
+        toggle,
+    );
+
+    let text: String = text.into();
+    let spawn_children = move |props: &Props, cb: &mut ChildBuilder| {
+        let Props {
+            resources,
+            settings,
+            ..
+        } = props;
+
+        cb.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
+            .with_children(|label_container| {
+                label_container.spawn(
+                    FlexTextBundle::from_text(Text::from_section(text, text_style(resources)))
+                        .with_anchor(Anchor::CenterLeft),
+                );
+            });
+
+        let is_enabled = toggle.is_enabled(settings);
+        let toggle_bundle = (
+            Toggle,
+            toggle,
+            FlexItemBundle::from_style(
+                FlexItemStyle::fixed_size(Val::CrossPercent(70.), Val::Percent(70.))
+                    .with_alignment(Alignment::Centered)
+                    .with_transform(Transform::from_2d_scale(1. / 121., 1. / 121.)),
+            ),
+            SpriteBundle {
+                texture: if is_enabled {
+                    resources.images.toggle_selected.clone()
+                } else {
+                    resources.images.toggle_deselected.clone()
+                },
+                ..default()
+            },
+        );
+
+        if is_enabled {
+            cb.spawn((ToggleEnabled, toggle_bundle));
+        } else {
+            cb.spawn(toggle_bundle);
+        }
+    };
+
+    (bundle, spawn_children)
 }
 
-impl<'a> SettingsToggleBuilder<'a> {
-    pub fn new(resources: &'a ResourceBag<'a>) -> Self {
-        let container_style = FlexItemStyle {
-            flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
-            margin: Size::all(Val::Vmin(2.)),
-            ..default()
-        };
-
-        let text_style = TextStyle {
-            font: resources.fonts.medium.clone(),
-            font_size: if resources.screen_sizing.is_ipad {
-                72.
-            } else {
-                50.
-            },
-            color: COLOR_SECONDARY_BUTTON_TEXT,
-        };
-
-        Self {
-            container_style,
-            resources,
-            text_style,
-        }
-    }
-
-    pub fn build_settings_toggle(
-        &mut self,
-        parent: &mut ChildBuilder,
-        settings: &Settings,
-        text: &str,
-        toggle: SettingsToggle,
-    ) {
-        parent
-            .spawn((
-                Interaction::None,
-                FlexBundle::new(
-                    self.container_style.clone(),
-                    FlexContainerStyle::row()
-                        .with_gap(Val::Vmin(2.))
-                        .with_padding(Sides::all(Val::Vmin(2.))),
-                ),
-                toggle,
-            ))
-            .with_children(|toggle_container| {
-                toggle_container
-                    .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                    .with_children(|label_container| {
-                        label_container.spawn(
-                            FlexTextBundle::from_text(Text::from_section(
-                                text,
-                                self.text_style.clone(),
-                            ))
-                            .with_anchor(Anchor::CenterLeft),
-                        );
-                    });
-
-                let is_enabled = toggle.is_enabled(settings);
-                let toggle_bundle = (
-                    Toggle,
-                    toggle,
-                    FlexItemBundle::from_style(
-                        FlexItemStyle::fixed_size(Val::CrossPercent(70.), Val::Percent(70.))
-                            .with_alignment(Alignment::Centered)
-                            .with_transform(Transform::from_2d_scale(1. / 121., 1. / 121.)),
-                    ),
-                    SpriteBundle {
-                        texture: if is_enabled {
-                            self.resources.images.toggle_selected.clone()
-                        } else {
-                            self.resources.images.toggle_deselected.clone()
-                        },
-                        ..default()
-                    },
-                );
-
-                if is_enabled {
-                    toggle_container.spawn((ToggleEnabled, toggle_bundle));
-                } else {
-                    toggle_container.spawn(toggle_bundle);
-                }
-            });
+fn text_style(resources: &ResourceBag) -> TextStyle {
+    TextStyle {
+        color: COLOR_SECONDARY_BUTTON_TEXT,
+        font: resources.fonts.medium.clone(),
+        font_size: if resources.screen_sizing.is_ipad {
+            72.
+        } else {
+            50.
+        },
     }
 }
 
