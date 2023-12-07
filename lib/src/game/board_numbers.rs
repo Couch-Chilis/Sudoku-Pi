@@ -49,6 +49,7 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
             game,
             resources,
             settings,
+            ..
         } = props;
 
         let n = game.current.get(x, y);

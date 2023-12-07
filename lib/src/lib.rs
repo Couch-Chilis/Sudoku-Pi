@@ -263,6 +263,7 @@ fn setup(
 
     let props = Props {
         game: &game,
+        highscores: &highscores,
         resources: ResourceBag {
             fonts: &fonts,
             images: &images,
@@ -278,8 +279,8 @@ fn setup(
 
     spawn_screen(&mut commands, Game, resources).with_children(|cb| board_setup(&props, cb));
 
-    let mut highscore_screen = spawn_screen(&mut commands, Highscores, resources);
-    highscore_screen_setup(&mut highscore_screen, &game, &highscores, resources);
+    spawn_screen(&mut commands, Highscores, resources)
+        .with_children(|cb| highscore_screen_setup(&props, cb));
 
     spawn_screen(&mut commands, Settings, resources)
         .with_children(|cb| settings_screen_setup(&props, cb));

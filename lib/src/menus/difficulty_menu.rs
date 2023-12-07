@@ -7,39 +7,39 @@ pub enum DifficultyScreenButtonAction {
     StartGameAtDifficulty(Difficulty),
 }
 
-pub fn difficulty_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
+pub fn difficulty_menu_buttons() -> impl FnOnce(&Props, &mut ChildBuilder) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
 
-    let resources = &props.resources;
-
-    fragment5(
-        secondary_button(
-            BackToMain,
-            (button_size_main, button_margin_extra_height),
-            text("Back", button_text(resources)),
-        ),
-        primary_button(
-            StartGameAtDifficulty(Easy),
-            (button_size_main, button_margin),
-            text("Easy", button_text(resources)),
-        ),
-        primary_button(
-            StartGameAtDifficulty(Medium),
-            (button_size_main, button_margin),
-            text("Medium", button_text(resources)),
-        ),
-        primary_button(
-            StartGameAtDifficulty(Advanced),
-            (button_size_main, button_margin),
-            text("Hard", button_text(resources)),
-        ),
-        primary_button(
-            StartGameAtDifficulty(Expert),
-            (button_size_main, button_margin),
-            text("Extreme", button_text(resources)),
-        ),
-    )(props, cb)
+    |props: &Props, cb: &mut ChildBuilder| {
+        fragment5(
+            secondary_button(
+                BackToMain,
+                (button_size_main, button_margin_extra_height),
+                text("Back", button_text(&props.resources)),
+            ),
+            primary_button(
+                StartGameAtDifficulty(Easy),
+                (button_size_main, button_margin),
+                text("Easy", button_text(&props.resources)),
+            ),
+            primary_button(
+                StartGameAtDifficulty(Medium),
+                (button_size_main, button_margin),
+                text("Medium", button_text(&props.resources)),
+            ),
+            primary_button(
+                StartGameAtDifficulty(Advanced),
+                (button_size_main, button_margin),
+                text("Hard", button_text(&props.resources)),
+            ),
+            primary_button(
+                StartGameAtDifficulty(Expert),
+                (button_size_main, button_margin),
+                text("Extreme", button_text(&props.resources)),
+            ),
+        )(props, cb)
+    }
 }
 
 // Handles screen navigation based on button actions in the difficulty screen.

@@ -28,7 +28,7 @@ pub fn settings_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             padding(Sides::vertical(Val::Auto)),
             secondary_button(
                 Back,
-                button_size_settings(&props.resources),
+                button_size_settings,
                 text("Back", button_text(&props.resources)),
             ),
         ),

@@ -220,8 +220,8 @@ pub struct FlexItemStyle {
     /// this item, there may be a mismatch in coordinates.
     pub transform: Transform,
 
-    /// Optional factory that allows for determining style fields at runtime.
-    pub dynamic_style: Option<Arc<dyn Fn(&mut FlexItemStyle, &ResourceBag) + Send + Sync>>,
+    /// Optional enhancers that allow for determining style fields at runtime.
+    pub dynamic_styles: Vec<Arc<dyn Fn(&mut FlexItemStyle, &ResourceBag) + Send + Sync>>,
 }
 
 impl FlexItemStyle {
@@ -327,7 +327,7 @@ impl Default for FlexItemStyle {
             occupies_space: true,
             preserve_aspect_ratio: false,
             transform: Default::default(),
-            dynamic_style: None,
+            dynamic_styles: Default::default(),
         }
     }
 }
@@ -362,6 +362,7 @@ impl FlexLeafBundle {
 pub struct FlexTextBundle {
     pub flex: Flex,
     pub text: Text2dBundle,
+    pub text_style: FlexTextStyle,
     pub computed_position: ComputedPosition,
 }
 
@@ -391,6 +392,15 @@ impl FlexTextBundle {
         self.text.text_2d_bounds = bounds;
         self
     }
+}
+
+#[derive(Clone, Component, Default)]
+pub struct FlexTextStyle {
+    /// Font to use.
+    pub font: Handle<Font>,
+
+    /// Optional enhancers that allow for determining style fields at runtime.
+    pub dynamic_styles: Vec<Arc<dyn Fn(&mut TextStyle, &ResourceBag) + Send + Sync>>,
 }
 
 #[derive(Clone, Copy, Debug, Default)]

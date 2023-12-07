@@ -31,7 +31,7 @@ pub fn button_margin_extra_height_on_ios(style: &mut FlexItemStyle) {
 }
 
 pub fn button_size_main(style: &mut FlexItemStyle) {
-    style.dynamic_style = Some(Arc::new(
+    style.dynamic_styles.push(Arc::new(
         |style: &mut FlexItemStyle, resources: &ResourceBag| {
             let screen_sizing = &resources.screen_sizing;
 
@@ -44,16 +44,16 @@ pub fn button_size_main(style: &mut FlexItemStyle) {
     ));
 }
 
-pub fn button_size_settings(resources: &ResourceBag) -> impl FnOnce(&mut FlexItemStyle) {
-    let flex_base = if resources.screen_sizing.is_ipad {
-        Size::new(Val::Pixel(600), Val::Pixel(60))
-    } else {
-        Size::new(Val::Vmin(50.), Val::Vmin(10.))
-    };
-
-    move |style: &mut FlexItemStyle| {
-        style.flex_base = flex_base;
-    }
+pub fn button_size_settings(style: &mut FlexItemStyle) {
+    style.dynamic_styles.push(Arc::new(
+        |style: &mut FlexItemStyle, resources: &ResourceBag| {
+            style.flex_base = if resources.screen_sizing.is_ipad {
+                Size::new(Val::Pixel(600), Val::Pixel(60))
+            } else {
+                Size::new(Val::Vmin(50.), Val::Vmin(10.))
+            };
+        },
+    ));
 }
 
 pub fn button_text(resources: &ResourceBag) -> impl FnOnce(&mut TextStyle) {
@@ -65,8 +65,8 @@ pub fn button_text(resources: &ResourceBag) -> impl FnOnce(&mut TextStyle) {
     };
 
     move |style: &mut TextStyle| {
-        style.color = COLOR_BUTTON_TEXT;
         style.font = font;
+        style.color = COLOR_BUTTON_TEXT;
         style.font_size = font_size;
     }
 }

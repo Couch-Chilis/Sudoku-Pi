@@ -84,7 +84,7 @@ pub fn menu_setup(props: &Props, cb: &mut ChildBuilder) {
             ScreenState::SelectDifficulty,
             -0.5 * PI,
             3.,
-            difficulty_menu_buttons,
+            difficulty_menu_buttons(),
         ),
     );
 }

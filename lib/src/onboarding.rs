@@ -30,8 +30,6 @@ pub struct OnboardingNotesInstruction;
 pub struct OnboardingNotesHint;
 
 pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
-    let resources = &props.resources;
-
     fragment4(
         column(
             available_size,
@@ -39,7 +37,7 @@ pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             center_text(
                 "Welcome to\nSudoku Pi",
                 (
-                    font_bold(resources),
+                    font_bold(&props.resources),
                     font_size(80.),
                     text_color(COLOR_MAIN_DARKER),
                 ),
@@ -51,7 +49,7 @@ pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             center_text(
                 "You are about to\nexperience a new way\nto play Sudoku.",
                 (
-                    font_medium(resources),
+                    font_medium(&props.resources),
                     font_size(50.),
                     text_color(COLOR_MAIN_DARKER),
                 ),
@@ -63,7 +61,7 @@ pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             center_text(
                 "But first, let us show you\nhow to play.",
                 (
-                    font_medium(resources),
+                    font_medium(&props.resources),
                     font_size(40.),
                     text_color(COLOR_MAIN_DARKER),
                 ),
@@ -74,23 +72,21 @@ pub fn welcome_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             padding(Sides::vertical(Val::Auto)),
             primary_button(
                 OnboardingScreenAction::HowToPlayNumbers,
-                button_size_settings(resources),
-                text("Next", button_text(resources)),
+                button_size_settings,
+                text("Next", button_text(&props.resources)),
             ),
         ),
     )(props, cb)
 }
 
 pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
-    let resources = &props.resources;
-
     fragment5(
         column(
             available_size,
             (),
             center_text(
                 "A New Way\nto Fill In Numbers",
-                (font_bold(resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
+                (font_bold(&props.resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
             ),
         ),
 
@@ -101,7 +97,7 @@ pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
                 OnboardingNumberInstruction,
                 center_text(
                     INITIAL_NUMBER_INSTRUCTION,
-                    (font_medium(resources), font_size(40.), text_color(COLOR_MAIN_DARKER)),
+                    (font_medium(&props.resources), font_size(40.), text_color(COLOR_MAIN_DARKER)),
                 ),
             ),
         ),
@@ -112,7 +108,7 @@ pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             OnboardingNumberHint,
             center_text(
                 "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
-                (font_medium(resources), font_size(36.), text_color(COLOR_MAIN_DARKER))
+                (font_medium(&props.resources), font_size(36.), text_color(COLOR_MAIN_DARKER))
             )
         )),
 
@@ -121,27 +117,25 @@ pub fn how_to_play_numbers_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             padding(Sides::vertical(Val::Auto)),
             primary_button(
                 OnboardingScreenAction::HowToPlayNotes,
-                button_size_settings(resources),
-                text("Next", button_text(resources)),
+                button_size_settings,
+                text("Next", button_text(&props.resources)),
             ),
         )
     )(props, cb)
 }
 
 pub fn how_to_play_notes_screen_setup(props: &Props, cb: &mut ChildBuilder) {
-    let resources = &props.resources;
-
     fragment5(
         column(available_size, (), center_text(
             "A New Way\nto Draw Notes",
-            (font_bold(resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
+            (font_bold(&props.resources), font_size(80.), text_color(COLOR_MAIN_DARKER)),
         )),
 
         column(preferred_size(Val::Percent(100.), Val::Pixel(80)), (), (
             OnboardingNotesInstruction,
             center_text(
                 INITIAL_NOTES_INSTRUCTION,
-                (font_medium(resources), font_size(40.), text_color(COLOR_MAIN_DARKER)),
+                (font_medium(&props.resources), font_size(40.), text_color(COLOR_MAIN_DARKER)),
             ),
         )),
 
@@ -151,16 +145,16 @@ pub fn how_to_play_notes_screen_setup(props: &Props, cb: &mut ChildBuilder) {
             OnboardingNotesHint,
             center_text(
                 "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
-                (font_medium(resources), font_size(36.), text_color(COLOR_MAIN_DARKER)),
+                (font_medium(&props.resources), font_size(36.), text_color(COLOR_MAIN_DARKER)),
             )
         )),
 
         column(available_size, padding(Sides::vertical(Val::Auto)), primary_button(
             OnboardingScreenAction::FinishOnboarding,
-            button_size_settings(resources),
+            button_size_settings,
             text(
                 if props.settings.onboarding_finished { "Return to Menu" } else { "Start Game" },
-                button_text(resources)
+                button_text(&props.resources)
             )
         )),
     )(props, cb)

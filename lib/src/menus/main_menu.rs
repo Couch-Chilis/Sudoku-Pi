@@ -13,17 +13,13 @@ pub enum MainScreenButtonAction {
 pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
     use MainScreenButtonAction::*;
 
-    let Props {
-        game, resources, ..
-    } = props;
-
     if cfg!(not(target_os = "ios")) {
         cb.spawn_with_children(
             props,
             ternary_button(
                 Quit,
                 (button_size_main, button_margin),
-                text("Quit", button_text(resources)),
+                text("Quit", button_text(&props.resources)),
             ),
         );
     }
@@ -33,17 +29,17 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
         secondary_button(
             GoToHowToPlay,
             (button_size_main, button_margin_extra_height_on_ios),
-            text("How to Play", button_text(resources)),
+            text("How to Play", button_text(&props.resources)),
         ),
     );
 
-    if game.may_continue() {
+    if props.game.may_continue() {
         cb.spawn_with_children(
             props,
             secondary_button(
                 GoToNewGame,
                 (button_size_main, button_margin),
-                text("New Game", button_text(resources)),
+                text("New Game", button_text(&props.resources)),
             ),
         );
         cb.spawn_with_children(
@@ -51,7 +47,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             selected_button(
                 ContinueGame,
                 (button_size_main, button_margin),
-                text("Continue", button_text(resources)),
+                text("Continue", button_text(&props.resources)),
             ),
         );
     } else {
@@ -60,7 +56,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             selected_button(
                 GoToNewGame,
                 (button_size_main, button_margin),
-                text("New Game", button_text(resources)),
+                text("New Game", button_text(&props.resources)),
             ),
         );
     }
@@ -78,7 +74,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             text(
                 "© 2023 Couch Chilis",
                 (
-                    font_medium(resources),
+                    font_medium(&props.resources),
                     font_size(30.),
                     text_color(COLOR_BOARD_LINE_MEDIUM),
                 ),
