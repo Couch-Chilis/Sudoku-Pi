@@ -1,5 +1,4 @@
 mod difficulty_menu;
-mod how_to_play;
 mod main_menu;
 mod settings_menu;
 mod settings_toggle;
