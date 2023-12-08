@@ -29,7 +29,7 @@ pub fn init_game_ui(
     build_button_row(cb, resources, |icon_row| {
         icon_row.spawn(leaf(available_size));
 
-        build_settings_icon(icon_row, resources);
+        settings_icon(icon_row, resources);
     });
 
     build_timer_row(cb, |timer_row| {
@@ -61,27 +61,16 @@ pub fn init_game_ui(
     build_mode_slider(cb, resources);
 }
 
-fn build_settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
-    let cog_size = if resources.screen_sizing.is_ipad {
-        Val::Pixel(40)
-    } else {
-        Val::Pixel(30)
-    };
-
+fn settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
     // Cog.
-    screen.spawn((
-        SettingsIcon,
-        Interaction::None,
-        UiButtonAction::GoToSettings,
-        FlexItemBundle::from_style(
-            FlexItemStyle::fixed_size(cog_size.clone(), cog_size)
-                .with_alignment(Alignment::Start)
-                .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
+    screen.spawn(image_t(
+        (
+            SettingsIcon,
+            Interaction::None,
+            UiButtonAction::GoToSettings,
         ),
-        SpriteBundle {
-            texture: resources.images.cog.handle.clone(),
-            ..default()
-        },
+        resources.images.cog.clone(),
+        (align_self(Alignment::Start), cog_size),
     ));
 }
 

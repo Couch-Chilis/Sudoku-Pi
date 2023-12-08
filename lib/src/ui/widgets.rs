@@ -292,6 +292,17 @@ pub fn image(image: ImageWithDimensions, styles: impl FlexItemStyleEnhancer) -> 
     (item, sprite)
 }
 
+pub fn image_t<T>(
+    marker: T,
+    image_with_dimensions: ImageWithDimensions,
+    styles: impl FlexItemStyleEnhancer,
+) -> impl Bundle
+where
+    T: Bundle,
+{
+    (image(image_with_dimensions, styles), marker)
+}
+
 pub fn leaf(styles: impl FlexItemStyleEnhancer) -> FlexLeafBundle {
     let mut bundle = FlexLeafBundle::default();
     styles.enhance(&mut bundle.flex.style);

@@ -104,6 +104,21 @@ pub struct ScreenSizing {
     is_ipad: bool,
 }
 
+impl ScreenSizing {
+    pub fn is_tablet(&self) -> bool {
+        self.portrait_ratio() < 1.
+    }
+
+    /// Returns the ratio between the height and the width, where the height is
+    /// assumed to be significantly larger than the width.
+    ///
+    /// The ratio is chosen such that phone form factors tend to have a ratio
+    /// above 1.0, while most tablets will have a ratio below 1.0.
+    pub fn portrait_ratio(&self) -> f32 {
+        self.height / (1.6 * self.width)
+    }
+}
+
 impl Default for ScreenSizing {
     fn default() -> Self {
         // Dimensions will be determined in `on_resize()`.

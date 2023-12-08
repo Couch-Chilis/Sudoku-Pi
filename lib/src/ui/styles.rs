@@ -27,12 +27,11 @@ pub fn board_size(style: &mut FlexItemStyle) {
             style.min_size = Size::all(Val::Vmin(50.));
             style.preserve_aspect_ratio = true;
 
-            style.flex_base =
-                if resources.screen_sizing.height > 1.6 * resources.screen_sizing.width {
-                    Size::all(Val::Vmin(90.))
-                } else {
-                    Size::all(Val::Vmin(80.))
-                };
+            style.flex_base = if resources.screen_sizing.is_tablet() {
+                Size::all(Val::Vmin(90.))
+            } else {
+                Size::all(Val::Vmin(80.))
+            };
         },
     ))
 }
@@ -56,9 +55,7 @@ pub fn button_margin_extra_height_on_ios(style: &mut FlexItemStyle) {
 pub fn button_size_main(style: &mut FlexItemStyle) {
     style.dynamic_styles.push(Arc::new(
         |style: &mut FlexItemStyle, resources: &ResourceBag| {
-            let screen_sizing = &resources.screen_sizing;
-
-            let ratio = screen_sizing.height / (1.6 * screen_sizing.width);
+            let ratio = resources.screen_sizing.portrait_ratio();
             let base = 10. * ratio.clamp(0.5, 0.8);
             let ratio = 10. * ratio.clamp(0.7, 1.);
 
@@ -70,7 +67,7 @@ pub fn button_size_main(style: &mut FlexItemStyle) {
 pub fn button_size_settings(style: &mut FlexItemStyle) {
     style.dynamic_styles.push(Arc::new(
         |style: &mut FlexItemStyle, resources: &ResourceBag| {
-            style.flex_base = if resources.screen_sizing.is_ipad {
+            style.flex_base = if resources.screen_sizing.is_tablet() {
                 Size::new(Val::Pixel(600), Val::Pixel(60))
             } else {
                 Size::new(Val::Vmin(50.), Val::Vmin(10.))
@@ -94,11 +91,25 @@ pub fn button_text_font(text: &mut Text, resources: &ResourceBag) {
 }
 
 pub fn button_text_size(text: &mut Text, resources: &ResourceBag) {
-    text.sections[0].style.font_size = if resources.screen_sizing.is_ipad {
+    text.sections[0].style.font_size = if resources.screen_sizing.is_tablet() {
         66.
     } else {
         44.
     };
+}
+
+pub fn cog_size(style: &mut FlexItemStyle) {
+    style.dynamic_styles.push(Arc::new(
+        |style: &mut FlexItemStyle, resources: &ResourceBag| {
+            let cog_size = if resources.screen_sizing.is_ipad {
+                Val::Pixel(40)
+            } else {
+                Val::Pixel(30)
+            };
+
+            fixed_size(cog_size.clone(), cog_size)(style);
+        },
+    ));
 }
 
 pub fn fixed_aspect_ratio(style: &mut FlexItemStyle) {
@@ -158,20 +169,20 @@ pub fn screen_padding(
     resources: &ResourceBag,
     screen: ScreenState,
 ) -> impl FnOnce(&mut FlexContainerStyle) {
-    let is_ipad = resources.screen_sizing.is_ipad;
+    let is_tablet = resources.screen_sizing.is_tablet();
     let top_padding = resources.screen_sizing.top_padding;
 
     move |style: &mut FlexContainerStyle| {
         style.padding = Sides {
             top: if screen == ScreenState::MainMenu {
                 Val::None
-            } else if is_ipad && screen == ScreenState::Game {
+            } else if is_tablet && screen == ScreenState::Game {
                 Val::Auto
             } else {
                 Val::Pixel(top_padding)
             },
             right: Val::None,
-            bottom: if is_ipad && screen == ScreenState::Game {
+            bottom: if is_tablet && screen == ScreenState::Game {
                 Val::Auto
             } else {
                 Val::None
