@@ -1,24 +1,24 @@
 mod buttons;
 mod child_builder_ext;
-mod components;
 mod flex;
 mod interaction;
 mod layout;
 mod props;
 mod style_enhancers;
 mod styles;
+mod widgets;
 
 use bevy::{prelude::*, transform::TransformSystem};
 use bevy_tweening::component_animator_system;
 
 pub use buttons::*;
 pub use child_builder_ext::*;
-pub use components::*;
 pub use flex::*;
 pub use interaction::*;
 pub use props::*;
 pub use style_enhancers::*;
 pub use styles::*;
+pub use widgets::*;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, SystemSet)]
 pub enum LayoutSystem {

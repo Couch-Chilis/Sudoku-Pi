@@ -8,8 +8,8 @@ pub enum TransitionEvent {
     ContinueGame,
     Exit,
     FinishOnboarding,
-    HowToPlayNotes,
-    HowToPlayNumbers,
+    LearnNotes,
+    LearnNumbers,
     StartGame(Difficulty),
 }
 
@@ -35,25 +35,25 @@ pub fn on_transition(
             Exit => match current_state.get() {
                 ScreenState::MainMenu => app_exit_events.send(AppExit),
                 ScreenState::Settings => screen_state.set(ScreenState::Game),
-                ScreenState::HowToPlayNumbers => how_to_play_notes(
+                ScreenState::LearnNumbers => how_to_play_notes(
                     &mut screen_state,
                     &mut mode_state,
                     &mut game,
                     &mut selection,
                 ),
-                ScreenState::HowToPlayNotes => {
+                ScreenState::LearnNotes => {
                     finish_onboarding(&mut screen_state, &mut game, &mut settings)
                 }
                 _ => screen_state.set(ScreenState::MainMenu),
             },
             FinishOnboarding => finish_onboarding(&mut screen_state, &mut game, &mut settings),
-            HowToPlayNotes => how_to_play_notes(
+            LearnNotes => how_to_play_notes(
                 &mut screen_state,
                 &mut mode_state,
                 &mut game,
                 &mut selection,
             ),
-            HowToPlayNumbers => how_to_play_numbers(
+            LearnNumbers => how_to_play_numbers(
                 &mut screen_state,
                 &mut mode_state,
                 &mut game,
@@ -110,7 +110,7 @@ fn how_to_play_notes(
         note_toggle: None,
     };
     mode_state.set(ModeState::Notes);
-    screen_state.set(ScreenState::HowToPlayNotes);
+    screen_state.set(ScreenState::LearnNotes);
 }
 
 fn how_to_play_numbers(
@@ -127,5 +127,5 @@ fn how_to_play_numbers(
         note_toggle: None,
     };
     mode_state.set(ModeState::Normal);
-    screen_state.set(ScreenState::HowToPlayNumbers);
+    screen_state.set(ScreenState::LearnNumbers);
 }

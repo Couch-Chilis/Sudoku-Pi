@@ -27,7 +27,7 @@ pub fn init_game_ui(
     let resources = &props.resources;
 
     build_button_row(cb, resources, |icon_row| {
-        icon_row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
+        icon_row.spawn(leaf(available_size));
 
         build_settings_icon(icon_row, resources);
     });

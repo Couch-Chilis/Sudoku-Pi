@@ -19,7 +19,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             ternary_button(
                 Quit,
                 (button_size_main, button_margin),
-                text("Quit", button_text(&props.resources)),
+                text("Quit", button_text),
             ),
         );
     }
@@ -29,7 +29,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
         secondary_button(
             GoToHowToPlay,
             (button_size_main, button_margin_extra_height_on_ios),
-            text("How to Play", button_text(&props.resources)),
+            text("How to Play", button_text),
         ),
     );
 
@@ -39,7 +39,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             secondary_button(
                 GoToNewGame,
                 (button_size_main, button_margin),
-                text("New Game", button_text(&props.resources)),
+                text("New Game", button_text),
             ),
         );
         cb.spawn_with_children(
@@ -47,7 +47,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             selected_button(
                 ContinueGame,
                 (button_size_main, button_margin),
-                text("Continue", button_text(&props.resources)),
+                text("Continue", button_text),
             ),
         );
     } else {
@@ -56,7 +56,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             selected_button(
                 GoToNewGame,
                 (button_size_main, button_margin),
-                text("New Game", button_text(&props.resources)),
+                text("New Game", button_text),
             ),
         );
     }
@@ -71,15 +71,15 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
                 align_self(Alignment::End),
             ),
             (),
-            text(
+            text_with_bundle_enhancer(
                 "© 2023 Couch Chilis",
                 (
-                    font_medium(&props.resources),
+                    font_medium,
                     font_size(30.),
                     text_color(COLOR_BOARD_LINE_MEDIUM),
                 ),
-            )
-            .with_anchor(Anchor::CenterRight),
+                |text| text.text_anchor = Anchor::CenterRight,
+            ),
         ),
     );
 }
@@ -95,7 +95,7 @@ pub fn main_menu_button_actions(
             use MainScreenButtonAction::*;
             match action {
                 ContinueGame => transition_events.send(TransitionEvent::ContinueGame),
-                GoToHowToPlay => transition_events.send(TransitionEvent::HowToPlayNumbers),
+                GoToHowToPlay => transition_events.send(TransitionEvent::LearnNumbers),
                 GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
                 Quit => app_exit_events.send(AppExit),
             }

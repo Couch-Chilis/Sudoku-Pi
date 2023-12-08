@@ -54,7 +54,7 @@ enum StatKind {
 #[derive(Component)]
 pub struct BestTimeText;
 
-pub fn highscore_screen_setup(props: &Props, cb: &mut ChildBuilder) {
+pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
     let resources = &props.resources;
 
     cb.spawn(FlexBundle::new(

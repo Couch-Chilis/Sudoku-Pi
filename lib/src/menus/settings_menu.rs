@@ -7,7 +7,7 @@ pub enum SettingsButtonAction {
     Back,
 }
 
-pub fn settings_screen_setup(props: &Props, cb: &mut ChildBuilder) {
+pub fn settings_screen(props: &Props, cb: &mut ChildBuilder) {
     use SettingsButtonAction::*;
     use SettingsToggle::*;
 
@@ -26,11 +26,7 @@ pub fn settings_screen_setup(props: &Props, cb: &mut ChildBuilder) {
         column(
             available_size,
             padding(Sides::vertical(Val::Auto)),
-            secondary_button(
-                Back,
-                button_size_settings,
-                text("Back", button_text(&props.resources)),
-            ),
+            secondary_button(Back, button_size_settings, text("Back", button_text)),
         ),
     )(props, cb);
 }

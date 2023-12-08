@@ -21,14 +21,13 @@ use assets::*;
 use bevy::app::AppExit;
 use bevy::asset::io::memory::MemoryAssetReader;
 use bevy::asset::io::{AssetSourceBuilder, AssetSourceBuilders, AssetSourceId};
-use bevy::ecs::system::EntityCommands;
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
 use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
-use game::{board_setup, highscore_screen_setup, ActiveSliceHandles};
+use game::{game_screen, highscore_screen, ActiveSliceHandles};
 use highscores::Highscores;
-use menus::{menu_setup, settings_screen_setup, SettingsToggleTimer};
+use menus::{menu, settings_screen, SettingsToggleTimer};
 use onboarding::*;
 use resource_bag::ResourceBag;
 use settings::Settings;
@@ -85,8 +84,8 @@ pub enum ScreenState {
     Highscores,
     Settings,
     Welcome,
-    HowToPlayNumbers,
-    HowToPlayNotes,
+    LearnNumbers,
+    LearnNotes,
 }
 
 /// Overrides the screen(s) for which the given entity provides interactivity.
@@ -275,24 +274,16 @@ fn setup(
     let resources = &props.resources;
 
     use ScreenState::*;
-    spawn_screen(&mut commands, MainMenu, resources).with_children(|cb| menu_setup(&props, cb));
-
-    spawn_screen(&mut commands, Game, resources).with_children(|cb| board_setup(&props, cb));
-
-    spawn_screen(&mut commands, Highscores, resources)
-        .with_children(|cb| highscore_screen_setup(&props, cb));
-
-    spawn_screen(&mut commands, Settings, resources)
-        .with_children(|cb| settings_screen_setup(&props, cb));
-
-    spawn_screen(&mut commands, Welcome, resources)
-        .with_children(|cb| welcome_screen_setup(&props, cb));
-
-    spawn_screen(&mut commands, HowToPlayNumbers, resources)
-        .with_children(|cb| how_to_play_numbers_screen_setup(&props, cb));
-
-    spawn_screen(&mut commands, HowToPlayNotes, resources)
-        .with_children(|cb| how_to_play_notes_screen_setup(&props, cb));
+    commands.spawn_with_children(&props, screen(MainMenu, resources, menu));
+    commands.spawn_with_children(&props, screen(Game, resources, game_screen));
+    commands.spawn_with_children(&props, screen(Highscores, resources, highscore_screen));
+    commands.spawn_with_children(&props, screen(Settings, resources, settings_screen));
+    commands.spawn_with_children(&props, screen(Welcome, resources, welcome_screen()));
+    commands.spawn_with_children(&props, screen(LearnNotes, resources, learn_notes_screen()));
+    commands.spawn_with_children(
+        &props,
+        screen(LearnNumbers, resources, learn_numbers_screen()),
+    );
 
     if !settings.onboarding_finished {
         screen_state.set(Welcome);
@@ -414,53 +405,35 @@ fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
         Highscores => (1., 1.),
         Settings => (2., 0.),
         Welcome => (-3., 0.),
-        HowToPlayNumbers => (-2., 0.),
-        HowToPlayNotes => (-1., 0.),
+        LearnNumbers => (-2., 0.),
+        LearnNotes => (-1., 0.),
     }
 }
 
-fn spawn_screen<'w, 's, 'a>(
-    commands: &'a mut Commands<'w, 's>,
+fn screen<B>(
     screen: ScreenState,
     resources: &ResourceBag,
-) -> EntityCommands<'w, 's, 'a> {
-    let screen_sizing = resources.screen_sizing;
+    child: impl Into<BundleWithChildren<B>>,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+where
+    B: Bundle,
+{
+    let (mut bundle, spawn_children) = container(
+        (screen_gap(screen), screen_padding(resources, screen)),
+        child,
+    );
 
+    let screen_sizing = resources.screen_sizing;
     let (tile_x, tile_y) = get_tile_offset_for_screen(screen);
-    let flex_container = FlexContainerBundle {
-        background: Sprite::default(),
-        transform: Transform {
-            scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
-            translation: Vec3::new(
-                screen_sizing.width * tile_x,
-                screen_sizing.height * tile_y,
-                1.,
-            ),
-            ..default()
-        },
-        style: if screen == ScreenState::Game {
-            FlexContainerStyle::default().with_gap(Val::Auto)
-        } else {
-            FlexContainerStyle::default()
-        }
-        .with_padding(Sides {
-            top: if screen == ScreenState::MainMenu {
-                Val::None
-            } else if screen_sizing.is_ipad && screen == ScreenState::Game {
-                Val::Auto
-            } else {
-                Val::Pixel(screen_sizing.top_padding)
-            },
-            right: Val::None,
-            bottom: if screen_sizing.is_ipad && screen == ScreenState::Game {
-                Val::Auto
-            } else {
-                Val::None
-            },
-            left: Val::None,
-        }),
+    bundle.transform = Transform {
+        scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
+        translation: Vec3::new(
+            screen_sizing.width * tile_x,
+            screen_sizing.height * tile_y,
+            1.,
+        ),
         ..default()
     };
 
-    commands.spawn((Screen::for_state(screen), Flex, flex_container))
+    ((Screen::for_state(screen), Flex, bundle), spawn_children)
 }

@@ -122,14 +122,6 @@ where
     ((action, ButtonType::Ternary, bundle), spawn_children)
 }
 
-pub fn center_text(text: impl Into<String>, styles: impl TextStyleEnhancer) -> FlexTextBundle {
-    let mut bundle = FlexTextBundle::from_text(
-        Text::from_section(text, TextStyle::default()).with_alignment(TextAlignment::Center),
-    );
-    styles.enhance(&mut bundle.text.text.sections[0].style);
-    bundle
-}
-
 pub fn column<B>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerStyleEnhancer,
@@ -141,6 +133,23 @@ where
     let mut bundle = FlexBundle::default();
     item_styles.enhance(&mut bundle.item.style);
     container_styles.enhance(&mut bundle.container.style);
+
+    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
+        cb.spawn_with_children(props, child);
+    };
+
+    (bundle, spawn_children)
+}
+
+pub fn container<B>(
+    styles: impl FlexContainerStyleEnhancer,
+    child: impl Into<BundleWithChildren<B>>,
+) -> (FlexContainerBundle, impl FnOnce(&Props, &mut ChildBuilder))
+where
+    B: Bundle,
+{
+    let mut bundle = FlexContainerBundle::default();
+    styles.enhance(&mut bundle.style);
 
     let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
         cb.spawn_with_children(props, child);
@@ -235,8 +244,44 @@ where
     (bundle, spawn_children)
 }
 
-pub fn text(text: impl Into<String>, styles: impl TextStyleEnhancer) -> FlexTextBundle {
-    let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
-    styles.enhance(&mut bundle.text.text.sections[0].style);
-    bundle
+pub fn text(
+    text: impl Into<String>,
+    styles: impl TextEnhancer,
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    text_with_bundle_enhancer(text, styles, |_bundle| {})
+}
+
+pub fn text_with_bundle_enhancer(
+    text: impl Into<String>,
+    styles: impl TextEnhancer,
+    enhance: impl FnOnce(&mut Text2dBundle),
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    |props: &Props, cb: &mut ChildBuilder| {
+        let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
+        enhance(&mut bundle.text);
+        styles.enhance(&mut bundle.text.text, &props.resources);
+        cb.spawn(bundle);
+    }
+}
+
+pub fn text_with_marker(
+    marker: impl Bundle,
+    text: impl Into<String>,
+    styles: impl TextEnhancer,
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    text_with_marker_and_bundle_enhancer(marker, text, styles, |_bundle| {})
+}
+
+pub fn text_with_marker_and_bundle_enhancer(
+    marker: impl Bundle,
+    text: impl Into<String>,
+    styles: impl TextEnhancer,
+    enhance: impl FnOnce(&mut Text2dBundle),
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    |props: &Props, cb: &mut ChildBuilder| {
+        let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
+        enhance(&mut bundle.text);
+        styles.enhance(&mut bundle.text.text, &props.resources);
+        cb.spawn((bundle, marker));
+    }
 }

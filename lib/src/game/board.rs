@@ -18,35 +18,20 @@ pub struct MistakeCellBordersBundle {
     pub view_visibility: ViewVisibility,
 }
 
-pub fn board(
-    props: &Props,
-    screen: ScreenState,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
-    let bundle = FlexBundle::new(
-        if props.resources.screen_sizing.is_ipad {
-            FlexItemStyle::preferred_and_minimum_size(
-                Size::all(Val::Vmin(80.)),
-                Size::all(Val::Vmin(50.)),
-            )
-        } else {
-            FlexItemStyle::preferred_and_minimum_size(
-                Size::all(Val::Vmin(90.)),
-                Size::all(Val::Vmin(50.)),
-            )
-        }
-        .with_fixed_aspect_ratio(),
-        FlexContainerStyle::row(),
+pub fn board(screen: ScreenState) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    let (bundle, spawn_children) = row(
+        board_size,
+        (),
+        move |props: &Props, cb: &mut ChildBuilder| {
+            draw_lines(cb);
+
+            cb.spawn_with_children(props, board_numbers);
+
+            cb.spawn_with_children(props, wheel(screen));
+
+            place_mistake_borders(cb);
+        },
     );
-
-    let spawn_children = move |props: &Props, cb: &mut ChildBuilder| {
-        draw_lines(cb);
-
-        cb.spawn_with_children(props, board_numbers);
-
-        cb.spawn_with_children(props, wheel(screen));
-
-        place_mistake_borders(cb);
-    };
 
     ((Board, screen, bundle), spawn_children)
 }

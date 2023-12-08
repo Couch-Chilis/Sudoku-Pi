@@ -14,7 +14,7 @@ use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
-pub use settings_menu::settings_screen_setup;
+pub use settings_menu::settings_screen;
 pub use settings_toggle::SettingsToggleTimer;
 
 #[derive(Component, Default)]
@@ -42,7 +42,7 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_setup(props: &Props, cb: &mut ChildBuilder) {
+pub fn menu(props: &Props, cb: &mut ChildBuilder) {
     // Logo.
     cb.spawn((
         FlexItemBundle::from_style(

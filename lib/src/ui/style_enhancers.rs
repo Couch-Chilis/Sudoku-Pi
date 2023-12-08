@@ -1,5 +1,6 @@
 use super::flex::*;
-use bevy::text::TextStyle;
+use crate::resource_bag::ResourceBag;
+use bevy::text::Text;
 
 /// Trait that defines enhancers for [FlexContainerStyle].
 pub trait FlexContainerStyleEnhancer: Sized {
@@ -60,43 +61,58 @@ where
 }
 
 /// Trait that defines enhancers for [TextStyle].
-pub trait TextStyleEnhancer: Sized {
-    fn enhance(self, style: &mut TextStyle);
+pub trait TextEnhancer: Sized {
+    fn enhance(self, text: &mut Text, resources: &ResourceBag);
 }
 
-impl<T> TextStyleEnhancer for T
+impl<T> TextEnhancer for T
 where
-    T: FnOnce(&mut TextStyle) + Sized,
+    T: FnOnce(&mut Text, &ResourceBag) + Sized,
 {
-    fn enhance(self, style: &mut TextStyle) {
-        self(style)
+    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+        self(text, resources)
     }
 }
 
-impl TextStyleEnhancer for () {
-    fn enhance(self, _style: &mut TextStyle) {}
+impl TextEnhancer for () {
+    fn enhance(self, _text: &mut Text, _resources: &ResourceBag) {}
 }
 
-impl<T, U> TextStyleEnhancer for (T, U)
+impl<T, U> TextEnhancer for (T, U)
 where
-    T: TextStyleEnhancer,
-    U: TextStyleEnhancer,
+    T: TextEnhancer,
+    U: TextEnhancer,
 {
-    fn enhance(self, style: &mut TextStyle) {
-        self.0.enhance(style);
-        self.1.enhance(style);
+    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+        self.0.enhance(text, resources);
+        self.1.enhance(text, resources);
     }
 }
 
-impl<T, U, V> TextStyleEnhancer for (T, U, V)
+impl<T, U, V> TextEnhancer for (T, U, V)
 where
-    T: TextStyleEnhancer,
-    U: TextStyleEnhancer,
-    V: TextStyleEnhancer,
+    T: TextEnhancer,
+    U: TextEnhancer,
+    V: TextEnhancer,
 {
-    fn enhance(self, style: &mut TextStyle) {
-        self.0.enhance(style);
-        self.1.enhance(style);
-        self.2.enhance(style);
+    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+        self.0.enhance(text, resources);
+        self.1.enhance(text, resources);
+        self.2.enhance(text, resources);
+    }
+}
+
+impl<T, U, V, W> TextEnhancer for (T, U, V, W)
+where
+    T: TextEnhancer,
+    U: TextEnhancer,
+    V: TextEnhancer,
+    W: TextEnhancer,
+{
+    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+        self.0.enhance(text, resources);
+        self.1.enhance(text, resources);
+        self.2.enhance(text, resources);
+        self.3.enhance(text, resources);
     }
 }

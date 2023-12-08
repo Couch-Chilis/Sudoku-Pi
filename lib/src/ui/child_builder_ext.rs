@@ -91,3 +91,29 @@ where
         }
     }
 }
+
+impl<'w, 's, B> ChildBuilderExt<B> for Commands<'w, 's>
+where
+    B: Bundle,
+{
+    fn spawn_with_children(
+        &mut self,
+        props: &Props,
+        bundle_with_children: impl Into<BundleWithChildren<B>>,
+    ) {
+        let BundleWithChildren {
+            bundle,
+            spawn_children,
+        } = bundle_with_children.into();
+
+        if let Some(bundle) = bundle {
+            let mut entity_commands = self.spawn(bundle);
+
+            if let Some(spawn_children) = spawn_children {
+                entity_commands.with_children(|cb| spawn_children(props, cb));
+            }
+        } else {
+            unimplemented!("Need a bundle to spawn top-level entities");
+        }
+    }
+}

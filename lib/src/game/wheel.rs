@@ -156,7 +156,7 @@ pub fn on_wheel_input(
 ) {
     use ScreenState::*;
     let screen = screen.get();
-    if !matches!(screen, Game | HowToPlayNumbers | HowToPlayNotes) {
+    if !matches!(screen, Game | LearnNumbers | LearnNotes) {
         return;
     }
 
@@ -275,7 +275,7 @@ pub fn on_wheel_timer(
 ) {
     use ScreenState::*;
     let screen = screen.get();
-    if !matches!(screen, Game | HowToPlayNumbers | HowToPlayNotes) {
+    if !matches!(screen, Game | LearnNumbers | LearnNotes) {
         return;
     }
 

@@ -1,6 +1,6 @@
 use super::flex::*;
-use crate::constants::COLOR_BUTTON_TEXT;
-use crate::resource_bag::ResourceBag;
+use crate::constants::*;
+use crate::{ResourceBag, ScreenState};
 use bevy::prelude::*;
 use std::sync::Arc;
 
@@ -10,8 +10,31 @@ pub fn align_self(align_self: Alignment) -> impl FnOnce(&mut FlexItemStyle) {
     }
 }
 
+pub fn alignment(alignment: TextAlignment) -> impl FnOnce(&mut Text, &ResourceBag) {
+    move |text: &mut Text, _resources: &ResourceBag| {
+        text.alignment = alignment;
+    }
+}
+
 pub fn available_size(style: &mut FlexItemStyle) {
     style.flex_grow = 1.;
+}
+
+pub fn board_size(style: &mut FlexItemStyle) {
+    style.dynamic_styles.push(Arc::new(
+        |style: &mut FlexItemStyle, resources: &ResourceBag| {
+            style.flex_shrink = 1.;
+            style.min_size = Size::all(Val::Vmin(50.));
+            style.preserve_aspect_ratio = true;
+
+            style.flex_base =
+                if resources.screen_sizing.height > 1.6 * resources.screen_sizing.width {
+                    Size::all(Val::Vmin(90.))
+                } else {
+                    Size::all(Val::Vmin(80.))
+                };
+        },
+    ))
 }
 
 pub fn button_margin(style: &mut FlexItemStyle) {
@@ -56,35 +79,27 @@ pub fn button_size_settings(style: &mut FlexItemStyle) {
     ));
 }
 
-pub fn button_text(resources: &ResourceBag) -> impl FnOnce(&mut TextStyle) {
-    let font = resources.fonts.medium.clone();
-    let font_size = if resources.screen_sizing.is_ipad {
+pub fn button_text(text: &mut Text, resources: &ResourceBag) {
+    let style = &mut text.sections[0].style;
+    style.font = resources.fonts.medium.clone();
+    style.color = COLOR_BUTTON_TEXT;
+    style.font_size = if resources.screen_sizing.is_ipad {
         66.
     } else {
         44.
     };
-
-    move |style: &mut TextStyle| {
-        style.font = font;
-        style.color = COLOR_BUTTON_TEXT;
-        style.font_size = font_size;
-    }
 }
 
-pub fn font_bold(resources: &ResourceBag) -> impl FnOnce(&mut TextStyle) {
-    let font = resources.fonts.bold.clone();
-
-    move |style: &mut TextStyle| {
-        style.font = font;
-    }
+pub fn fixed_aspect_ratio(style: &mut FlexItemStyle) {
+    style.preserve_aspect_ratio = true;
 }
 
-pub fn font_medium(resources: &ResourceBag) -> impl FnOnce(&mut TextStyle) {
-    let font = resources.fonts.medium.clone();
+pub fn font_bold(text: &mut Text, resources: &ResourceBag) {
+    text.sections[0].style.font = resources.fonts.bold.clone();
+}
 
-    move |style: &mut TextStyle| {
-        style.font = font;
-    }
+pub fn font_medium(text: &mut Text, resources: &ResourceBag) {
+    text.sections[0].style.font = resources.fonts.medium.clone();
 }
 
 pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
@@ -93,9 +108,9 @@ pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
     }
 }
 
-pub fn font_size(font_size: f32) -> impl FnOnce(&mut TextStyle) {
-    move |style: &mut TextStyle| {
-        style.font_size = font_size;
+pub fn font_size(font_size: f32) -> impl FnOnce(&mut Text, &ResourceBag) {
+    move |text: &mut Text, _resources: &ResourceBag| {
+        text.sections[0].style.font_size = font_size;
     }
 }
 
@@ -112,9 +127,46 @@ pub fn preferred_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle
     }
 }
 
-pub fn text_color(color: Color) -> impl FnOnce(&mut TextStyle) {
-    move |style: &mut TextStyle| {
-        style.color = color;
+pub fn screen_gap(screen: ScreenState) -> impl FnOnce(&mut FlexContainerStyle) {
+    move |style: &mut FlexContainerStyle| {
+        style.gap = if screen == ScreenState::Game {
+            Val::Auto
+        } else {
+            Val::None
+        }
+    }
+}
+
+pub fn screen_padding(
+    resources: &ResourceBag,
+    screen: ScreenState,
+) -> impl FnOnce(&mut FlexContainerStyle) {
+    let is_ipad = resources.screen_sizing.is_ipad;
+    let top_padding = resources.screen_sizing.top_padding;
+
+    move |style: &mut FlexContainerStyle| {
+        style.padding = Sides {
+            top: if screen == ScreenState::MainMenu {
+                Val::None
+            } else if is_ipad && screen == ScreenState::Game {
+                Val::Auto
+            } else {
+                Val::Pixel(top_padding)
+            },
+            right: Val::None,
+            bottom: if is_ipad && screen == ScreenState::Game {
+                Val::Auto
+            } else {
+                Val::None
+            },
+            left: Val::None,
+        }
+    }
+}
+
+pub fn text_color(color: Color) -> impl FnOnce(&mut Text, &ResourceBag) {
+    move |text: &mut Text, _resources: &ResourceBag| {
+        text.sections[0].style.color = color;
     }
 }
 

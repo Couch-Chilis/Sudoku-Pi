@@ -23,7 +23,7 @@ use wheel::{
 };
 
 pub use board::board;
-pub use highscore_screen::highscore_screen_setup;
+pub use highscore_screen::highscore_screen;
 pub use mode_slider::ModeState;
 pub use wheel::{ActiveSliceHandles, Wheel};
 
@@ -157,9 +157,9 @@ pub enum NoteToggleMode {
     Unset,
 }
 
-pub fn board_setup(props: &Props, cb: &mut ChildBuilder) {
+pub fn game_screen(props: &Props, cb: &mut ChildBuilder) {
     let board_builder = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, board(props, ScreenState::Game));
+        cb.spawn_with_children(props, board(ScreenState::Game));
     };
 
     init_game_ui(props, cb, board_builder);
