@@ -1,5 +1,6 @@
 use super::flex::*;
 use crate::constants::*;
+use crate::utils::SpriteExt;
 use crate::{ResourceBag, ScreenState};
 use bevy::prelude::*;
 use std::sync::Arc;
@@ -18,6 +19,12 @@ pub fn alignment(alignment: TextAlignment) -> impl FnOnce(&mut Text, &ResourceBa
 
 pub fn available_size(style: &mut FlexItemStyle) {
     style.flex_grow = 1.;
+}
+
+pub fn background_color(color: Color) -> impl FnOnce(&mut FlexContainerBundle) {
+    move |bundle: &mut FlexContainerBundle| {
+        bundle.background = Sprite::from_color(color);
+    }
 }
 
 pub fn board_size(style: &mut FlexItemStyle) {
@@ -101,7 +108,7 @@ pub fn button_text_size(text: &mut Text, resources: &ResourceBag) {
 pub fn cog_size(style: &mut FlexItemStyle) {
     style.dynamic_styles.push(Arc::new(
         |style: &mut FlexItemStyle, resources: &ResourceBag| {
-            let cog_size = if resources.screen_sizing.is_ipad {
+            let cog_size = if resources.screen_sizing.is_tablet() {
                 Val::Pixel(40)
             } else {
                 Val::Pixel(30)
@@ -142,9 +149,9 @@ pub fn margin(margin: Size) -> impl FnOnce(&mut FlexItemStyle) {
     }
 }
 
-pub fn padding(padding: Sides) -> impl FnOnce(&mut FlexContainerStyle) {
-    move |style: &mut FlexContainerStyle| {
-        style.padding = padding;
+pub fn padding(padding: Sides) -> impl FnOnce(&mut FlexContainerBundle) {
+    move |bundle: &mut FlexContainerBundle| {
+        bundle.style.padding = padding;
     }
 }
 
@@ -155,9 +162,32 @@ pub fn preferred_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle
     }
 }
 
-pub fn screen_gap(screen: ScreenState) -> impl FnOnce(&mut FlexContainerStyle) {
-    move |style: &mut FlexContainerStyle| {
-        style.gap = if screen == ScreenState::Game {
+pub fn score_board_padding(bundle: &mut FlexContainerBundle) {
+    bundle
+        .style
+        .dynamic_styles
+        .push(Arc::new(|style, resources| {
+            style.padding = if resources.screen_sizing.is_tablet() {
+                Sides {
+                    top: Val::Percent(32.),
+                    right: Val::Percent(27.),
+                    bottom: Val::Percent(12.),
+                    left: Val::Percent(27.),
+                }
+            } else {
+                Sides {
+                    top: Val::Percent(30.),
+                    right: Val::Percent(15.),
+                    bottom: Val::Percent(10.),
+                    left: Val::Percent(15.),
+                }
+            };
+        }));
+}
+
+pub fn screen_gap(screen: ScreenState) -> impl FnOnce(&mut FlexContainerBundle) {
+    move |bundle: &mut FlexContainerBundle| {
+        bundle.style.gap = if screen == ScreenState::Game {
             Val::Auto
         } else {
             Val::None
@@ -168,12 +198,12 @@ pub fn screen_gap(screen: ScreenState) -> impl FnOnce(&mut FlexContainerStyle) {
 pub fn screen_padding(
     resources: &ResourceBag,
     screen: ScreenState,
-) -> impl FnOnce(&mut FlexContainerStyle) {
+) -> impl FnOnce(&mut FlexContainerBundle) {
     let is_tablet = resources.screen_sizing.is_tablet();
     let top_padding = resources.screen_sizing.top_padding;
 
-    move |style: &mut FlexContainerStyle| {
-        style.padding = Sides {
+    move |bundle: &mut FlexContainerBundle| {
+        bundle.style.padding = Sides {
             top: if screen == ScreenState::MainMenu {
                 Val::None
             } else if is_tablet && screen == ScreenState::Game {

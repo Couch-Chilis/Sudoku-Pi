@@ -14,7 +14,6 @@ use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
-use crate::resource_bag::ResourceBag;
 pub use settings_menu::settings_screen;
 pub use settings_toggle::SettingsToggleTimer;
 
@@ -43,15 +42,11 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_screen(resources: &ResourceBag) -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn menu_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
     fragment4(
         // Logo.
-        image(
-            if resources.screen_sizing.is_ipad {
-                resources.images.launch_screen_ipad.clone()
-            } else {
-                resources.images.launch_screen.clone()
-            },
+        dynamic_image(
+            launch_screen,
             (
                 fixed_size(Val::CrossPercent(46.19), Val::Percent(100.)),
                 fixed_aspect_ratio,

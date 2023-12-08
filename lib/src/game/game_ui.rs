@@ -37,12 +37,12 @@ pub fn init_game_ui(
     });
 
     build_button_row(cb, resources, |button_row| {
-        let button_size = if resources.screen_sizing.is_ipad {
+        let button_size = if resources.screen_sizing.is_tablet() {
             FlexItemStyle::fixed_size(Val::Pixel(133), Val::Pixel(60))
         } else {
             FlexItemStyle::fixed_size(Val::Pixel(80), Val::Pixel(35))
         };
-        let font_size = if resources.screen_sizing.is_ipad {
+        let font_size = if resources.screen_sizing.is_tablet() {
             66.
         } else {
             44.
@@ -83,12 +83,12 @@ fn build_timer_row(cb: &mut ChildBuilder, children: impl FnOnce(&mut ChildBuilde
 }
 
 fn build_timer(row: &mut ChildBuilder, resources: &ResourceBag) {
-    let width = if resources.screen_sizing.is_ipad {
+    let width = if resources.screen_sizing.is_tablet() {
         Val::Pixel(150)
     } else {
         Val::Pixel(100)
     };
-    let height = if resources.screen_sizing.is_ipad {
+    let height = if resources.screen_sizing.is_tablet() {
         Val::Pixel(64)
     } else {
         Val::Pixel(42)
@@ -97,7 +97,7 @@ fn build_timer(row: &mut ChildBuilder, resources: &ResourceBag) {
 
     let text_style = TextStyle {
         font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_ipad {
+        font_size: if resources.screen_sizing.is_tablet() {
             105.
         } else {
             70.
@@ -145,7 +145,7 @@ pub fn build_button_row(
 ) {
     cb.spawn(FlexBundle::new(
         FlexItemStyle::preferred_size(
-            Val::Vmin(if resources.screen_sizing.is_ipad {
+            Val::Vmin(if resources.screen_sizing.is_tablet() {
                 80.
             } else {
                 90.
@@ -161,7 +161,7 @@ pub fn build_button_row(
 fn build_score(row: &mut ChildBuilder, resources: &ResourceBag) {
     let text_style = TextStyle {
         font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_ipad {
+        font_size: if resources.screen_sizing.is_tablet() {
             86.
         } else {
             58.
@@ -170,12 +170,12 @@ fn build_score(row: &mut ChildBuilder, resources: &ResourceBag) {
     };
 
     row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
-        Val::Pixel(if resources.screen_sizing.is_ipad {
+        Val::Pixel(if resources.screen_sizing.is_tablet() {
             150
         } else {
             100
         }),
-        Val::Pixel(if resources.screen_sizing.is_ipad {
+        Val::Pixel(if resources.screen_sizing.is_tablet() {
             60
         } else {
             35

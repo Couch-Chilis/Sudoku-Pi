@@ -18,7 +18,6 @@ int main(int argc, char *argv[]) {
         scale,
         nativeScale,
         topPadding,
-        [[UIDevice currentDevice].model hasPrefix:@"iPad"]
     );
     return 0;
 }

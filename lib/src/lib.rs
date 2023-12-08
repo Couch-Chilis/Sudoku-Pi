@@ -40,12 +40,10 @@ use ui::*;
 // iPhone:
 const INITIAL_WIDTH: f32 = 390.;
 const INITIAL_HEIGHT: f32 = 845.;
-const IS_IPAD: bool = false;
 
 // iPad:
 //const INITIAL_WIDTH: f32 = 768.;
 //const INITIAL_HEIGHT: f32 = 1024.;
-//const IS_IPAD: bool = true;
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -101,7 +99,6 @@ pub struct ScreenSizing {
     width: f32,
     height: f32,
     top_padding: i32,
-    is_ipad: bool,
 }
 
 impl ScreenSizing {
@@ -126,7 +123,6 @@ impl Default for ScreenSizing {
             width: INITIAL_WIDTH,
             height: INITIAL_HEIGHT,
             top_padding: 0,
-            is_ipad: IS_IPAD,
         }
     }
 }
@@ -150,7 +146,6 @@ extern "C" fn run_with_fixed_sizes(
     scale: f64,
     native_scale: f64,
     top_padding: i32,
-    is_ipad: bool,
 ) {
     let scale = (scale / native_scale) as f32;
     println!("Starting at size {width}x{height} (scale={scale}, top_padding={top_padding}px)");
@@ -159,7 +154,6 @@ extern "C" fn run_with_fixed_sizes(
             width: width as f32,
             height: height as f32,
             top_padding,
-            is_ipad,
         },
         ZoomFactor { x: scale, y: scale },
     )
@@ -289,7 +283,7 @@ fn setup(
     let resources = &props.resources;
 
     use ScreenState::*;
-    commands.spawn_with_children(&props, screen(MainMenu, resources, menu_screen(resources)));
+    commands.spawn_with_children(&props, screen(MainMenu, resources, menu_screen()));
     commands.spawn_with_children(&props, screen(Game, resources, game_screen));
     commands.spawn_with_children(&props, screen(Highscores, resources, highscore_screen));
     commands.spawn_with_children(&props, screen(Settings, resources, settings_screen()));

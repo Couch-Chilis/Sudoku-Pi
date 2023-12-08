@@ -60,7 +60,7 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
             } else {
                 resources.fonts.bold.clone()
             },
-            font_size: if resources.screen_sizing.is_ipad {
+            font_size: if resources.screen_sizing.is_tablet() {
                 NUMBER_FONT_SIZE_IPAD
             } else {
                 NUMBER_FONT_SIZE
@@ -74,7 +74,7 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
 
         let note_style = TextStyle {
             font: resources.fonts.bold.clone(),
-            font_size: if resources.screen_sizing.is_ipad {
+            font_size: if resources.screen_sizing.is_tablet() {
                 NOTE_FONT_SIZE_IPAD
             } else {
                 NOTE_FONT_SIZE
@@ -394,7 +394,7 @@ fn animate_mistake(
     } else {
         note.animation_timer += delta;
 
-        let font_ratio = if screen_sizing.is_ipad {
+        let font_ratio = if screen_sizing.is_tablet() {
             NUMBER_FONT_SIZE_IPAD / NOTE_FONT_SIZE_IPAD
         } else {
             NUMBER_FONT_SIZE / NOTE_FONT_SIZE

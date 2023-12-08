@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use crate::assets::ImageWithDimensions;
 use crate::resource_bag::ResourceBag;
 use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
@@ -103,6 +104,9 @@ pub struct FlexContainerStyle {
 
     /// Padding to keep within the container and around the items.
     pub padding: Sides,
+
+    /// Optional enhancers that allow for determining style fields at runtime.
+    pub dynamic_styles: Vec<Arc<dyn Fn(&mut FlexContainerStyle, &ResourceBag) + Send + Sync>>,
 }
 
 impl FlexContainerStyle {
@@ -181,6 +185,20 @@ impl Default for FlexItemBundle {
     }
 }
 
+#[derive(Bundle, Clone)]
+pub struct FlexImageBundle {
+    pub dynamic_image: DynamicImage,
+}
+
+#[derive(Clone, Component)]
+pub struct DynamicImage(pub Arc<dyn Fn(&ResourceBag) -> ImageWithDimensions + Send + Sync>);
+
+impl DynamicImage {
+    pub fn get_image(&self, resources: &ResourceBag) -> ImageWithDimensions {
+        self.0(resources)
+    }
+}
+
 #[derive(Clone, Component)]
 pub struct FlexItemStyle {
     /// How the item should be aligned along the container's cross axis.
@@ -206,8 +224,12 @@ pub struct FlexItemStyle {
     /// Whether this item occupies space. If `false`, this item does not count
     /// towards the total space taken by the items inside a container and the
     /// next item (if any) may be rendered in exactly the same space. This can
-    /// still be useful if you use a transform to move the item elsewhere, for
-    /// instance.
+    /// be useful for background images, or if you want to use a transform to
+    /// move the item elsewhere, for instance.
+    ///
+    /// When multiple items end up rendered in the same space, be careful to use
+    /// translation to render them at different z-indices. Otherwise the order
+    /// between the items is undefined.
     pub occupies_space: bool,
 
     /// Set to `true` if aspect ratio relative to the base size must be

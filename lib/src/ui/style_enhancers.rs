@@ -2,32 +2,32 @@ use super::flex::*;
 use crate::resource_bag::ResourceBag;
 use bevy::text::Text;
 
-/// Trait that defines enhancers for [FlexContainerStyle].
-pub trait FlexContainerStyleEnhancer: Sized {
-    fn enhance(self, style: &mut FlexContainerStyle);
+/// Trait that defines enhancers for [FlexContainerBundle].
+pub trait FlexContainerBundleEnhancer: Sized {
+    fn enhance(self, bundle: &mut FlexContainerBundle);
 }
 
-impl<T> FlexContainerStyleEnhancer for T
+impl<T> FlexContainerBundleEnhancer for T
 where
-    T: FnOnce(&mut FlexContainerStyle) + Sized,
+    T: FnOnce(&mut FlexContainerBundle) + Sized,
 {
-    fn enhance(self, style: &mut FlexContainerStyle) {
-        self(style)
+    fn enhance(self, bundle: &mut FlexContainerBundle) {
+        self(bundle)
     }
 }
 
-impl FlexContainerStyleEnhancer for () {
-    fn enhance(self, _style: &mut FlexContainerStyle) {}
+impl FlexContainerBundleEnhancer for () {
+    fn enhance(self, _bundle: &mut FlexContainerBundle) {}
 }
 
-impl<T, U> FlexContainerStyleEnhancer for (T, U)
+impl<T, U> FlexContainerBundleEnhancer for (T, U)
 where
-    T: FlexContainerStyleEnhancer,
-    U: FlexContainerStyleEnhancer,
+    T: FlexContainerBundleEnhancer,
+    U: FlexContainerBundleEnhancer,
 {
-    fn enhance(self, style: &mut FlexContainerStyle) {
-        self.0.enhance(style);
-        self.1.enhance(style);
+    fn enhance(self, bundle: &mut FlexContainerBundle) {
+        self.0.enhance(bundle);
+        self.1.enhance(bundle);
     }
 }
 

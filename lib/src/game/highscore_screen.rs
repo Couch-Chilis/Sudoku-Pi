@@ -61,98 +61,83 @@ pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
         FlexItemStyle::available_size(),
         FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(5.))),
     ))
-    .with_children(|scroll_section| {
-        let item_style = if resources.screen_sizing.is_ipad {
+    .with_children(|cb| {
+        let item_style = if resources.screen_sizing.is_tablet() {
             FlexItemStyle::fixed_size(Val::Pixel(700), Val::Pixel(190))
         } else {
             FlexItemStyle::fixed_size(Val::Pixel(342), Val::Pixel(92))
         };
 
-        let padding = if resources.screen_sizing.is_ipad {
+        let padding = if resources.screen_sizing.is_tablet() {
             Sides::new(Val::Pixel(30), Val::Pixel(22))
         } else {
             Sides::new(Val::Pixel(16), Val::Pixel(10))
         };
 
         // "Scroll" containing the quotes.
-        scroll_section
-            .spawn(
-                FlexBundle::new(
-                    item_style
-                        .clone()
-                        .with_alignment(Alignment::Centered)
-                        .without_occupying_space(),
-                    FlexContainerStyle::default().with_padding(padding.clone()),
-                )
-                .with_background_color(COLOR_BOARD_LINE_THIN),
-            )
-            .with_children(|section| {
-                section.spawn((
-                    FlexItemBundle::from_style(FlexItemStyle::available_size()),
-                    SpriteBundle {
-                        sprite: Sprite::from_color(COLOR_CREAM),
-                        ..default()
-                    },
-                ));
-            });
+        cb.spawn_with_children(
+            props,
+            column(
+                (align_self(Alignment::Centered), without_occupying_space),
+                background_color(COLOR_BOARD_LINE_THIN),
+                rect(COLOR_CREAM, available_size),
+            ),
+        );
 
-        scroll_section
-            .spawn(FlexBundle::new(
-                item_style
-                    .clone()
-                    .with_transform(Transform::from_translation(Vec3::new(0., 0., 3.)))
-                    .without_occupying_space(),
-                FlexContainerStyle::default().with_padding(padding.clone()),
-            ))
-            .with_children(|scroll_text_container| {
-                scroll_text_container.spawn((
-                    ScrollText::new(ScrollTextKind::Quote),
-                    FlexTextBundle::from_text(Text::default()).with_bounds(Text2dBounds {
-                        size: Vec2::new(
-                            if resources.screen_sizing.is_ipad {
-                                1200.
-                            } else {
-                                580.
-                            },
-                            if resources.screen_sizing.is_ipad {
-                                400.
-                            } else {
-                                200.
-                            },
-                        ),
-                    }),
-                ));
-            });
-
-        scroll_section
-            .spawn(FlexBundle::new(
-                item_style.with_transform(Transform::from_translation(Vec3::new(0., 0., 4.))),
-                FlexContainerStyle::default().with_padding({
-                    let top = Val::Pixel(if resources.screen_sizing.is_ipad {
-                        155
-                    } else {
-                        65
-                    });
-                    let right = padding.right.clone()
-                        + Val::Pixel(if resources.screen_sizing.is_ipad {
-                            15
+        cb.spawn(FlexBundle::new(
+            item_style
+                .clone()
+                .with_transform(Transform::from_translation(Vec3::new(0., 0., 3.)))
+                .without_occupying_space(),
+            FlexContainerStyle::default().with_padding(padding.clone()),
+        ))
+        .with_children(|scroll_text_container| {
+            scroll_text_container.spawn((
+                ScrollText::new(ScrollTextKind::Quote),
+                FlexTextBundle::from_text(Text::default()).with_bounds(Text2dBounds {
+                    size: Vec2::new(
+                        if resources.screen_sizing.is_tablet() {
+                            1200.
                         } else {
-                            10
-                        });
-                    padding.with_top(top).with_right(right)
+                            580.
+                        },
+                        if resources.screen_sizing.is_tablet() {
+                            400.
+                        } else {
+                            200.
+                        },
+                    ),
                 }),
-            ))
-            .with_children(|scroll_author_wrapper| {
-                scroll_author_wrapper
-                    .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                    .with_children(|scroll_author_container| {
-                        scroll_author_container.spawn((
-                            ScrollText::new(ScrollTextKind::Author),
-                            FlexTextBundle::from_text(Text::default())
-                                .with_anchor(Anchor::BottomRight),
-                        ));
+            ));
+        });
+
+        cb.spawn(FlexBundle::new(
+            item_style.with_transform(Transform::from_translation(Vec3::new(0., 0., 4.))),
+            FlexContainerStyle::default().with_padding({
+                let top = Val::Pixel(if resources.screen_sizing.is_tablet() {
+                    155
+                } else {
+                    65
+                });
+                let right = padding.right.clone()
+                    + Val::Pixel(if resources.screen_sizing.is_tablet() {
+                        15
+                    } else {
+                        10
                     });
-            });
+                padding.with_top(top).with_right(right)
+            }),
+        ))
+        .with_children(|scroll_author_wrapper| {
+            scroll_author_wrapper
+                .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
+                .with_children(|scroll_author_container| {
+                    scroll_author_container.spawn((
+                        ScrollText::new(ScrollTextKind::Author),
+                        FlexTextBundle::from_text(Text::default()).with_anchor(Anchor::BottomRight),
+                    ));
+                });
+        });
     });
 
     cb.spawn_with_children(
@@ -160,7 +145,7 @@ pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
         row(
             fixed_size(
                 Val::Percent(100.),
-                Val::CrossPercent(if resources.screen_sizing.is_ipad {
+                Val::CrossPercent(if resources.screen_sizing.is_tablet() {
                     59.8
                 } else {
                     102.5
@@ -169,33 +154,12 @@ pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
             (),
             fragment(
                 // Wall background.
-                image(
-                    if resources.screen_sizing.is_ipad {
-                        resources.images.wall_ipad.clone()
-                    } else {
-                        resources.images.wall.clone()
-                    },
-                    (available_size, without_occupying_space),
-                ),
+                dynamic_image(wall_image, (available_size, without_occupying_space)),
                 // Score board.
                 column_t(
                     StatsContainer,
                     (available_size, translation(Vec3::new(0., 0., 2.))),
-                    padding(if resources.screen_sizing.is_ipad {
-                        Sides {
-                            top: Val::Percent(32.),
-                            right: Val::Percent(27.),
-                            bottom: Val::Percent(12.),
-                            left: Val::Percent(27.),
-                        }
-                    } else {
-                        Sides {
-                            top: Val::Percent(30.),
-                            right: Val::Percent(15.),
-                            bottom: Val::Percent(10.),
-                            left: Val::Percent(15.),
-                        }
-                    }),
+                    score_board_padding,
                     scores(props),
                 ),
             ),
@@ -207,14 +171,14 @@ pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
         FlexContainerStyle::column().with_padding(Sides::new(Val::None, Val::Auto)),
     ))
     .with_children(|button_section| {
-        let button_style = if resources.screen_sizing.is_ipad {
+        let button_style = if resources.screen_sizing.is_tablet() {
             FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
                 .with_margin(Size::all(Val::Vmin(1.5)))
         } else {
             FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
                 .with_margin(Size::all(Val::Vmin(1.5)))
         };
-        let font_size = if resources.screen_sizing.is_ipad {
+        let font_size = if resources.screen_sizing.is_tablet() {
             66.
         } else {
             44.
@@ -367,7 +331,7 @@ pub fn on_fortune(
                     quote,
                     TextStyle {
                         font: fonts.scroll.clone(),
-                        font_size: if screen_sizing.is_ipad { 60. } else { 35. },
+                        font_size: if screen_sizing.is_tablet() { 60. } else { 35. },
                         color: Color::BLACK,
                     },
                 )])
@@ -382,7 +346,7 @@ pub fn on_fortune(
                     author,
                     TextStyle {
                         font: fonts.scroll.clone(),
-                        font_size: if screen_sizing.is_ipad { 50. } else { 30. },
+                        font_size: if screen_sizing.is_tablet() { 50. } else { 30. },
                         color: Color::BLACK,
                     },
                 )])

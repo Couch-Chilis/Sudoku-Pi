@@ -1,5 +1,6 @@
 use super::flex::*;
 use crate::resource_bag::{ResourceBag, ResourceTuple};
+use crate::utils::TransformExt;
 use crate::{Screen, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use smallvec::smallvec;
@@ -18,6 +19,8 @@ type FlexEntity<'a> = (
     Option<&'a FlexTextStyle>,
     Option<&'a Anchor>,
     Option<&'a ScreenInteraction>,
+    Option<&'a DynamicImage>,
+    Option<&'a mut Handle<Image>>,
 );
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
@@ -81,6 +84,8 @@ impl<'a> LayoutInfo<'a> {
             text_style,
             anchor,
             screen_interaction,
+            dynamic_image,
+            image_handle,
         ) in flex_query.iter_mut()
         {
             if let (Some(container_style), Some(children)) = (container_style, children) {
@@ -101,7 +106,7 @@ impl<'a> LayoutInfo<'a> {
                     );
                 }
                 (_, _, _, Some(item_style), Some(computed_position)) => {
-                    let item_style = if !item_style.dynamic_styles.is_empty() {
+                    let mut item_style = if !item_style.dynamic_styles.is_empty() {
                         let mut style = item_style.clone();
                         for enhance in &item_style.dynamic_styles {
                             enhance(&mut style, &resources);
@@ -110,6 +115,21 @@ impl<'a> LayoutInfo<'a> {
                     } else {
                         Cow::Borrowed(item_style)
                     };
+
+                    if let (Some(dynamic_image), Some(mut image_handle)) =
+                        (dynamic_image, image_handle)
+                    {
+                        let image = dynamic_image.get_image(&resources);
+                        *image_handle = image.handle.clone();
+
+                        item_style = Cow::Owned(FlexItemStyle {
+                            transform: Transform::from_2d_scale(
+                                1. / image.width,
+                                1. / image.height,
+                            ),
+                            ..(*item_style).clone()
+                        });
+                    }
 
                     item_map.insert(
                         entity,

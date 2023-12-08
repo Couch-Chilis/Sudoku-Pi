@@ -413,7 +413,7 @@ fn get_radius(screen_sizing: &ScreenSizing, wheel: &Wheel) -> f32 {
     let time_radius = (spawn_timer * 40.).powi(2) / 10.;
     finger_radius
         .max(time_radius)
-        .min(if screen_sizing.is_ipad {
+        .min(if screen_sizing.is_tablet() {
             MAX_RADIUS_IPAD
         } else {
             MAX_RADIUS
@@ -428,7 +428,7 @@ fn get_wheel_center(screen_sizing: &ScreenSizing, wheel: &Wheel, radius: f32) ->
     let mut cx = wheel.start_position.x;
     let cy = wheel.start_position.y;
 
-    if !screen_sizing.is_ipad {
+    if !screen_sizing.is_tablet() {
         let overflow_ratio = 0.9;
 
         if cx + radius > overflow_ratio {

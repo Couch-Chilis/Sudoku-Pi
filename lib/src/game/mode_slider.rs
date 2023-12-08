@@ -28,7 +28,7 @@ pub struct ModeSliderKnob;
 pub struct OppositeSliderKnob;
 
 pub fn build_mode_slider(cb: &mut ChildBuilder, resources: &ResourceBag) {
-    if resources.screen_sizing.is_ipad {
+    if resources.screen_sizing.is_tablet() {
         cb.spawn((
             ModeSlider { active: false },
             FlexBundle::new(
@@ -146,7 +146,7 @@ fn build_knob(
 fn build_label(row: &mut ChildBuilder, resources: &ResourceBag, text: &str, anchor: Anchor) {
     let text_style = TextStyle {
         font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_ipad {
+        font_size: if resources.screen_sizing.is_tablet() {
             64.
         } else {
             48.
@@ -223,12 +223,12 @@ pub fn render_slider_knobs(
         return;
     };
 
-    let slider_width = if screen_sizing.is_ipad {
+    let slider_width = if screen_sizing.is_tablet() {
         0.66 * slider_position.width
     } else {
         slider_position.width
     };
-    let slider_x = if screen_sizing.is_ipad {
+    let slider_x = if screen_sizing.is_tablet() {
         slider_position.x + 0.17 * slider_position.width
     } else {
         slider_position.x

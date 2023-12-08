@@ -101,7 +101,7 @@ fn text_style(resources: &ResourceBag) -> TextStyle {
     TextStyle {
         color: COLOR_SECONDARY_BUTTON_TEXT,
         font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_ipad {
+        font_size: if resources.screen_sizing.is_tablet() {
             72.
         } else {
             50.

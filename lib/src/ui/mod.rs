@@ -1,6 +1,7 @@
 mod buttons;
 mod child_builder_ext;
 mod flex;
+mod images;
 mod interaction;
 mod layout;
 mod props;
@@ -14,6 +15,7 @@ use bevy_tweening::component_animator_system;
 pub use buttons::*;
 pub use child_builder_ext::*;
 pub use flex::*;
+pub use images::*;
 pub use interaction::*;
 pub use props::*;
 pub use style_enhancers::*;

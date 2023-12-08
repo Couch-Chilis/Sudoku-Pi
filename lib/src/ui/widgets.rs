@@ -1,11 +1,11 @@
 use super::{
     buttons::*, child_builder_ext::*, flex::*, interaction::*, props::*, style_enhancers::*,
 };
-use crate::assets::ImageWithDimensions;
-use crate::constants::*;
-use crate::utils::TransformExt;
+use crate::ResourceBag;
+use crate::{assets::*, constants::*, utils::*};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
+use std::sync::Arc;
 
 pub fn primary_button<B>(
     action: impl Bundle,
@@ -127,7 +127,7 @@ where
 
 pub fn column<B>(
     item_styles: impl FlexItemStyleEnhancer,
-    container_styles: impl FlexContainerStyleEnhancer,
+    container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
 ) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
 where
@@ -135,7 +135,7 @@ where
 {
     let mut bundle = FlexBundle::default();
     item_styles.enhance(&mut bundle.item.style);
-    container_styles.enhance(&mut bundle.container.style);
+    container_styles.enhance(&mut bundle.container);
 
     let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
         cb.spawn_with_children(props, child);
@@ -147,7 +147,7 @@ where
 pub fn column_t<B, T>(
     marker: T,
     item_styles: impl FlexItemStyleEnhancer,
-    container_styles: impl FlexContainerStyleEnhancer,
+    container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
 ) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
 where
@@ -160,20 +160,34 @@ where
 }
 
 pub fn container<B>(
-    styles: impl FlexContainerStyleEnhancer,
+    styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
 ) -> (FlexContainerBundle, impl FnOnce(&Props, &mut ChildBuilder))
 where
     B: Bundle,
 {
     let mut bundle = FlexContainerBundle::default();
-    styles.enhance(&mut bundle.style);
+    styles.enhance(&mut bundle);
 
     let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
         cb.spawn_with_children(props, child);
     };
 
     (bundle, spawn_children)
+}
+
+pub fn dynamic_image<T>(dynamic_image: T, styles: impl FlexItemStyleEnhancer) -> impl Bundle
+where
+    T: Fn(&ResourceBag) -> ImageWithDimensions + Send + Sync + 'static,
+{
+    let mut item = FlexItemBundle::default();
+    styles.enhance(&mut item.style);
+
+    let flex_image = FlexImageBundle {
+        dynamic_image: DynamicImage(Arc::new(dynamic_image)),
+    };
+
+    ((item, flex_image), SpriteBundle::default())
 }
 
 pub fn fragment<B1, B2>(
@@ -309,9 +323,21 @@ pub fn leaf(styles: impl FlexItemStyleEnhancer) -> FlexLeafBundle {
     bundle
 }
 
+pub fn rect(color: Color, styles: impl FlexItemStyleEnhancer) -> impl Bundle {
+    let mut item = FlexItemBundle::default();
+    styles.enhance(&mut item.style);
+
+    let sprite = SpriteBundle {
+        sprite: Sprite::from_color(color),
+        ..default()
+    };
+
+    (item, sprite)
+}
+
 pub fn row<B>(
     item_styles: impl FlexItemStyleEnhancer,
-    container_styles: impl FlexContainerStyleEnhancer,
+    container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
 ) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
 where
@@ -320,7 +346,7 @@ where
     let mut bundle = FlexBundle::default();
     bundle.container.style.direction = FlexDirection::Row;
     item_styles.enhance(&mut bundle.item.style);
-    container_styles.enhance(&mut bundle.container.style);
+    container_styles.enhance(&mut bundle.container);
 
     let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
         cb.spawn_with_children(props, child);
@@ -332,7 +358,7 @@ where
 pub fn row_t<B, T>(
     marker: T,
     item_styles: impl FlexItemStyleEnhancer,
-    container_styles: impl FlexContainerStyleEnhancer,
+    container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
 ) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
 where
