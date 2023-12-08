@@ -7,7 +7,7 @@ pub enum SettingsButtonAction {
     Back,
 }
 
-pub fn settings_screen(props: &Props, cb: &mut ChildBuilder) {
+pub fn settings_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
     use SettingsButtonAction::*;
     use SettingsToggle::*;
 
@@ -28,7 +28,7 @@ pub fn settings_screen(props: &Props, cb: &mut ChildBuilder) {
             padding(Sides::vertical(Val::Auto)),
             secondary_button(Back, button_size_settings, text("Back", button_text)),
         ),
-    )(props, cb);
+    )
 }
 
 pub fn settings_screen_button_actions(

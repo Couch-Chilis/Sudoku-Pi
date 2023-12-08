@@ -79,9 +79,9 @@ pub fn settings_toggle(
             ),
             SpriteBundle {
                 texture: if is_enabled {
-                    resources.images.toggle_selected.clone()
+                    resources.images.toggle_selected.handle.clone()
                 } else {
-                    resources.images.toggle_deselected.clone()
+                    resources.images.toggle_deselected.handle.clone()
                 },
                 ..default()
             },
@@ -140,21 +140,21 @@ pub fn render_settings_toggles(
 fn get_animation_images(images: &Images, is_enabled: bool) -> [&Handle<Image>; 6] {
     if is_enabled {
         [
-            &images.toggle_select_1,
-            &images.toggle_select_2,
-            &images.toggle_select_3,
-            &images.toggle_select_4,
-            &images.toggle_select_5,
-            &images.toggle_selected,
+            &images.toggle_select_1.handle,
+            &images.toggle_select_2.handle,
+            &images.toggle_select_3.handle,
+            &images.toggle_select_4.handle,
+            &images.toggle_select_5.handle,
+            &images.toggle_selected.handle,
         ]
     } else {
         [
-            &images.toggle_deselect_1,
-            &images.toggle_deselect_2,
-            &images.toggle_deselect_3,
-            &images.toggle_deselect_4,
-            &images.toggle_deselect_5,
-            &images.toggle_deselected,
+            &images.toggle_deselect_1.handle,
+            &images.toggle_deselect_2.handle,
+            &images.toggle_deselect_3.handle,
+            &images.toggle_deselect_4.handle,
+            &images.toggle_deselect_5.handle,
+            &images.toggle_deselected.handle,
         ]
     }
 }

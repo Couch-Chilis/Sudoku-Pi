@@ -79,7 +79,7 @@ fn build_settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
                 .with_transform(Transform::from_2d_scale(1. / 64., 1. / 64.)),
         ),
         SpriteBundle {
-            texture: resources.images.cog.clone(),
+            texture: resources.images.cog.handle.clone(),
             ..default()
         },
     ));
@@ -243,8 +243,8 @@ pub fn settings_icon_interaction(
 ) {
     for (interaction, mut image) in &mut interaction_query {
         *image = match *interaction {
-            Interaction::Selected => images.cog_pressed.clone(),
-            Interaction::Pressed | Interaction::None => images.cog.clone(),
+            Interaction::Selected => images.cog_pressed.handle.clone(),
+            Interaction::Pressed | Interaction::None => images.cog.handle.clone(),
         };
     }
 }

@@ -19,21 +19,12 @@ pub struct MistakeCellBordersBundle {
 }
 
 pub fn board(screen: ScreenState) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
-    let (bundle, spawn_children) = row(
+    row_t(
+        (Board, screen),
         board_size,
         (),
-        move |props: &Props, cb: &mut ChildBuilder| {
-            draw_lines(cb);
-
-            cb.spawn_with_children(props, board_numbers);
-
-            cb.spawn_with_children(props, wheel(screen));
-
-            place_mistake_borders(cb);
-        },
-    );
-
-    ((Board, screen, bundle), spawn_children)
+        fragment4(board_lines, board_numbers, wheel(screen), mistake_borders()),
+    )
 }
 
 enum Orientation {
@@ -47,30 +38,30 @@ enum Thickness {
     Thick,
 }
 
-fn draw_lines(child_builder: &mut ChildBuilder) {
+fn board_lines(_props: &Props, cb: &mut ChildBuilder) {
     use Orientation::*;
     use Thickness::*;
 
-    child_builder.spawn(line(0, Horizontal, Thick));
-    child_builder.spawn(line(1, Horizontal, Thin));
-    child_builder.spawn(line(2, Horizontal, Thin));
-    child_builder.spawn(line(3, Horizontal, Medium));
-    child_builder.spawn(line(4, Horizontal, Thin));
-    child_builder.spawn(line(5, Horizontal, Thin));
-    child_builder.spawn(line(6, Horizontal, Medium));
-    child_builder.spawn(line(7, Horizontal, Thin));
-    child_builder.spawn(line(8, Horizontal, Thin));
-    child_builder.spawn(line(9, Horizontal, Thick));
-    child_builder.spawn(line(0, Vertical, Thick));
-    child_builder.spawn(line(1, Vertical, Thin));
-    child_builder.spawn(line(2, Vertical, Thin));
-    child_builder.spawn(line(3, Vertical, Medium));
-    child_builder.spawn(line(4, Vertical, Thin));
-    child_builder.spawn(line(5, Vertical, Thin));
-    child_builder.spawn(line(6, Vertical, Medium));
-    child_builder.spawn(line(7, Vertical, Thin));
-    child_builder.spawn(line(8, Vertical, Thin));
-    child_builder.spawn(line(9, Vertical, Thick));
+    cb.spawn(line(0, Horizontal, Thick));
+    cb.spawn(line(1, Horizontal, Thin));
+    cb.spawn(line(2, Horizontal, Thin));
+    cb.spawn(line(3, Horizontal, Medium));
+    cb.spawn(line(4, Horizontal, Thin));
+    cb.spawn(line(5, Horizontal, Thin));
+    cb.spawn(line(6, Horizontal, Medium));
+    cb.spawn(line(7, Horizontal, Thin));
+    cb.spawn(line(8, Horizontal, Thin));
+    cb.spawn(line(9, Horizontal, Thick));
+    cb.spawn(line(0, Vertical, Thick));
+    cb.spawn(line(1, Vertical, Thin));
+    cb.spawn(line(2, Vertical, Thin));
+    cb.spawn(line(3, Vertical, Medium));
+    cb.spawn(line(4, Vertical, Thin));
+    cb.spawn(line(5, Vertical, Thin));
+    cb.spawn(line(6, Vertical, Medium));
+    cb.spawn(line(7, Vertical, Thin));
+    cb.spawn(line(8, Vertical, Thin));
+    cb.spawn(line(9, Vertical, Thick));
 }
 
 fn line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
@@ -103,19 +94,21 @@ fn line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
     }
 }
 
-fn place_mistake_borders(child_builder: &mut ChildBuilder) {
-    child_builder
-        .spawn(MistakeCellBordersBundle {
-            transform: Transform::from_translation(Vec3::new(0., 0., 8.)),
-            visibility: Visibility::Hidden,
-            ..default()
-        })
-        .with_children(|parent| {
-            parent.spawn(mistake_line(-0.5, Orientation::Horizontal));
-            parent.spawn(mistake_line(0.5, Orientation::Horizontal));
-            parent.spawn(mistake_line(-0.5, Orientation::Vertical));
-            parent.spawn(mistake_line(0.5, Orientation::Vertical));
-        });
+fn mistake_borders() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    let bundle = MistakeCellBordersBundle {
+        transform: Transform::from_translation(Vec3::new(0., 0., 8.)),
+        visibility: Visibility::Hidden,
+        ..default()
+    };
+
+    let spawn_children = fragment4(
+        mistake_line(-0.5, Orientation::Horizontal),
+        mistake_line(0.5, Orientation::Horizontal),
+        mistake_line(-0.5, Orientation::Vertical),
+        mistake_line(0.5, Orientation::Vertical),
+    );
+
+    (bundle, spawn_children)
 }
 
 fn mistake_line(edge: f32, orientation: Orientation) -> impl Bundle {

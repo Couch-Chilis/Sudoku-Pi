@@ -35,8 +35,8 @@ pub struct StatTextMarker {
     kind: StatKind,
 }
 
-impl StatTextMarker {
-    fn new(kind: StatKind) -> Self {
+impl From<StatKind> for StatTextMarker {
+    fn from(kind: StatKind) -> Self {
         Self { kind }
     }
 }
@@ -155,70 +155,52 @@ pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
             });
     });
 
-    cb.spawn(FlexBundle::new(
-        FlexItemStyle::fixed_size(
-            Val::Percent(100.),
-            Val::CrossPercent(if resources.screen_sizing.is_ipad {
-                59.8
-            } else {
-                102.5
-            }),
-        ),
-        FlexContainerStyle::row(),
-    ))
-    .with_children(|wall_section| {
-        // Wall.
-        wall_section.spawn((
-            FlexItemBundle::from_style(
-                FlexItemStyle::available_size()
-                    .without_occupying_space()
-                    .with_transform(if resources.screen_sizing.is_ipad {
-                        Transform::from_2d_scale(1. / 2503., 1. / 1497.)
-                    } else {
-                        Transform::from_2d_scale(1. / 780., 1. / 797.)
-                    }),
-            ),
-            SpriteBundle {
-                texture: if resources.screen_sizing.is_ipad {
-                    resources.images.wall_ipad.clone()
+    cb.spawn_with_children(
+        props,
+        row(
+            fixed_size(
+                Val::Percent(100.),
+                Val::CrossPercent(if resources.screen_sizing.is_ipad {
+                    59.8
                 } else {
-                    resources.images.wall.clone()
-                },
-                ..default()
-            },
-        ));
-
-        let _spacer = wall_section.spawn(FlexItemBundle::from_style(
-            FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(18.8))
-                .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-        ));
-
-        let padding = if resources.screen_sizing.is_ipad {
-            Sides {
-                top: Val::Percent(32.),
-                right: Val::Percent(27.),
-                bottom: Val::Percent(12.),
-                left: Val::Percent(27.),
-            }
-        } else {
-            Sides {
-                top: Val::Percent(30.),
-                right: Val::Percent(15.),
-                bottom: Val::Percent(10.),
-                left: Val::Percent(15.),
-            }
-        };
-        wall_section
-            .spawn((
-                StatsContainer,
-                FlexBundle::new(
-                    FlexItemStyle::available_size()
-                        .with_transform(Transform::from_translation(Vec3::new(0., 0., 2.))),
-                    FlexContainerStyle::column().with_padding(padding),
+                    102.5
+                }),
+            ),
+            (),
+            fragment(
+                // Wall background.
+                image(
+                    if resources.screen_sizing.is_ipad {
+                        resources.images.wall_ipad.clone()
+                    } else {
+                        resources.images.wall.clone()
+                    },
+                    (available_size, without_occupying_space),
                 ),
-            ))
-            .with_children(|cb| render_scores(props, cb));
-    });
+                // Score board.
+                column_t(
+                    StatsContainer,
+                    (available_size, translation(Vec3::new(0., 0., 2.))),
+                    padding(if resources.screen_sizing.is_ipad {
+                        Sides {
+                            top: Val::Percent(32.),
+                            right: Val::Percent(27.),
+                            bottom: Val::Percent(12.),
+                            left: Val::Percent(27.),
+                        }
+                    } else {
+                        Sides {
+                            top: Val::Percent(30.),
+                            right: Val::Percent(15.),
+                            bottom: Val::Percent(10.),
+                            left: Val::Percent(15.),
+                        }
+                    }),
+                    scores(props),
+                ),
+            ),
+        ),
+    );
 
     cb.spawn(FlexBundle::new(
         FlexItemStyle::available_size(),
@@ -304,84 +286,57 @@ fn get_stat_text(props: &Props, kind: StatKind) -> String {
     }
 }
 
-fn render_scores(props: &Props, cb: &mut ChildBuilder) {
-    let mut create_row = |marker: StatTextMarker, label: &str| {
-        create_stat_row(props, cb, marker, label);
-    };
-
-    create_row(StatTextMarker::new(StatKind::Score), "Score:");
-    create_row(StatTextMarker::new(StatKind::Time), "Time:");
-    create_row(StatTextMarker::new(StatKind::Mistakes), "Mistakes:");
-    create_row(StatTextMarker::new(StatKind::Hints), "Hints:");
-
-    let _spacer = cb.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
-
-    let mut create_row = |marker: StatTextMarker, label: &str| {
-        create_stat_row(props, cb, marker, label);
-    };
-
-    create_row(
-        StatTextMarker::new(StatKind::HighestScore),
-        "Highest score:",
-    );
-    create_row(StatTextMarker::new(StatKind::BestTime), "Best time:");
+fn scores(props: &Props) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    fragment7(
+        stat_row(props, StatKind::Score, "Score:"),
+        stat_row(props, StatKind::Time, "Time:"),
+        stat_row(props, StatKind::Mistakes, "Mistakes:"),
+        stat_row(props, StatKind::Hints, "Hints:"),
+        leaf(available_size),
+        stat_row(props, StatKind::HighestScore, "Highest score:"),
+        stat_row(props, StatKind::BestTime, "Best time:"),
+    )
 }
 
-fn create_stat_row(props: &Props, cb: &mut ChildBuilder, marker: StatTextMarker, label: &str) {
-    let resources = &props.resources;
-
-    let font_size = if resources.screen_sizing.is_ipad {
-        60.
+fn stat_row(
+    props: &Props,
+    kind: StatKind,
+    label: &str,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    let font = if matches!(kind, StatKind::HighestScore | StatKind::BestTime) {
+        font_bold
     } else {
-        44.
-    };
-    let font = if matches!(marker.kind, StatKind::HighestScore | StatKind::BestTime) {
-        resources.fonts.bold.clone()
-    } else {
-        resources.fonts.medium.clone()
+        font_medium
     };
 
-    cb.spawn(FlexBundle::new(
-        FlexItemStyle::available_size(),
-        FlexContainerStyle::row(),
-    ))
-    .with_children(|row| {
-        row.spawn(FlexBundle::from_item_style(FlexItemStyle::preferred_size(
-            Val::Percent(50.),
-            Val::Percent(100.),
-        )))
-        .with_children(|left| {
-            let style = TextStyle {
-                font: font.clone(),
-                font_size,
-                color: COLOR_MAIN_DARKER,
-            };
-
-            left.spawn(
-                FlexTextBundle::from_text(Text::from_section(label, style))
-                    .with_anchor(Anchor::CenterRight),
-            );
-        });
-
-        row.spawn(FlexBundle::from_item_style(
-            FlexItemStyle::preferred_size(Val::Percent(40.), Val::Percent(100.))
-                .with_margin(Size::new(Val::Percent(5.), Val::None)),
-        ))
-        .with_children(|right| {
-            let value = get_stat_text(props, marker.kind);
-            let style = TextStyle {
-                font,
-                font_size,
-                color: COLOR_POP_FOCUS,
-            };
-
-            right.spawn((
-                marker,
-                FlexTextBundle::from_text(Text::from_section(value, style))
-                    .with_anchor(Anchor::CenterLeft),
-            ));
-        });
-    });
+    row(
+        available_size,
+        (),
+        fragment(
+            row(
+                preferred_size(Val::Percent(50.), Val::Percent(100.)),
+                (),
+                text_with_anchor(
+                    label.to_owned(),
+                    Anchor::CenterRight,
+                    (button_text_size, font, text_color(COLOR_MAIN_DARKER)),
+                ),
+            ),
+            row(
+                (
+                    preferred_size(Val::Percent(40.), Val::Percent(100.)),
+                    margin(Size::new(Val::Percent(5.), Val::None)),
+                ),
+                (),
+                text_with_anchor_t(
+                    StatTextMarker::from(kind),
+                    get_stat_text(props, kind),
+                    Anchor::CenterLeft,
+                    (button_text_size, font, text_color(COLOR_POP_FOCUS)),
+                ),
+            ),
+        ),
+    )
 }
 
 pub fn on_fortune(

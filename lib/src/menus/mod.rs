@@ -3,7 +3,7 @@ mod main_menu;
 mod settings_menu;
 mod settings_toggle;
 
-use crate::{ui::*, utils::*, ScreenInteraction, ScreenState};
+use crate::{ui::*, ScreenInteraction, ScreenState};
 use bevy::prelude::*;
 use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
 use difficulty_menu::*;
@@ -14,6 +14,7 @@ use smallvec::smallvec;
 use std::f32::consts::PI;
 use std::time::Duration;
 
+use crate::resource_bag::ResourceBag;
 pub use settings_menu::settings_screen;
 pub use settings_toggle::SettingsToggleTimer;
 
@@ -42,91 +43,68 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu(props: &Props, cb: &mut ChildBuilder) {
-    // Logo.
-    cb.spawn((
-        FlexItemBundle::from_style(
-            FlexItemStyle::fixed_size(Val::CrossPercent(46.19), Val::Percent(100.))
-                .with_fixed_aspect_ratio()
-                .without_occupying_space()
-                .with_transform(Transform::from_2d_scale(1. / 1170., 1. / 2533.)),
-        ),
-        SpriteBundle {
-            texture: if props.resources.screen_sizing.is_ipad {
-                props.resources.images.launch_screen_ipad.clone()
+pub fn menu_screen(resources: &ResourceBag) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    fragment4(
+        // Logo.
+        image(
+            if resources.screen_sizing.is_ipad {
+                resources.images.launch_screen_ipad.clone()
             } else {
-                props.resources.images.launch_screen.clone()
+                resources.images.launch_screen.clone()
             },
-            ..default()
-        },
-    ));
-
-    // Spacer.
-    cb.spawn_with_children(
-        props,
+            (
+                fixed_size(Val::CrossPercent(46.19), Val::Percent(100.)),
+                fixed_aspect_ratio,
+                without_occupying_space,
+            ),
+        ),
+        // Spacer.
         leaf((
             fixed_size(Val::Percent(100.), Val::Percent(50.)),
             translation(Vec3::new(0., 0., 2.)),
         )),
-    );
-
-    // Main menu buttons.
-    cb.spawn_with_children(
-        props,
+        // Main menu buttons.
         button_section(ScreenState::MainMenu, 0., 2., main_menu_buttons),
-    );
-
-    // Difficulty buttons.
-    cb.spawn_with_children(
-        props,
+        // Difficulty buttons.
         button_section(
             ScreenState::SelectDifficulty,
             -0.5 * PI,
             3.,
             difficulty_menu_buttons(),
         ),
-    );
+    )
 }
 
 fn button_section(
     screen_state: ScreenState,
     initial_rotation: f32,
     z_index: f32,
-    children: impl FnOnce(&Props, &mut ChildBuilder),
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    move |props, cb| {
-        cb.spawn((
-            ButtonSection {
-                initial_rotation,
-                current_rotation: initial_rotation,
+    children: impl FnOnce(&Props, &mut ChildBuilder) + 'static,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    column_t(
+        ButtonSection {
+            initial_rotation,
+            current_rotation: initial_rotation,
+        },
+        (
+            available_size,
+            without_occupying_space,
+            transform(Transform {
+                rotation: Quat::from_rotation_z(initial_rotation),
+                translation: Vec3::new(0., -1., z_index),
+                ..default()
+            }),
+        ),
+        padding(Sides::all(Val::Vmin(10.))),
+        column_t(
+            ScreenInteraction {
+                screens: smallvec![screen_state],
             },
-            FlexBundle::new(
-                FlexItemStyle::available_size()
-                    .without_occupying_space()
-                    .with_transform(Transform {
-                        rotation: Quat::from_rotation_z(initial_rotation),
-                        translation: Vec3::new(0., -1., z_index),
-                        ..default()
-                    }),
-                FlexContainerStyle::default().with_padding(Sides::all(Val::Vmin(10.))),
-            ),
-        ))
-        .with_children(|main_section_rotation_axis| {
-            main_section_rotation_axis
-                .spawn((
-                    ScreenInteraction {
-                        screens: smallvec![screen_state],
-                    },
-                    FlexBundle::from_item_style(FlexItemStyle::available_size().with_transform(
-                        Transform {
-                            translation: Vec3::new(0., 2., 1.),
-                            ..default()
-                        },
-                    )),
-                ))
-                .with_children(|cb| children(props, cb));
-        });
-    }
+            (available_size, translation(Vec3::new(0., 2., 1.))),
+            (),
+            children,
+        ),
+    )
 }
 
 fn on_screen_change(

@@ -80,10 +80,21 @@ pub fn button_size_settings(style: &mut FlexItemStyle) {
 }
 
 pub fn button_text(text: &mut Text, resources: &ResourceBag) {
-    let style = &mut text.sections[0].style;
-    style.font = resources.fonts.medium.clone();
-    style.color = COLOR_BUTTON_TEXT;
-    style.font_size = if resources.screen_sizing.is_ipad {
+    button_text_color(text, resources);
+    button_text_font(text, resources);
+    button_text_size(text, resources);
+}
+
+pub fn button_text_color(text: &mut Text, _resources: &ResourceBag) {
+    text.sections[0].style.color = COLOR_BUTTON_TEXT;
+}
+
+pub fn button_text_font(text: &mut Text, resources: &ResourceBag) {
+    text.sections[0].style.font = resources.fonts.medium.clone();
+}
+
+pub fn button_text_size(text: &mut Text, resources: &ResourceBag) {
+    text.sections[0].style.font_size = if resources.screen_sizing.is_ipad {
         66.
     } else {
         44.
@@ -111,6 +122,12 @@ pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
 pub fn font_size(font_size: f32) -> impl FnOnce(&mut Text, &ResourceBag) {
     move |text: &mut Text, _resources: &ResourceBag| {
         text.sections[0].style.font_size = font_size;
+    }
+}
+
+pub fn margin(margin: Size) -> impl FnOnce(&mut FlexItemStyle) {
+    move |style: &mut FlexItemStyle| {
+        style.margin = margin;
     }
 }
 
@@ -170,10 +187,14 @@ pub fn text_color(color: Color) -> impl FnOnce(&mut Text, &ResourceBag) {
     }
 }
 
-pub fn translation(translation: Vec3) -> impl FnOnce(&mut FlexItemStyle) {
+pub fn transform(transform: Transform) -> impl FnOnce(&mut FlexItemStyle) {
     move |style: &mut FlexItemStyle| {
-        style.transform = Transform::from_translation(translation);
+        style.transform = transform;
     }
+}
+
+pub fn translation(translation: Vec3) -> impl FnOnce(&mut FlexItemStyle) {
+    transform(Transform::from_translation(translation))
 }
 
 pub fn without_occupying_space(style: &mut FlexItemStyle) {

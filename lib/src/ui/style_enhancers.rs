@@ -60,6 +60,19 @@ where
     }
 }
 
+impl<T, U, V> FlexItemStyleEnhancer for (T, U, V)
+where
+    T: FlexItemStyleEnhancer,
+    U: FlexItemStyleEnhancer,
+    V: FlexItemStyleEnhancer,
+{
+    fn enhance(self, style: &mut FlexItemStyle) {
+        self.0.enhance(style);
+        self.1.enhance(style);
+        self.2.enhance(style);
+    }
+}
+
 /// Trait that defines enhancers for [TextStyle].
 pub trait TextEnhancer: Sized {
     fn enhance(self, text: &mut Text, resources: &ResourceBag);

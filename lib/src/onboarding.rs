@@ -101,7 +101,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
         row(
             preferred_size(Val::Percent(100.), Val::Pixel(80)),
             (),
-            text_with_marker(
+            text_t(
                 OnboardingNumberInstruction,
                 INITIAL_NUMBER_INSTRUCTION,
                 (
@@ -118,7 +118,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
         row(
             preferred_size(Val::Percent(100.), Val::Pixel(80)),
             (),
-            text_with_marker(
+            text_t(
                 OnboardingNumberHint,
                 "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
                 (
@@ -162,7 +162,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             row(
                 preferred_size(Val::Percent(100.), Val::Pixel(80)),
                 (),
-                text_with_marker(
+                text_t(
                     OnboardingNotesInstruction,
                     INITIAL_NOTES_INSTRUCTION,
                     (
@@ -179,7 +179,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             row(
                 preferred_size(Val::Percent(100.), Val::Pixel(80)),
                 (),
-                text_with_marker(
+                text_t(
                     OnboardingNotesHint,
                     "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
                     (

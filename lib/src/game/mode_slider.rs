@@ -95,7 +95,7 @@ fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {
                 .with_transform(Transform::from_2d_scale(1. / 1282., 1. / 118.)),
         ),
         SpriteBundle {
-            texture: resources.images.mode_slider.clone(),
+            texture: resources.images.mode_slider.handle.clone(),
             ..default()
         },
     ));
@@ -104,14 +104,14 @@ fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {
 fn build_knobs(row: &mut ChildBuilder, resources: &ResourceBag) {
     build_knob(
         row,
-        &resources.images.pop_dark_circle,
+        &resources.images.pop_dark_circle.handle,
         ModeSliderKnob,
         0.,
         ACTIVE_KNOB_Z,
     );
     build_knob(
         row,
-        &resources.images.board_line_thin_circle,
+        &resources.images.board_line_thin_circle.handle,
         OppositeSliderKnob,
         0.91,
         INACTIVE_KNOB_Z,

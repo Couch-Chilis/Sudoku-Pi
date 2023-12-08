@@ -45,15 +45,15 @@ impl ActiveSliceHandles {
     pub fn load(images: &Images) -> Self {
         Self {
             slices: [
-                images.slice_active_1.clone(),
-                images.slice_active_2.clone(),
-                images.slice_active_3.clone(),
-                images.slice_active_4.clone(),
-                images.slice_active_5.clone(),
-                images.slice_active_6.clone(),
-                images.slice_active_7.clone(),
-                images.slice_active_8.clone(),
-                images.slice_active_9.clone(),
+                images.slice_active_1.handle.clone(),
+                images.slice_active_2.handle.clone(),
+                images.slice_active_3.handle.clone(),
+                images.slice_active_4.handle.clone(),
+                images.slice_active_5.handle.clone(),
+                images.slice_active_6.handle.clone(),
+                images.slice_active_7.handle.clone(),
+                images.slice_active_8.handle.clone(),
+                images.slice_active_9.handle.clone(),
             ],
         }
     }
@@ -69,7 +69,7 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
             Wheel::default(),
             screen,
             SpriteBundle {
-                texture: props.resources.images.wheel.clone(),
+                texture: props.resources.images.wheel.handle.clone(),
                 transform: Transform::from_2d_scale(0., 0.),
                 ..default()
             },
@@ -110,7 +110,7 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
             TopLabel,
             screen,
             SpriteBundle {
-                texture: props.resources.images.top_label.clone(),
+                texture: props.resources.images.top_label.handle.clone(),
                 transform: Transform::from_2d_scale(0., 0.),
                 ..default()
             },
@@ -130,15 +130,15 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
 
 fn get_disabled_slice_handles(images: &Images) -> [&Handle<Image>; 9] {
     [
-        &images.slice_disabled_1,
-        &images.slice_disabled_2,
-        &images.slice_disabled_3,
-        &images.slice_disabled_4,
-        &images.slice_disabled_5,
-        &images.slice_disabled_6,
-        &images.slice_disabled_7,
-        &images.slice_disabled_8,
-        &images.slice_disabled_9,
+        &images.slice_disabled_1.handle,
+        &images.slice_disabled_2.handle,
+        &images.slice_disabled_3.handle,
+        &images.slice_disabled_4.handle,
+        &images.slice_disabled_5.handle,
+        &images.slice_disabled_6.handle,
+        &images.slice_disabled_7.handle,
+        &images.slice_disabled_8.handle,
+        &images.slice_disabled_9.handle,
     ]
 }
 

@@ -1,8 +1,11 @@
 use super::{
     buttons::*, child_builder_ext::*, flex::*, interaction::*, props::*, style_enhancers::*,
 };
+use crate::assets::ImageWithDimensions;
 use crate::constants::*;
+use crate::utils::TransformExt;
 use bevy::prelude::*;
+use bevy::sprite::Anchor;
 
 pub fn primary_button<B>(
     action: impl Bundle,
@@ -141,6 +144,21 @@ where
     (bundle, spawn_children)
 }
 
+pub fn column_t<B, T>(
+    marker: T,
+    item_styles: impl FlexItemStyleEnhancer,
+    container_styles: impl FlexContainerStyleEnhancer,
+    child: impl Into<BundleWithChildren<B>>,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+where
+    B: Bundle,
+    T: Bundle,
+{
+    let (bundle, spawn_children) = column(item_styles, container_styles, child);
+
+    ((bundle, marker), spawn_children)
+}
+
 pub fn container<B>(
     styles: impl FlexContainerStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
@@ -156,6 +174,20 @@ where
     };
 
     (bundle, spawn_children)
+}
+
+pub fn fragment<B1, B2>(
+    child1: impl Into<BundleWithChildren<B1>>,
+    child2: impl Into<BundleWithChildren<B2>>,
+) -> impl FnOnce(&Props, &mut ChildBuilder)
+where
+    B1: Bundle,
+    B2: Bundle,
+{
+    |props, cb| {
+        cb.spawn_with_children(props, child1);
+        cb.spawn_with_children(props, child2);
+    }
 }
 
 pub fn fragment3<B1, B2, B3>(
@@ -218,6 +250,48 @@ where
     }
 }
 
+pub fn fragment7<B1, B2, B3, B4, B5, B6, B7>(
+    child1: impl Into<BundleWithChildren<B1>>,
+    child2: impl Into<BundleWithChildren<B2>>,
+    child3: impl Into<BundleWithChildren<B3>>,
+    child4: impl Into<BundleWithChildren<B4>>,
+    child5: impl Into<BundleWithChildren<B5>>,
+    child6: impl Into<BundleWithChildren<B6>>,
+    child7: impl Into<BundleWithChildren<B7>>,
+) -> impl FnOnce(&Props, &mut ChildBuilder)
+where
+    B1: Bundle,
+    B2: Bundle,
+    B3: Bundle,
+    B4: Bundle,
+    B5: Bundle,
+    B6: Bundle,
+    B7: Bundle,
+{
+    |props, cb| {
+        cb.spawn_with_children(props, child1);
+        cb.spawn_with_children(props, child2);
+        cb.spawn_with_children(props, child3);
+        cb.spawn_with_children(props, child4);
+        cb.spawn_with_children(props, child5);
+        cb.spawn_with_children(props, child6);
+        cb.spawn_with_children(props, child7);
+    }
+}
+
+pub fn image(image: ImageWithDimensions, styles: impl FlexItemStyleEnhancer) -> impl Bundle {
+    let mut item = FlexItemBundle::default();
+    styles.enhance(&mut item.style);
+    item.style.transform = Transform::from_2d_scale(1. / image.width, 1. / image.height);
+
+    let sprite = SpriteBundle {
+        texture: image.handle,
+        ..default()
+    };
+
+    (item, sprite)
+}
+
 pub fn leaf(styles: impl FlexItemStyleEnhancer) -> FlexLeafBundle {
     let mut bundle = FlexLeafBundle::default();
     styles.enhance(&mut bundle.flex.style);
@@ -244,11 +318,34 @@ where
     (bundle, spawn_children)
 }
 
+pub fn row_t<B, T>(
+    marker: T,
+    item_styles: impl FlexItemStyleEnhancer,
+    container_styles: impl FlexContainerStyleEnhancer,
+    child: impl Into<BundleWithChildren<B>>,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+where
+    B: Bundle,
+    T: Bundle,
+{
+    let (bundle, spawn_children) = row(item_styles, container_styles, child);
+
+    ((bundle, marker), spawn_children)
+}
+
 pub fn text(
     text: impl Into<String>,
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildBuilder) {
     text_with_bundle_enhancer(text, styles, |_bundle| {})
+}
+
+pub fn text_with_anchor(
+    text: impl Into<String>,
+    anchor: Anchor,
+    styles: impl TextEnhancer,
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    text_with_bundle_enhancer(text, styles, move |text| text.text_anchor = anchor)
 }
 
 pub fn text_with_bundle_enhancer(
@@ -264,15 +361,24 @@ pub fn text_with_bundle_enhancer(
     }
 }
 
-pub fn text_with_marker(
+pub fn text_t(
     marker: impl Bundle,
     text: impl Into<String>,
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    text_with_marker_and_bundle_enhancer(marker, text, styles, |_bundle| {})
+    text_with_bundle_enhancer_t(marker, text, styles, |_bundle| {})
 }
 
-pub fn text_with_marker_and_bundle_enhancer(
+pub fn text_with_anchor_t(
+    marker: impl Bundle,
+    text: impl Into<String>,
+    anchor: Anchor,
+    styles: impl TextEnhancer,
+) -> impl FnOnce(&Props, &mut ChildBuilder) {
+    text_with_bundle_enhancer_t(marker, text, styles, move |text| text.text_anchor = anchor)
+}
+
+pub fn text_with_bundle_enhancer_t(
     marker: impl Bundle,
     text: impl Into<String>,
     styles: impl TextEnhancer,

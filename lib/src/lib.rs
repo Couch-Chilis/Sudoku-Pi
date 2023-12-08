@@ -27,7 +27,7 @@ use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
 use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
 use game::{game_screen, highscore_screen, ActiveSliceHandles};
 use highscores::Highscores;
-use menus::{menu, settings_screen, SettingsToggleTimer};
+use menus::{menu_screen, settings_screen, SettingsToggleTimer};
 use onboarding::*;
 use resource_bag::ResourceBag;
 use settings::Settings;
@@ -274,10 +274,10 @@ fn setup(
     let resources = &props.resources;
 
     use ScreenState::*;
-    commands.spawn_with_children(&props, screen(MainMenu, resources, menu));
+    commands.spawn_with_children(&props, screen(MainMenu, resources, menu_screen(resources)));
     commands.spawn_with_children(&props, screen(Game, resources, game_screen));
     commands.spawn_with_children(&props, screen(Highscores, resources, highscore_screen));
-    commands.spawn_with_children(&props, screen(Settings, resources, settings_screen));
+    commands.spawn_with_children(&props, screen(Settings, resources, settings_screen()));
     commands.spawn_with_children(&props, screen(Welcome, resources, welcome_screen()));
     commands.spawn_with_children(&props, screen(LearnNotes, resources, learn_notes_screen()));
     commands.spawn_with_children(

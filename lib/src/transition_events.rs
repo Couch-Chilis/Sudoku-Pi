@@ -30,7 +30,7 @@ pub fn on_transition(
             ContinueGame => {
                 *selection = Selection::new_for_game(&game);
                 mode_state.set(ModeState::Normal);
-                screen_state.set(ScreenState::Game);
+                screen_state.set(ScreenState::Highscores);
             }
             Exit => match current_state.get() {
                 ScreenState::MainMenu => app_exit_events.send(AppExit),
