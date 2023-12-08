@@ -132,7 +132,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
 
         row(
             available_size,
-            padding(Sides::vertical(Val::Auto)),
+            padding(Sides::all(Val::Auto)),
             primary_button(
                 OnboardingScreenAction::HowToPlayNotes,
                 button_size_settings,
@@ -193,7 +193,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
 
             row(
                 available_size,
-                padding(Sides::vertical(Val::Auto)),
+                padding(Sides::all(Val::Auto)),
                 primary_button(
                     OnboardingScreenAction::FinishOnboarding,
                     button_size_settings,

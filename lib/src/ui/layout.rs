@@ -22,7 +22,7 @@ type FlexEntity<'a> = (
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
 type ItemMapEntry<'a> = (
-    &'a FlexItemStyle,
+    Cow<'a, FlexItemStyle>,
     Mut<'a, ComputedPosition>,
     Mut<'a, Transform>,
     Option<&'a ScreenInteraction>,
@@ -49,8 +49,9 @@ pub(crate) fn layout_system(
 }
 
 fn layout(flex_query: &mut FlexQuery, resource_tuple: &ResourceTuple) {
-    let mut layout_info = LayoutInfo::from_query(flex_query);
-    layout_info.apply(&ResourceBag::from_tuple(resource_tuple));
+    let mut layout_info =
+        LayoutInfo::from_query(flex_query, ResourceBag::from_tuple(resource_tuple));
+    layout_info.apply();
 }
 
 struct LayoutInfo<'a> {
@@ -58,10 +59,11 @@ struct LayoutInfo<'a> {
     container_map: BTreeMap<Entity, (&'a Children, &'a FlexContainerStyle)>,
     item_map: BTreeMap<Entity, ItemMapEntry<'a>>,
     text_map: BTreeMap<Entity, TextMapEntry<'a>>,
+    resources: ResourceBag<'a>,
 }
 
 impl<'a> LayoutInfo<'a> {
-    fn from_query(flex_query: &'a mut FlexQuery) -> Self {
+    fn from_query(flex_query: &'a mut FlexQuery, resources: ResourceBag<'a>) -> Self {
         let mut screens = Vec::new();
         let mut container_map = BTreeMap::new();
         let mut item_map = BTreeMap::new();
@@ -99,6 +101,16 @@ impl<'a> LayoutInfo<'a> {
                     );
                 }
                 (_, _, _, Some(item_style), Some(computed_position)) => {
+                    let item_style = if !item_style.dynamic_styles.is_empty() {
+                        let mut style = item_style.clone();
+                        for enhance in &item_style.dynamic_styles {
+                            enhance(&mut style, &resources);
+                        }
+                        Cow::Owned(style)
+                    } else {
+                        Cow::Borrowed(item_style)
+                    };
+
                     item_map.insert(
                         entity,
                         (item_style, computed_position, transform, screen_interaction),
@@ -113,10 +125,11 @@ impl<'a> LayoutInfo<'a> {
             container_map,
             item_map,
             text_map,
+            resources,
         }
     }
 
-    fn apply(&mut self, resources: &ResourceBag) {
+    fn apply(&mut self) {
         for (entity, screen_state, width, height) in self.screens.clone() {
             let position = ComputedPosition {
                 width,
@@ -125,7 +138,7 @@ impl<'a> LayoutInfo<'a> {
                 x: 0.,
                 y: 0.,
             };
-            self.apply_container(entity, position, resources, (width, height));
+            self.apply_container(entity, position, (width, height));
         }
     }
 
@@ -133,7 +146,6 @@ impl<'a> LayoutInfo<'a> {
         &mut self,
         entity: Entity,
         position: ComputedPosition,
-        resources: &ResourceBag,
         screen_size: (f32, f32),
     ) {
         let Some((children, container_style)) = self.container_map.remove(&entity) else {
@@ -218,7 +230,7 @@ impl<'a> LayoutInfo<'a> {
 
         for item_entity in children {
             if let Some(text_entry) = self.text_map.remove(item_entity) {
-                position_text(text_entry, &position, resources);
+                self.position_text(text_entry, &position);
                 continue;
             }
 
@@ -226,16 +238,6 @@ impl<'a> LayoutInfo<'a> {
                 self.item_map.remove(item_entity)
             else {
                 continue;
-            };
-
-            let item_style = if !item_style.dynamic_styles.is_empty() {
-                let mut style = item_style.clone();
-                for enhance in &item_style.dynamic_styles {
-                    enhance(&mut style, resources);
-                }
-                Cow::Owned(style)
-            } else {
-                Cow::Borrowed(item_style)
             };
 
             // Start by assuming the base size.
@@ -407,31 +409,31 @@ impl<'a> LayoutInfo<'a> {
             }
 
             // Apply recursively in case the child item is also a container.
-            self.apply_container(*item_entity, item_position, resources, screen_size);
+            self.apply_container(*item_entity, item_position, screen_size);
         }
     }
-}
 
-fn position_text(
-    (anchor, mut text, text_style, mut transform, mut computed_position): TextMapEntry,
-    position: &ComputedPosition,
-    resources: &ResourceBag,
-) {
-    let ComputedPosition { width, height, .. } = position;
+    fn position_text(
+        &self,
+        (anchor, mut text, text_style, mut transform, mut computed_position): TextMapEntry,
+        position: &ComputedPosition,
+    ) {
+        let ComputedPosition { width, height, .. } = position;
 
-    transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
-    transform.translation = Vec3::new(
-        match anchor {
-            Anchor::CenterLeft | Anchor::BottomLeft | Anchor::TopLeft => -0.5,
-            Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
-            _ => 0.,
-        },
-        0.,
-        1.,
-    );
+        transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
+        transform.translation = Vec3::new(
+            match anchor {
+                Anchor::CenterLeft | Anchor::BottomLeft | Anchor::TopLeft => -0.5,
+                Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
+                _ => 0.,
+            },
+            0.,
+            1.,
+        );
 
-    *computed_position = position.transformed(transform.scale, transform.translation);
-    for enhance in &text_style.dynamic_styles {
-        enhance(&mut text.sections[0].style, resources);
+        *computed_position = position.transformed(transform.scale, transform.translation);
+        for enhance in &text_style.dynamic_styles {
+            enhance(&mut text.sections[0].style, &self.resources);
+        }
     }
 }
