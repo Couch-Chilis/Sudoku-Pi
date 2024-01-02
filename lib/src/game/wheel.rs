@@ -9,7 +9,12 @@ const MAX_RADIUS: f32 = 0.6;
 const MAX_RADIUS_IPAD: f32 = 0.4;
 const WHEEL_SIZE: f32 = 400.;
 const WHEEL_Z: f32 = 10.;
-pub const NOTES_MODE_OPEN_DELAY: f32 = 0.6;
+
+/// Delay in seconds until the wheel is opened.
+///
+/// This delay is used when in notes mode, as well as for cells with filled-in
+/// numbers when reveal mistakes is disabled.
+pub const WHEEL_OPEN_DELAY: f32 = 0.6;
 
 #[derive(Component, Default)]
 pub struct Wheel {
@@ -18,7 +23,7 @@ pub struct Wheel {
     pub start_position: Vec2,
     pub current_position: Vec2,
     pub is_open: bool,
-    pub mode: ModeState,
+    pub open_with_delay: bool,
     pub spawn_timer: f32,
     pub selected_number: Option<NonZeroU8>,
     pub slice_timer: f32,
@@ -194,41 +199,29 @@ pub fn on_wheel_input(
                 };
 
                 if should_open {
+                    let mode = *mode.get();
+
                     wheel.center_position = translation;
                     wheel.start_position = translation;
                     wheel.cell = (x, y);
                     wheel.spawn_timer = 0.;
                     wheel.is_open = true;
                     wheel.selected_number = None;
-                    wheel.mode = *mode.get();
+                    wheel.open_with_delay = should_open_with_delay(x, y, mode, &game);
                 }
             }
         }
         InputKind::PressedMovement => {
             if wheel.is_open {
-                // In notes mode, the wheel only opens after a long press,
-                // so we cancel opening if there's movement during the delay.
-                if wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY {
+                if wheel.open_with_delay && wheel.spawn_timer < WHEEL_OPEN_DELAY {
+                    // Cancel opening the wheel if there's movement during the delay.
                     if wheel.start_position.distance(wheel.current_position) > 0.01 {
                         wheel.is_open = false;
                     }
                     return;
                 }
 
-                let selected_number = get_selected_number(&wheel);
-                let may_select_number = !settings.enable_wheel_aid
-                    || match selected_number {
-                        Some(n) => {
-                            let sudoku = if settings.show_mistakes {
-                                &game.current
-                            } else {
-                                &game.start
-                            };
-                            sudoku.may_set(wheel.cell.0, wheel.cell.1, n)
-                        }
-                        None => true, // It should always be allowed to deselect.
-                    };
-                if may_select_number && selected_number != wheel.selected_number {
+                if let Some(selected_number) = get_newly_selected_number(&game, &settings, &wheel) {
                     wheel.selected_number = selected_number;
                     wheel.slice_timer = 0.;
                 }
@@ -240,7 +233,7 @@ pub fn on_wheel_input(
 
                 if let Some(n) = wheel.selected_number {
                     let (x, y) = wheel.cell;
-                    match wheel.mode {
+                    match mode.get() {
                         ModeState::Normal => {
                             fill_number(
                                 &mut game,
@@ -331,9 +324,7 @@ pub fn render_wheel(
         return;
     };
 
-    if !wheel.is_open
-        || (wheel.mode == ModeState::Notes && wheel.spawn_timer < NOTES_MODE_OPEN_DELAY)
-    {
+    if !wheel.is_open || (wheel.open_with_delay && wheel.spawn_timer < WHEEL_OPEN_DELAY) {
         *wheel_transform = Transform::from_2d_scale(0., 0.);
         *slice_transform = Transform::from_2d_scale(0., 0.);
         *top_label_transform = Transform::from_2d_scale(0., 0.);
@@ -382,10 +373,8 @@ pub fn render_disabled_wheel_slices(
     wheel: Query<&Wheel, Changed<Wheel>>,
 ) {
     for wheel in &wheel {
-        let (x, y) = wheel.cell;
-
         for (DisabledSlice(n), mut visibility) in &mut disabled_slices {
-            let is_disabled = settings.enable_wheel_aid && !game.current.may_set(x, y, *n);
+            let is_disabled = !may_select_number(wheel.cell, Some(*n), &game, &settings);
             *visibility = if is_disabled {
                 Visibility::Visible
             } else {
@@ -404,10 +393,11 @@ fn get_board_translation(board_position: &ComputedPosition, cursor_position: Vec
 }
 
 fn get_radius(screen_sizing: &ScreenSizing, wheel: &Wheel) -> f32 {
-    let mut spawn_timer = wheel.spawn_timer;
-    if wheel.mode == ModeState::Notes {
-        spawn_timer = (spawn_timer - NOTES_MODE_OPEN_DELAY).max(0.);
-    }
+    let spawn_timer = if wheel.open_with_delay {
+        (wheel.spawn_timer - WHEEL_OPEN_DELAY).max(0.)
+    } else {
+        wheel.spawn_timer
+    };
 
     let finger_radius = 2.5 * wheel.start_position.distance(wheel.current_position);
     let time_radius = (spawn_timer * 40.).powi(2) / 10.;
@@ -441,6 +431,30 @@ fn get_wheel_center(screen_sizing: &ScreenSizing, wheel: &Wheel, radius: f32) ->
     Vec2::new(cx, cy)
 }
 
+/// Returns the new number that should be selected in the wheel.
+///
+/// - Returns `None` if the selected number hasn't changed.
+/// - Returns `Some(None)` if the selected number should be unselected.
+/// - Returns `Some(Some(n))` if a new number should be selected.
+///
+/// This function validates that the newly selected number may be selected.
+fn get_newly_selected_number(
+    game: &Game,
+    settings: &Settings,
+    wheel: &Wheel,
+) -> Option<Option<NonZeroU8>> {
+    let selected_number = get_selected_number(wheel);
+    if selected_number == wheel.selected_number {
+        return None;
+    }
+
+    may_select_number(wheel.cell, selected_number, game, settings).then_some(selected_number)
+}
+
+/// Returns the number that should be selected based on the input position
+/// within the wheel.
+///
+/// This does not perform validation whether the number is selectable.
 fn get_selected_number(wheel: &Wheel) -> Option<NonZeroU8> {
     let center = wheel.center_position;
 
@@ -458,4 +472,40 @@ fn get_selected_number(wheel: &Wheel) -> Option<NonZeroU8> {
     } else {
         None
     }
+}
+
+/// Validates whether the given selected number may be selected based on the
+/// state of the game and the settings.
+fn may_select_number(
+    selected_cell: (u8, u8),
+    selected_number: Option<NonZeroU8>,
+    game: &Game,
+    settings: &Settings,
+) -> bool {
+    let Some(n) = selected_number else {
+        return true; // It should always be allowed to deselect.
+    };
+
+    if game.is_completed(n) {
+        return false; // Selecting completed numbers is always forbidden.
+    }
+
+    if settings.enable_wheel_aid {
+        // With wheel aid, we determine whether the number may be selected based
+        // whether it may be filled in in the given cell. This still allows for
+        // mistakes, but prevents *trivial* mistakes.
+        let sudoku = if settings.show_mistakes {
+            &game.current
+        } else {
+            &game.start
+        };
+        sudoku.may_set(selected_cell.0, selected_cell.1, n)
+    } else {
+        true // Without wheel aid, every other number is selectable.
+    }
+}
+
+/// Returns whether the wheel should be opened with a delay.
+fn should_open_with_delay(x: u8, y: u8, mode: ModeState, game: &Game) -> bool {
+    mode == ModeState::Notes || game.current.has(x, y)
 }

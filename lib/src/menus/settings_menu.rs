@@ -19,7 +19,7 @@ pub fn settings_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             fragment4(
                 settings_toggle("Wheel swipe aid", EnableWheelAid),
                 settings_toggle("Selected cell highlight", SelectedCellHighlight),
-                settings_toggle("Show mistakes", ShowMistakes),
+                settings_toggle("Reveal mistakes", ShowMistakes),
                 settings_toggle("Auto-fill correct notes", AutofillCorrectNotes),
             ),
         ),

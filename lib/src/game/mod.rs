@@ -18,8 +18,7 @@ use mode_slider::{render_slider_knobs, slider_interaction};
 use std::num::NonZeroU8;
 use std::time::Duration;
 use wheel::{
-    on_wheel_input, on_wheel_timer, render_disabled_wheel_slices, render_wheel,
-    NOTES_MODE_OPEN_DELAY,
+    on_wheel_input, on_wheel_timer, render_disabled_wheel_slices, render_wheel, WHEEL_OPEN_DELAY,
 };
 
 pub use board::board;
@@ -303,7 +302,7 @@ fn on_pointer_input(
                                 return;
                             };
 
-                            if wheel.is_open && wheel.spawn_timer >= NOTES_MODE_OPEN_DELAY {
+                            if wheel.is_open && wheel.spawn_timer >= WHEEL_OPEN_DELAY {
                                 // Revert the initial toggle at the start of the long press.
                                 let (x, y) = wheel.cell;
                                 game.notes.toggle(x, y, n);
@@ -357,7 +356,7 @@ fn fill_number(
 
     let is_correct = game.set(x, y, n, options);
 
-    if is_correct {
+    if is_correct || !show_mistakes {
         if selection.selected_cell != Some((x, y)) {
             selection.set(x, y);
         }

@@ -59,11 +59,17 @@ impl Game {
         self.start == Sudoku::default()
     }
 
-    /// Returns whether all the instances of a given number have been filled in.
+    /// Returns whether all the instances of a given number have been filled in
+    /// and no mistakes have been made with the given number.
     pub fn is_completed(&self, n: NonZeroU8) -> bool {
         for pos in 0..81 {
             if let Some(solution_n) = self.solution.get_by_pos(pos) {
-                if solution_n == n && self.current.get_by_pos(pos) != Some(n) {
+                let actual_n = self.current.get_by_pos(pos);
+                if solution_n == n {
+                    if actual_n != Some(n) {
+                        return false;
+                    }
+                } else if actual_n == Some(n) {
                     return false;
                 }
             }
