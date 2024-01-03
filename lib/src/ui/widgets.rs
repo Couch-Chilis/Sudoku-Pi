@@ -4,7 +4,6 @@ use super::{
 use crate::ResourceBag;
 use crate::{assets::*, constants::*, utils::*};
 use bevy::prelude::*;
-use bevy::sprite::Anchor;
 use std::sync::Arc;
 
 pub fn primary_button<B>(
@@ -374,26 +373,9 @@ pub fn text(
     text: impl Into<String>,
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    text_with_bundle_enhancer(text, styles, |_bundle| {})
-}
-
-pub fn text_with_anchor(
-    text: impl Into<String>,
-    anchor: Anchor,
-    styles: impl TextEnhancer,
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    text_with_bundle_enhancer(text, styles, move |text| text.text_anchor = anchor)
-}
-
-pub fn text_with_bundle_enhancer(
-    text: impl Into<String>,
-    styles: impl TextEnhancer,
-    enhance: impl FnOnce(&mut Text2dBundle),
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
     |props: &Props, cb: &mut ChildBuilder| {
         let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
-        enhance(&mut bundle.text);
-        styles.enhance(&mut bundle.text.text, &props.resources);
+        styles.enhance(&mut bundle.text, &props.resources);
         cb.spawn(bundle);
     }
 }
@@ -403,28 +385,9 @@ pub fn text_t(
     text: impl Into<String>,
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    text_with_bundle_enhancer_t(marker, text, styles, |_bundle| {})
-}
-
-pub fn text_with_anchor_t(
-    marker: impl Bundle,
-    text: impl Into<String>,
-    anchor: Anchor,
-    styles: impl TextEnhancer,
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    text_with_bundle_enhancer_t(marker, text, styles, move |text| text.text_anchor = anchor)
-}
-
-pub fn text_with_bundle_enhancer_t(
-    marker: impl Bundle,
-    text: impl Into<String>,
-    styles: impl TextEnhancer,
-    enhance: impl FnOnce(&mut Text2dBundle),
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
     |props: &Props, cb: &mut ChildBuilder| {
         let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
-        enhance(&mut bundle.text);
-        styles.enhance(&mut bundle.text.text, &props.resources);
+        styles.enhance(&mut bundle.text, &props.resources);
         cb.spawn((bundle, marker));
     }
 }

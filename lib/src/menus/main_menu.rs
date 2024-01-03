@@ -71,12 +71,12 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
                 align_self(Alignment::End),
             ),
             (),
-            text_with_anchor(
+            text(
                 "© 2023 Couch Chilis",
-                Anchor::CenterRight,
                 (
                     font_medium,
                     font_size(30.),
+                    text_anchor(Anchor::CenterRight),
                     text_color(COLOR_BOARD_LINE_MEDIUM),
                 ),
             ),

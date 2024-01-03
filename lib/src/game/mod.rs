@@ -10,9 +10,7 @@ use crate::{GameTimer, ScreenState, Settings};
 use bevy::prelude::*;
 use board::{Board, MistakeCellBorders};
 use board_numbers::*;
-use game_ui::{
-    init_game_ui, on_score_changed, on_time_changed, settings_icon_interaction, UiButtonAction,
-};
+use game_ui::{on_score_changed, on_time_changed, settings_icon_interaction, UiButtonAction};
 use highscore_screen::{highscore_button_actions, on_fortune, on_highscores_changed};
 use mode_slider::{render_slider_knobs, slider_interaction};
 use std::num::NonZeroU8;
@@ -22,6 +20,7 @@ use wheel::{
 };
 
 pub use board::board;
+pub use game_ui::game_screen;
 pub use highscore_screen::highscore_screen;
 pub use mode_slider::ModeState;
 pub use wheel::{ActiveSliceHandles, Wheel};
@@ -154,14 +153,6 @@ pub enum NoteToggleMode {
     #[default]
     Set,
     Unset,
-}
-
-pub fn game_screen(props: &Props, cb: &mut ChildBuilder) {
-    let board_builder = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, board(ScreenState::Game));
-    };
-
-    init_game_ui(props, cb, board_builder);
 }
 
 fn on_keyboard_input(

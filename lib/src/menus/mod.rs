@@ -56,7 +56,7 @@ pub fn menu_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
         // Spacer.
         leaf((
             fixed_size(Val::Percent(100.), Val::Percent(50.)),
-            translation(Vec3::new(0., 0., 2.)),
+            z_index(2.),
         )),
         // Main menu buttons.
         button_section(ScreenState::MainMenu, 0., 2., main_menu_buttons),

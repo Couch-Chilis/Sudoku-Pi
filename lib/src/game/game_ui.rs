@@ -1,6 +1,7 @@
-use super::mode_slider::build_mode_slider;
+use super::board;
+use super::mode_slider::mode_slider;
 use crate::{constants::*, ui::*, utils::*};
-use crate::{Game, GameTimer, Highscores, Images, ResourceBag, ScreenState};
+use crate::{Game, GameTimer, Highscores, Images, ScreenState};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -19,174 +20,105 @@ pub struct SettingsIcon;
 #[derive(Component)]
 pub struct Timer;
 
-pub fn init_game_ui(
-    props: &Props,
-    cb: &mut ChildBuilder,
-    board_builder: impl FnOnce(&Props, &mut ChildBuilder) + 'static,
-) {
-    let resources = &props.resources;
-
-    build_button_row(cb, resources, |icon_row| {
-        icon_row.spawn(leaf(available_size));
-
-        settings_icon(icon_row, resources);
-    });
-
-    build_timer_row(cb, |timer_row| {
-        build_timer(timer_row, resources);
-    });
-
-    build_button_row(cb, resources, |button_row| {
-        let button_size = if resources.screen_sizing.is_tablet() {
-            FlexItemStyle::fixed_size(Val::Pixel(133), Val::Pixel(60))
-        } else {
-            FlexItemStyle::fixed_size(Val::Pixel(80), Val::Pixel(35))
-        };
-        let font_size = if resources.screen_sizing.is_tablet() {
-            66.
-        } else {
-            44.
-        };
-
-        let buttons = ButtonBuilder::new(resources, button_size, font_size);
-        buttons.build_with_text_and_action(button_row, "Menu", UiButtonAction::BackToMain);
-
-        build_score(button_row, resources);
-
-        buttons.build_secondary_with_text_and_action(button_row, "Hint", UiButtonAction::Hint);
-    });
-
-    cb.spawn_with_children(props, board_builder);
-
-    build_mode_slider(cb, resources);
-}
-
-fn settings_icon(screen: &mut ChildBuilder, resources: &ResourceBag) {
-    // Cog.
-    screen.spawn(image_t(
-        (
-            SettingsIcon,
-            Interaction::None,
-            UiButtonAction::GoToSettings,
-        ),
-        resources.images.cog.clone(),
-        (align_self(Alignment::Start), cog_size),
-    ));
-}
-
-fn build_timer_row(cb: &mut ChildBuilder, children: impl FnOnce(&mut ChildBuilder)) {
-    cb.spawn(FlexBundle::from_item_style(
-        FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(42))
-            .with_margin(Size::all(Val::Pixel(15))),
-    ))
-    .with_children(children);
-}
-
-fn build_timer(row: &mut ChildBuilder, resources: &ResourceBag) {
-    let width = if resources.screen_sizing.is_tablet() {
-        Val::Pixel(150)
-    } else {
-        Val::Pixel(100)
-    };
-    let height = if resources.screen_sizing.is_tablet() {
-        Val::Pixel(64)
-    } else {
-        Val::Pixel(42)
-    };
-    let line_height = Val::Pixel(1);
-
-    let text_style = TextStyle {
-        font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_tablet() {
-            105.
-        } else {
-            70.
-        },
-        color: COLOR_TIMER_TEXT,
-    };
-
-    row.spawn(FlexLeafBundle::from_style(FlexItemStyle::available_size()));
-
-    row.spawn((
-        FlexItemBundle::from_style(FlexItemStyle::fixed_size(
-            width.clone(),
-            line_height.clone(),
+pub fn game_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+    fragment5(
+        // Row with settings icon.
+        top_row(fragment(leaf(available_size), settings_icon())),
+        // Timer row.
+        timer(),
+        // Menu and hint buttons.
+        top_row(fragment3(
+            selected_button(
+                UiButtonAction::BackToMain,
+                game_screen_top_row_button_size,
+                text("Menu", button_text),
+            ),
+            score(),
+            secondary_button(
+                UiButtonAction::Hint,
+                game_screen_top_row_button_size,
+                text("Hint", button_text),
+            ),
         )),
-        SpriteBundle {
-            sprite: Sprite::from_color(COLOR_TIMER_BORDER),
-            ..default()
-        },
-    ));
-
-    row.spawn(FlexBundle::from_item_style(FlexItemStyle::minimum_size(
-        width.clone(),
-        height - 2. * line_height.clone(),
-    )))
-    .with_children(|text_leaf| {
-        text_leaf.spawn((
-            Timer,
-            FlexTextBundle::from_text(Text::from_section("0:00", text_style)),
-        ));
-    });
-
-    row.spawn((
-        FlexItemBundle::from_style(FlexItemStyle::fixed_size(width, line_height)),
-        SpriteBundle {
-            sprite: Sprite::from_color(COLOR_TIMER_BORDER),
-            ..default()
-        },
-    ));
+        // Game board.
+        board(ScreenState::Game),
+        // Mode slider.
+        mode_slider,
+    )
 }
 
-pub fn build_button_row(
-    cb: &mut ChildBuilder,
-    resources: &ResourceBag,
-    child_builder: impl FnOnce(&mut ChildBuilder),
-) {
-    cb.spawn(FlexBundle::new(
-        FlexItemStyle::preferred_size(
-            Val::Vmin(if resources.screen_sizing.is_tablet() {
-                80.
-            } else {
-                90.
-            }),
-            Val::Pixel(35),
-        )
-        .with_margin(Size::new(Val::None, Val::Pixel(15))),
-        FlexContainerStyle::row().with_gap(Val::Auto),
-    ))
-    .with_children(child_builder);
+fn settings_icon() -> impl FnOnce(&Props, &mut ChildBuilder) {
+    |props: &Props, cb: &mut ChildBuilder| {
+        cb.spawn_with_children(
+            props,
+            image_t(
+                (
+                    SettingsIcon,
+                    Interaction::None,
+                    UiButtonAction::GoToSettings,
+                ),
+                props.resources.images.cog.clone(),
+                (align_self(Alignment::Start), cog_size),
+            ),
+        );
+    }
 }
 
-fn build_score(row: &mut ChildBuilder, resources: &ResourceBag) {
-    let text_style = TextStyle {
-        font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_tablet() {
-            86.
-        } else {
-            58.
-        },
-        color: COLOR_SCORE_TEXT,
-    };
+fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    column(
+        (
+            preferred_size(Val::Vmin(90.), Val::Pixel(42)),
+            margin(Size::new(Val::None, Val::Pixel(15))),
+        ),
+        (),
+        fragment4(
+            leaf(available_size),
+            rect(COLOR_TIMER_BORDER, game_screen_timer_line_size),
+            row(
+                game_screen_timer_inner_size,
+                (),
+                text_t(
+                    Timer,
+                    "0:00",
+                    (
+                        font_medium,
+                        game_screen_timer_font_size,
+                        text_color(COLOR_TIMER_TEXT),
+                    ),
+                ),
+            ),
+            rect(COLOR_TIMER_BORDER, game_screen_timer_line_size),
+        ),
+    )
+}
 
-    row.spawn(FlexBundle::from_item_style(FlexItemStyle::fixed_size(
-        Val::Pixel(if resources.screen_sizing.is_tablet() {
-            150
-        } else {
-            100
-        }),
-        Val::Pixel(if resources.screen_sizing.is_tablet() {
-            60
-        } else {
-            35
-        }),
-    )))
-    .with_children(|text_leaf| {
-        text_leaf.spawn((
+fn top_row<B: Bundle>(
+    child: impl Into<BundleWithChildren<B>>,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    row(
+        (
+            game_screen_top_row_size,
+            margin(Size::new(Val::None, Val::Pixel(15))),
+        ),
+        gap(Val::Auto),
+        child,
+    )
+}
+
+fn score() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    row(
+        game_screen_score_size,
+        (),
+        text_t(
             Score,
-            FlexTextBundle::from_text(Text::from_section(format_score(0), text_style)),
-        ));
-    });
+            format_score(0),
+            (
+                font_medium,
+                game_screen_score_font_size,
+                text_color(COLOR_SCORE_TEXT),
+            ),
+        ),
+    )
 }
 
 pub fn on_score_changed(

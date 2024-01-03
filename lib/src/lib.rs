@@ -284,8 +284,8 @@ fn setup(
 
     use ScreenState::*;
     commands.spawn_with_children(&props, screen(MainMenu, resources, menu_screen()));
-    commands.spawn_with_children(&props, screen(Game, resources, game_screen));
-    commands.spawn_with_children(&props, screen(Highscores, resources, highscore_screen));
+    commands.spawn_with_children(&props, screen(Game, resources, game_screen()));
+    commands.spawn_with_children(&props, screen(Highscores, resources, highscore_screen()));
     commands.spawn_with_children(&props, screen(Settings, resources, settings_screen()));
     commands.spawn_with_children(&props, screen(Welcome, resources, welcome_screen()));
     commands.spawn_with_children(&props, screen(LearnNotes, resources, learn_notes_screen()));

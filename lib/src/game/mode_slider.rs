@@ -27,7 +27,9 @@ pub struct ModeSliderKnob;
 #[derive(Component)]
 pub struct OppositeSliderKnob;
 
-pub fn build_mode_slider(cb: &mut ChildBuilder, resources: &ResourceBag) {
+pub fn mode_slider(props: &Props, cb: &mut ChildBuilder) {
+    let resources = &props.resources;
+
     if resources.screen_sizing.is_tablet() {
         cb.spawn((
             ModeSlider { active: false },

@@ -1,6 +1,6 @@
 use super::flex::*;
 use crate::resource_bag::ResourceBag;
-use bevy::text::Text;
+use bevy::text::Text2dBundle;
 
 /// Trait that defines enhancers for [FlexContainerBundle].
 pub trait FlexContainerBundleEnhancer: Sized {
@@ -73,22 +73,22 @@ where
     }
 }
 
-/// Trait that defines enhancers for [TextStyle].
+/// Trait that defines enhancers for [Text2dBounde].
 pub trait TextEnhancer: Sized {
-    fn enhance(self, text: &mut Text, resources: &ResourceBag);
+    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag);
 }
 
 impl<T> TextEnhancer for T
 where
-    T: FnOnce(&mut Text, &ResourceBag) + Sized,
+    T: FnOnce(&mut Text2dBundle, &ResourceBag) + Sized,
 {
-    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
         self(text, resources)
     }
 }
 
 impl TextEnhancer for () {
-    fn enhance(self, _text: &mut Text, _resources: &ResourceBag) {}
+    fn enhance(self, _text: &mut Text2dBundle, _resources: &ResourceBag) {}
 }
 
 impl<T, U> TextEnhancer for (T, U)
@@ -96,7 +96,7 @@ where
     T: TextEnhancer,
     U: TextEnhancer,
 {
-    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
         self.0.enhance(text, resources);
         self.1.enhance(text, resources);
     }
@@ -108,7 +108,7 @@ where
     U: TextEnhancer,
     V: TextEnhancer,
 {
-    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
         self.0.enhance(text, resources);
         self.1.enhance(text, resources);
         self.2.enhance(text, resources);
@@ -122,7 +122,7 @@ where
     V: TextEnhancer,
     W: TextEnhancer,
 {
-    fn enhance(self, text: &mut Text, resources: &ResourceBag) {
+    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
         self.0.enhance(text, resources);
         self.1.enhance(text, resources);
         self.2.enhance(text, resources);

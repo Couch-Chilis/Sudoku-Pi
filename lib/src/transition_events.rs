@@ -127,5 +127,5 @@ fn how_to_play_numbers(
         note_toggle: None,
     };
     mode_state.set(ModeState::Normal);
-    screen_state.set(ScreenState::LearnNumbers);
+    screen_state.set(ScreenState::Highscores);
 }

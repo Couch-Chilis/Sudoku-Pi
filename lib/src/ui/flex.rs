@@ -5,7 +5,7 @@ use crate::resource_bag::ResourceBag;
 use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
 use smallvec::SmallVec;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub};
 use std::sync::Arc;
 
 /// Marker for any flex entity, be it an item or a container.
@@ -654,6 +654,12 @@ impl Add<Val> for Val {
                 right: rhs,
             })),
         }
+    }
+}
+
+impl AddAssign<Val> for Val {
+    fn add_assign(&mut self, rhs: Val) {
+        *self = self.clone() + rhs;
     }
 }
 

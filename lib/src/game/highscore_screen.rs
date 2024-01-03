@@ -2,7 +2,6 @@ use crate::{constants::*, ui::*, utils::*, Fortune, ScreenSizing, TransitionEven
 use crate::{Fonts, Game, Highscores, ScreenState};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::text::Text2dBounds;
 
 #[derive(Component)]
 pub enum HighscoreButtonAction {
@@ -54,103 +53,52 @@ enum StatKind {
 #[derive(Component)]
 pub struct BestTimeText;
 
-pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
-    let resources = &props.resources;
-
-    cb.spawn(FlexBundle::new(
-        FlexItemStyle::available_size(),
-        FlexContainerStyle::column().with_padding(Sides::all(Val::Vmin(5.))),
-    ))
-    .with_children(|cb| {
-        let item_style = if resources.screen_sizing.is_tablet() {
-            FlexItemStyle::fixed_size(Val::Pixel(700), Val::Pixel(190))
-        } else {
-            FlexItemStyle::fixed_size(Val::Pixel(342), Val::Pixel(92))
-        };
-
-        let padding = if resources.screen_sizing.is_tablet() {
-            Sides::new(Val::Pixel(30), Val::Pixel(22))
-        } else {
-            Sides::new(Val::Pixel(16), Val::Pixel(10))
-        };
-
-        // "Scroll" containing the quotes.
-        cb.spawn_with_children(
-            props,
-            column(
-                (align_self(Alignment::Centered), without_occupying_space),
-                background_color(COLOR_BOARD_LINE_THIN),
-                rect(COLOR_CREAM, available_size),
-            ),
-        );
-
-        cb.spawn(FlexBundle::new(
-            item_style
-                .clone()
-                .with_transform(Transform::from_translation(Vec3::new(0., 0., 3.)))
-                .without_occupying_space(),
-            FlexContainerStyle::default().with_padding(padding.clone()),
-        ))
-        .with_children(|scroll_text_container| {
-            scroll_text_container.spawn((
-                ScrollText::new(ScrollTextKind::Quote),
-                FlexTextBundle::from_text(Text::default()).with_bounds(Text2dBounds {
-                    size: Vec2::new(
-                        if resources.screen_sizing.is_tablet() {
-                            1200.
-                        } else {
-                            580.
-                        },
-                        if resources.screen_sizing.is_tablet() {
-                            400.
-                        } else {
-                            200.
-                        },
+pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+    fragment3(
+        // Scroll section.
+        column(
+            available_size,
+            padding(Sides::all(Val::Vmin(5.))),
+            fragment3(
+                column(
+                    (
+                        align_self(Alignment::Centered),
+                        highscore_scroll_size,
+                        without_occupying_space,
                     ),
-                }),
-            ));
-        });
-
-        cb.spawn(FlexBundle::new(
-            item_style.with_transform(Transform::from_translation(Vec3::new(0., 0., 4.))),
-            FlexContainerStyle::default().with_padding({
-                let top = Val::Pixel(if resources.screen_sizing.is_tablet() {
-                    155
-                } else {
-                    65
-                });
-                let right = padding.right.clone()
-                    + Val::Pixel(if resources.screen_sizing.is_tablet() {
-                        15
-                    } else {
-                        10
-                    });
-                padding.with_top(top).with_right(right)
-            }),
-        ))
-        .with_children(|scroll_author_wrapper| {
-            scroll_author_wrapper
-                .spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-                .with_children(|scroll_author_container| {
-                    scroll_author_container.spawn((
-                        ScrollText::new(ScrollTextKind::Author),
-                        FlexTextBundle::from_text(Text::default()).with_anchor(Anchor::BottomRight),
-                    ));
-                });
-        });
-    });
-
-    cb.spawn_with_children(
-        props,
-        row(
-            fixed_size(
-                Val::Percent(100.),
-                Val::CrossPercent(if resources.screen_sizing.is_tablet() {
-                    59.8
-                } else {
-                    102.5
-                }),
+                    (
+                        background_color(COLOR_BOARD_LINE_THIN),
+                        highscore_scroll_padding,
+                    ),
+                    rect(COLOR_CREAM, available_size),
+                ),
+                column(
+                    (highscore_scroll_size, without_occupying_space, z_index(3.)),
+                    highscore_scroll_padding,
+                    text_t(
+                        ScrollText::new(ScrollTextKind::Quote),
+                        "",
+                        highscore_scroll_quote_text_bounds,
+                    ),
+                ),
+                column(
+                    (highscore_scroll_size, without_occupying_space, z_index(4.)),
+                    highscore_scroll_author_padding,
+                    column(
+                        available_size,
+                        (),
+                        text_t(
+                            ScrollText::new(ScrollTextKind::Author),
+                            "",
+                            text_anchor(Anchor::BottomRight),
+                        ),
+                    ),
+                ),
             ),
+        ),
+        // Wall section.
+        row(
+            highscore_screen_wall_size,
             (),
             fragment(
                 // Wall background.
@@ -158,43 +106,36 @@ pub fn highscore_screen(props: &Props, cb: &mut ChildBuilder) {
                 // Score board.
                 column_t(
                     StatsContainer,
-                    (available_size, translation(Vec3::new(0., 0., 2.))),
+                    (available_size, z_index(2.)),
                     score_board_padding,
-                    scores(props),
+                    scores(),
                 ),
             ),
         ),
-    );
-
-    cb.spawn(FlexBundle::new(
-        FlexItemStyle::available_size(),
-        FlexContainerStyle::column().with_padding(Sides::new(Val::None, Val::Auto)),
-    ))
-    .with_children(|button_section| {
-        let button_style = if resources.screen_sizing.is_tablet() {
-            FlexItemStyle::fixed_size(Val::Pixel(600), Val::Pixel(60))
-                .with_margin(Size::all(Val::Vmin(1.5)))
-        } else {
-            FlexItemStyle::fixed_size(Val::Vmin(70.), Val::Vmin(10.))
-                .with_margin(Size::all(Val::Vmin(1.5)))
-        };
-        let font_size = if resources.screen_sizing.is_tablet() {
-            66.
-        } else {
-            44.
-        };
-        let buttons = ButtonBuilder::new(resources, button_style, font_size);
-        buttons.build_secondary_with_text_and_action(
-            button_section,
-            "Back to Menu",
-            HighscoreButtonAction::Back,
-        );
-        buttons.build_selected_with_text_and_action(
-            button_section,
-            "Start a New Game",
-            HighscoreButtonAction::NewGame,
-        );
-    });
+        // Buttons section.
+        column(
+            available_size,
+            padding(Sides::new(Val::None, Val::Auto)),
+            fragment(
+                secondary_button(
+                    HighscoreButtonAction::Back,
+                    (
+                        highscore_screen_button_size,
+                        margin(Size::all(Val::Vmin(1.5))),
+                    ),
+                    text("Back to Menu", button_text),
+                ),
+                selected_button(
+                    HighscoreButtonAction::NewGame,
+                    (
+                        highscore_screen_button_size,
+                        margin(Size::all(Val::Vmin(1.5))),
+                    ),
+                    text("Start a New Game", button_text),
+                ),
+            ),
+        ),
+    )
 }
 
 pub fn highscore_button_actions(
@@ -250,23 +191,19 @@ fn get_stat_text(props: &Props, kind: StatKind) -> String {
     }
 }
 
-fn scores(props: &Props) -> impl FnOnce(&Props, &mut ChildBuilder) {
+fn scores() -> impl FnOnce(&Props, &mut ChildBuilder) {
     fragment7(
-        stat_row(props, StatKind::Score, "Score:"),
-        stat_row(props, StatKind::Time, "Time:"),
-        stat_row(props, StatKind::Mistakes, "Mistakes:"),
-        stat_row(props, StatKind::Hints, "Hints:"),
+        stat_row(StatKind::Score, "Score:"),
+        stat_row(StatKind::Time, "Time:"),
+        stat_row(StatKind::Mistakes, "Mistakes:"),
+        stat_row(StatKind::Hints, "Hints:"),
         leaf(available_size),
-        stat_row(props, StatKind::HighestScore, "Highest score:"),
-        stat_row(props, StatKind::BestTime, "Best time:"),
+        stat_row(StatKind::HighestScore, "Highest score:"),
+        stat_row(StatKind::BestTime, "Best time:"),
     )
 }
 
-fn stat_row(
-    props: &Props,
-    kind: StatKind,
-    label: &str,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+fn stat_row(kind: StatKind, label: &str) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
     let font = if matches!(kind, StatKind::HighestScore | StatKind::BestTime) {
         font_bold
     } else {
@@ -280,10 +217,14 @@ fn stat_row(
             row(
                 preferred_size(Val::Percent(50.), Val::Percent(100.)),
                 (),
-                text_with_anchor(
+                text(
                     label.to_owned(),
-                    Anchor::CenterRight,
-                    (button_text_size, font, text_color(COLOR_MAIN_DARKER)),
+                    (
+                        button_text_size,
+                        font,
+                        text_anchor(Anchor::CenterRight),
+                        text_color(COLOR_MAIN_DARKER),
+                    ),
                 ),
             ),
             row(
@@ -292,11 +233,15 @@ fn stat_row(
                     margin(Size::new(Val::Percent(5.), Val::None)),
                 ),
                 (),
-                text_with_anchor_t(
+                text_t(
                     StatTextMarker::from(kind),
-                    get_stat_text(props, kind),
-                    Anchor::CenterLeft,
-                    (button_text_size, font, text_color(COLOR_POP_FOCUS)),
+                    "",
+                    (
+                        button_text_size,
+                        font,
+                        text_anchor(Anchor::CenterLeft),
+                        text_color(COLOR_POP_FOCUS),
+                    ),
                 ),
             ),
         ),
