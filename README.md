@@ -15,13 +15,12 @@ prevent mistakes.
 - Highscore screen with random fortune quotes.
 - No ads, forever.
 
-Sudoku Pi is currently in BETA and free to download. Starting in January, it
-will become a paid app in the App Store, but beta testers will keep free access
-forever.
+The source code for Sudoku Pi is available for free under an open-source license
+that grants you the right to make copies and make modifications, so long as your
+copies are made available under the same terms.
 
-In addition, this source code repository provides free access to Sudoku Pi under
-an open-source license that grants you the right to make copies and make
-modifications, so long as your copies are made available under the same terms.
+If you want to support us, please buy the game in the
+[App Store](https://apps.apple.com/us/app/sudoku-pi/id6467504425).
 
 # Community
 
@@ -44,3 +43,6 @@ well as in binary form for release to app stores.
 
 Sudoku Pi is copyright 2023 by Couch Chilis and available under the
 [General Public License v3](LICENSE-GPLv3.md).
+
+If you use the source code for your own project, we ask you kindly to consider
+supporting us by buying the game in the [App Store](https://apps.apple.com/us/app/sudoku-pi/id6467504425).
