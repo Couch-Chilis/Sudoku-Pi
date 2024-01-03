@@ -418,6 +418,20 @@ pub fn screen_padding(
     }
 }
 
+pub fn settings_label_text(bundle: &mut Text2dBundle, resources: &ResourceBag) {
+    for section in &mut bundle.text.sections {
+        section.style = TextStyle {
+            color: COLOR_SECONDARY_BUTTON_TEXT,
+            font: resources.fonts.medium.clone(),
+            font_size: if resources.screen_sizing.is_tablet() {
+                72.
+            } else {
+                50.
+            },
+        }
+    }
+}
+
 pub fn text_anchor(anchor: Anchor) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
     move |bundle: &mut Text2dBundle, _resources: &ResourceBag| {
         bundle.text_anchor = anchor;

@@ -59,7 +59,7 @@ fn layout(flex_query: &mut FlexQuery, resource_tuple: &ResourceTuple) {
 
 struct LayoutInfo<'a> {
     screens: Vec<(Entity, ScreenState, f32, f32)>,
-    container_map: BTreeMap<Entity, (&'a Children, &'a FlexContainerStyle)>,
+    container_map: BTreeMap<Entity, (&'a Children, Cow<'a, FlexContainerStyle>)>,
     item_map: BTreeMap<Entity, ItemMapEntry<'a>>,
     text_map: BTreeMap<Entity, TextMapEntry<'a>>,
     resources: ResourceBag<'a>,
@@ -89,6 +89,16 @@ impl<'a> LayoutInfo<'a> {
         ) in flex_query.iter_mut()
         {
             if let (Some(container_style), Some(children)) = (container_style, children) {
+                let container_style = if !container_style.dynamic_styles.is_empty() {
+                    let mut style = container_style.clone();
+                    for enhance in &container_style.dynamic_styles {
+                        enhance(&mut style, &resources);
+                    }
+                    Cow::Owned(style)
+                } else {
+                    Cow::Borrowed(container_style)
+                };
+
                 container_map.insert(entity, (children, container_style));
 
                 if let Some(screen) = screen {
@@ -120,7 +130,9 @@ impl<'a> LayoutInfo<'a> {
                         (dynamic_image, image_handle)
                     {
                         let image = dynamic_image.get_image(&resources);
-                        *image_handle = image.handle.clone();
+                        if *image_handle != image.handle {
+                            *image_handle = image.handle.clone();
+                        }
 
                         item_style = Cow::Owned(FlexItemStyle {
                             transform: Transform::from_2d_scale(
@@ -453,7 +465,9 @@ impl<'a> LayoutInfo<'a> {
 
         *computed_position = position.transformed(transform.scale, transform.translation);
         for enhance in &text_style.dynamic_styles {
-            enhance(&mut text.sections[0].style, &self.resources);
+            for section in &mut text.sections {
+                enhance(&mut section.style, &self.resources);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-use crate::{constants::*, ui::*, utils::*, Images, ResourceBag, Settings};
+use crate::{ui::*, utils::*, Images, Settings};
 use bevy::{prelude::*, sprite::Anchor};
 
 #[derive(Clone, Component, Copy)]
@@ -32,19 +32,17 @@ impl SettingsToggle {
 }
 
 pub fn settings_toggle(
-    text: impl Into<String>,
+    label: impl Into<String>,
     toggle: SettingsToggle,
 ) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
-    let style = FlexItemStyle {
-        flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
-        margin: Size::all(Val::Vmin(2.)),
-        ..default()
-    };
-
     let bundle = (
         Interaction::None,
         FlexBundle::new(
-            style,
+            FlexItemStyle {
+                flex_base: Size::new(Val::Vmin(90.), Val::Vmin(11.)),
+                margin: Size::all(Val::Vmin(2.)),
+                ..default()
+            },
             FlexContainerStyle::row()
                 .with_gap(Val::Vmin(2.))
                 .with_padding(Sides::all(Val::Vmin(2.))),
@@ -52,7 +50,7 @@ pub fn settings_toggle(
         toggle,
     );
 
-    let text: String = text.into();
+    let label: String = label.into();
     let spawn_children = move |props: &Props, cb: &mut ChildBuilder| {
         let Props {
             resources,
@@ -60,13 +58,17 @@ pub fn settings_toggle(
             ..
         } = props;
 
-        cb.spawn(FlexBundle::from_item_style(FlexItemStyle::available_size()))
-            .with_children(|label_container| {
-                label_container.spawn(
-                    FlexTextBundle::from_text(Text::from_section(text, text_style(resources)))
-                        .with_anchor(Anchor::CenterLeft),
-                );
-            });
+        cb.spawn_with_children(
+            props,
+            row(
+                available_size,
+                (),
+                text(
+                    label,
+                    (settings_label_text, text_anchor(Anchor::CenterLeft)),
+                ),
+            ),
+        );
 
         let is_enabled = toggle.is_enabled(settings);
         let toggle_bundle = (
@@ -95,18 +97,6 @@ pub fn settings_toggle(
     };
 
     (bundle, spawn_children)
-}
-
-fn text_style(resources: &ResourceBag) -> TextStyle {
-    TextStyle {
-        color: COLOR_SECONDARY_BUTTON_TEXT,
-        font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_tablet() {
-            72.
-        } else {
-            50.
-        },
-    }
 }
 
 pub fn render_settings_toggles(
