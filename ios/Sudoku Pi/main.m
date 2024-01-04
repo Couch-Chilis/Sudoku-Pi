@@ -1,6 +1,6 @@
 @import UIKit;
 
-void run_with_fixed_sizes(double, double, double, double, SInt32, bool);
+void run_with_fixed_sizes(double, double, double, double, SInt32);
 
 int main(int argc, char *argv[]) {
     //CGSize statusBarSize = [[UIApplication sharedApplication] statusBarFrame].size;
@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
         height,
         scale,
         nativeScale,
-        topPadding,
+        topPadding
     );
     return 0;
 }

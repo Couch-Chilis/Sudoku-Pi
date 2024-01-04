@@ -6,6 +6,7 @@ use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
 use smallvec::smallvec;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
+use std::ops::DerefMut;
 
 type FlexEntity<'a> = (
     Entity,
@@ -464,10 +465,14 @@ impl<'a> LayoutInfo<'a> {
         );
 
         *computed_position = position.transformed(transform.scale, transform.translation);
-        for enhance in &text_style.dynamic_styles {
-            for section in &mut text.sections {
-                enhance(&mut section.style, &self.resources);
+        if !text_style.dynamic_styles.is_empty() {
+            for enhance in &text_style.dynamic_styles {
+                for section in &mut text.sections {
+                    enhance(&mut section.style, &self.resources);
+                }
             }
+        } else {
+            text.deref_mut(); // Prevent text appearing too small on iOS.
         }
     }
 }

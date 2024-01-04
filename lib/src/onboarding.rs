@@ -72,8 +72,8 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
         ),
         row(
             available_size,
-            padding(Sides::vertical(Val::Auto)),
-            primary_button(
+            padding(Sides::all(Val::Auto)),
+            selected_button(
                 OnboardingScreenAction::HowToPlayNumbers,
                 button_size_settings,
                 text("Next", button_text),
