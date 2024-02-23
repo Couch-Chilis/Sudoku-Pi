@@ -94,10 +94,18 @@ pub fn main_menu_button_actions(
         if *interaction == Interaction::Pressed {
             use MainScreenButtonAction::*;
             match action {
-                ContinueGame => transition_events.send(TransitionEvent::ContinueGame),
-                GoToHowToPlay => transition_events.send(TransitionEvent::LearnNumbers),
-                GoToNewGame => screen_state.set(ScreenState::SelectDifficulty),
-                Quit => app_exit_events.send(AppExit),
+                ContinueGame => {
+                    transition_events.send(TransitionEvent::ContinueGame);
+                }
+                GoToHowToPlay => {
+                    transition_events.send(TransitionEvent::LearnNumbers);
+                }
+                GoToNewGame => {
+                    screen_state.set(ScreenState::SelectDifficulty);
+                }
+                Quit => {
+                    app_exit_events.send(AppExit);
+                }
             }
         }
     }

@@ -25,7 +25,7 @@ pub enum Interaction {
 pub fn keyboard_interaction(
     mut interaction_query: InteractionQuery,
     screen: Res<State<ScreenState>>,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
 ) {
     if screen.get() == &ScreenState::Game {
         return; // Game screen has its own controls.
@@ -34,8 +34,10 @@ pub fn keyboard_interaction(
     for key in keys.get_just_pressed() {
         use KeyCode::*;
         match key {
-            Up | Right | Down | Left => move_selection(&mut interaction_query, screen.get(), *key),
-            Return => confirm_selection(&mut interaction_query, screen.get()),
+            ArrowUp | ArrowRight | ArrowDown | ArrowLeft => {
+                move_selection(&mut interaction_query, screen.get(), *key)
+            }
+            Enter => confirm_selection(&mut interaction_query, screen.get()),
             _ => {}
         }
     }
@@ -94,19 +96,19 @@ fn is_in_direction(position: &ComputedPosition, origin: &ComputedPosition, key: 
 
     use KeyCode::*;
     match key {
-        Up => {
+        ArrowUp => {
             let dy = position.y - origin.y;
             dy > 0. && dy >= (position.x - origin.x).abs()
         }
-        Right => {
+        ArrowRight => {
             let dx = position.x - origin.x;
             dx > 0. && dx >= (position.y - origin.y).abs()
         }
-        Down => {
+        ArrowDown => {
             let dy = origin.y - position.y;
             dy > 0. && dy >= (position.x - origin.x).abs()
         }
-        Left => {
+        ArrowLeft => {
             let dx = origin.x - position.x;
             dx > 0. && dx >= (position.y - origin.y).abs()
         }

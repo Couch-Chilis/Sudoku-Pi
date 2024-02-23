@@ -32,7 +32,7 @@ impl Plugin for GamePlugin {
         app.insert_resource(Selection::default())
             .insert_resource(Highlights::default())
             .init_resource::<ActiveSliceHandles>()
-            .add_state::<ModeState>()
+            .init_state::<ModeState>()
             .add_systems(
                 Update,
                 (
@@ -162,34 +162,34 @@ fn on_keyboard_input(
     mut mode: ResMut<NextState<ModeState>>,
     mut notes: Query<&mut Note>,
     settings: Res<Settings>,
-    keys: Res<Input<KeyCode>>,
+    keys: Res<ButtonInput<KeyCode>>,
 ) {
     for key in keys.get_just_pressed() {
         use KeyCode::*;
         match key {
-            Up => move_selection_relative(&mut selection, 0, -1),
-            Right => move_selection_relative(&mut selection, 1, 0),
-            Down => move_selection_relative(&mut selection, 0, 1),
-            Left => move_selection_relative(&mut selection, -1, 0),
+            ArrowUp => move_selection_relative(&mut selection, 0, -1),
+            ArrowRight => move_selection_relative(&mut selection, 1, 0),
+            ArrowDown => move_selection_relative(&mut selection, 0, 1),
+            ArrowLeft => move_selection_relative(&mut selection, -1, 0),
 
             Slash => give_hint(&mut game, &mut timer, &mut selection, &mut notes),
 
-            Back | Delete => clear_selection(&mut game, &selection),
+            Backspace | Delete => clear_selection(&mut game, &selection),
 
-            U => mode.set(ModeState::Normal),
-            O => mode.set(ModeState::Notes),
+            KeyU => mode.set(ModeState::Normal),
+            KeyO => mode.set(ModeState::Notes),
 
             key => {
                 if let Some(n) = match key {
-                    Key1 => NonZeroU8::new(1),
-                    Key2 => NonZeroU8::new(2),
-                    Key3 => NonZeroU8::new(3),
-                    Key4 => NonZeroU8::new(4),
-                    Key5 => NonZeroU8::new(5),
-                    Key6 => NonZeroU8::new(6),
-                    Key7 => NonZeroU8::new(7),
-                    Key8 => NonZeroU8::new(8),
-                    Key9 => NonZeroU8::new(9),
+                    Digit1 => NonZeroU8::new(1),
+                    Digit2 => NonZeroU8::new(2),
+                    Digit3 => NonZeroU8::new(3),
+                    Digit4 => NonZeroU8::new(4),
+                    Digit5 => NonZeroU8::new(5),
+                    Digit6 => NonZeroU8::new(6),
+                    Digit7 => NonZeroU8::new(7),
+                    Digit8 => NonZeroU8::new(8),
+                    Digit9 => NonZeroU8::new(9),
                     _ => None,
                 } {
                     if keys.pressed(KeyCode::AltLeft) || keys.pressed(KeyCode::AltRight) {

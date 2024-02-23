@@ -66,7 +66,7 @@ where
     );
 }
 
-impl<'w, 's, 'a, B> ChildBuilderExt<B> for ChildBuilder<'w, 's, 'a>
+impl<'a, B> ChildBuilderExt<B> for ChildBuilder<'a>
 where
     B: Bundle,
 {

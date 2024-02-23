@@ -33,8 +33,12 @@ pub fn on_transition(
                 screen_state.set(ScreenState::Game);
             }
             Exit => match current_state.get() {
-                ScreenState::MainMenu => app_exit_events.send(AppExit),
-                ScreenState::Settings => screen_state.set(ScreenState::Game),
+                ScreenState::MainMenu => {
+                    app_exit_events.send(AppExit);
+                }
+                ScreenState::Settings => {
+                    screen_state.set(ScreenState::Game);
+                }
                 ScreenState::LearnNumbers => how_to_play_notes(
                     &mut screen_state,
                     &mut mode_state,

@@ -400,11 +400,6 @@ impl FlexTextBundle {
         }
     }
 
-    pub fn with_alignment(mut self, alignment: TextAlignment) -> Self {
-        self.text.text.alignment = alignment;
-        self
-    }
-
     pub fn with_anchor(mut self, anchor: Anchor) -> Self {
         self.text.text_anchor = anchor;
         self
@@ -412,6 +407,11 @@ impl FlexTextBundle {
 
     pub fn with_bounds(mut self, bounds: Text2dBounds) -> Self {
         self.text.text_2d_bounds = bounds;
+        self
+    }
+
+    pub fn with_justify(mut self, justify: JustifyText) -> Self {
+        self.text.text.justify = justify;
         self
     }
 }
