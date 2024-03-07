@@ -25,9 +25,9 @@ pub trait PointerQueryExt {
 }
 
 type MouseQuery<'w, 's, 'a> = (
-    Res<'w, Input<MouseButton>>,
+    Res<'w, ButtonInput<MouseButton>>,
     Query<'w, 's, &'a Window, With<PrimaryWindow>>,
-    Query<'w, 's, (With<PrimaryWindow>, Changed<Window>)>,
+    Query<'w, 's, (), (With<PrimaryWindow>, Changed<Window>)>,
 );
 
 impl<'w, 's, 'a> PointerQueryExt for MouseQuery<'w, 's, 'a> {

@@ -1,0 +1,12 @@
+[package]
+name = "sudoku-pi"
+description = "Finger-friendly Sudoku"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[package.metadata.bundle]
+identifier = "nl.couch-chilis.sudoku-pi"
+
+[dependencies]
+sudoku-lib = { path = "../lib" }

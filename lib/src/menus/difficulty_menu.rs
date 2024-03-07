@@ -52,9 +52,11 @@ pub fn difficulty_screen_button_actions(
         if *interaction == Interaction::Pressed {
             use DifficultyScreenButtonAction::*;
             match action {
-                BackToMain => transition_events.send(TransitionEvent::Exit),
+                BackToMain => {
+                    transition_events.send(TransitionEvent::Exit);
+                }
                 StartGameAtDifficulty(difficulty) => {
-                    transition_events.send(TransitionEvent::StartGame(*difficulty))
+                    transition_events.send(TransitionEvent::StartGame(*difficulty));
                 }
             }
         }

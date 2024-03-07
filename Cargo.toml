@@ -1,12 +1,6 @@
-[package]
-name = "sudoku-pi"
-description = "Finger-friendly Sudoku"
-version = "0.1.0"
-edition = "2021"
-publish = false
-
 [workspace]
-members = [".", "lib"]
+members = ["android", "desktop", "lib"]
+resolver = "2"
 
 [profile.dev]
 opt-level = 1
@@ -14,13 +8,9 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 3
 
-[package.metadata.bundle]
-identifier = "nl.couch-chilis.sudoku-pi"
-
-[dependencies]
-sudoku-lib = { path = "lib" }
-
 [patch.crates-io]
+#bevy = { path = "../bevy" }
+#bevy_framepace = { path = "../bevy_framepace" }
 #bevy_tweening = { path = "../bevy_tweening" }
 #bevy-steamworks = { path = "../bevy-steamworks" }
-winit = { path = "../winit" }
+#winit = { path = "../winit" }

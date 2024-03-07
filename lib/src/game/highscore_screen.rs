@@ -149,7 +149,7 @@ pub fn highscore_button_actions(
             match action {
                 HighscoreButtonAction::Back => screen_state.set(ScreenState::MainMenu),
                 HighscoreButtonAction::NewGame => {
-                    transition_events.send(TransitionEvent::StartGame(game.difficulty))
+                    transition_events.send(TransitionEvent::StartGame(game.difficulty));
                 }
             }
         }
@@ -280,10 +280,10 @@ pub fn on_fortune(
                         color: Color::BLACK,
                     },
                 )])
-                .with_alignment(if author.is_empty() {
-                    TextAlignment::Center
+                .with_justify(if author.is_empty() {
+                    JustifyText::Center
                 } else {
-                    TextAlignment::Left
+                    JustifyText::Left
                 })
             }
             ScrollTextKind::Author => {
@@ -295,7 +295,7 @@ pub fn on_fortune(
                         color: Color::BLACK,
                     },
                 )])
-                .with_alignment(TextAlignment::Right)
+                .with_justify(JustifyText::Right)
             }
         }
     }

@@ -37,7 +37,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "Welcome to\nSudoku Pi",
                 (
-                    alignment(TextAlignment::Center),
+                    justify(JustifyText::Center),
                     font_bold,
                     font_size(80.),
                     text_color(COLOR_MAIN_DARKER),
@@ -50,7 +50,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "You are about to\nexperience a new way\nto play Sudoku.",
                 (
-                    alignment(TextAlignment::Center),
+                    justify(JustifyText::Center),
                     font_medium,
                     font_size(50.),
                     text_color(COLOR_MAIN_DARKER),
@@ -63,7 +63,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "But first, let us show you\nhow to play.",
                 (
-                    alignment(TextAlignment::Center),
+                    justify(JustifyText::Center),
                     font_medium,
                     font_size(40.),
                     text_color(COLOR_MAIN_DARKER),
@@ -90,7 +90,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "A New Way\nto Fill In Numbers",
                 (
-                    alignment(TextAlignment::Center),
+                    justify(JustifyText::Center),
                     font_bold,
                     font_size(80.),
                     text_color(COLOR_MAIN_DARKER)
@@ -105,7 +105,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 OnboardingNumberInstruction,
                 INITIAL_NUMBER_INSTRUCTION,
                 (
-                    alignment(TextAlignment::Center),
+                    justify(JustifyText::Center),
                     font_medium,
                     font_size(40.),
                     text_color(COLOR_MAIN_DARKER)
@@ -122,7 +122,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 OnboardingNumberHint,
                 "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
                 (
-                    alignment(TextAlignment::Center),
+                    justify(JustifyText::Center),
                     font_medium,
                     font_size(36.),
                     text_color(COLOR_MAIN_DARKER)
@@ -151,7 +151,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 text(
                     "A New Way\nto Draw Notes",
                     (
-                        alignment(TextAlignment::Center),
+                        justify(JustifyText::Center),
                         font_bold,
                         font_size(80.),
                         text_color(COLOR_MAIN_DARKER)
@@ -166,7 +166,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                     OnboardingNotesInstruction,
                     INITIAL_NOTES_INSTRUCTION,
                     (
-                        alignment(TextAlignment::Center),
+                        justify(JustifyText::Center),
                         font_medium,
                         font_size(40.),
                         text_color(COLOR_MAIN_DARKER)
@@ -183,7 +183,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                     OnboardingNotesHint,
                     "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
                     (
-                        alignment(TextAlignment::Center),
+                        justify(JustifyText::Center),
                         font_medium,
                         font_size(36.),
                         text_color(COLOR_MAIN_DARKER)

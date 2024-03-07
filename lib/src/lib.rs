@@ -199,9 +199,9 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
         .insert_resource(screen_padding)
         .insert_resource(zoom_factor)
         .insert_resource(ClearColor(Color::WHITE))
+        .init_state::<ScreenState>()
         .add_event::<TransitionEvent>()
         .add_event::<WindowDestroyed>()
-        .add_state::<ScreenState>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -235,6 +235,11 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
             game::GamePlugin,
             menus::MenuPlugin,
         ));
+
+    // MSAA makes some Android devices panic, this is under investigation
+    // https://github.com/bevyengine/bevy/issues/8229
+    #[cfg(target_os = "android")]
+    app.insert_resource(Msaa::Off);
 
     add_steamworks_plugin(&mut app);
 
@@ -320,7 +325,10 @@ fn on_exit(
     }
 }
 
-fn on_escape(input: Res<Input<KeyCode>>, mut transition_events: EventWriter<TransitionEvent>) {
+fn on_escape(
+    input: Res<ButtonInput<KeyCode>>,
+    mut transition_events: EventWriter<TransitionEvent>,
+) {
     if input.just_pressed(KeyCode::Escape) {
         transition_events.send(TransitionEvent::Exit);
     }

@@ -15,12 +15,6 @@ pub fn align_self(align_self: Alignment) -> impl FnOnce(&mut FlexItemStyle) {
     }
 }
 
-pub fn alignment(alignment: TextAlignment) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
-    move |bundle: &mut Text2dBundle, _resources: &ResourceBag| {
-        bundle.text.alignment = alignment;
-    }
-}
-
 pub fn available_size(style: &mut FlexItemStyle) {
     style.flex_grow = 1.;
 }
@@ -330,6 +324,12 @@ pub fn highscore_scroll_size(style: &mut FlexItemStyle) {
             fixed_size(width, height)(style);
         },
     ));
+}
+
+pub fn justify(justify: JustifyText) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
+    move |bundle: &mut Text2dBundle, _resources: &ResourceBag| {
+        bundle.text.justify = justify;
+    }
 }
 
 pub fn margin(margin: Size) -> impl FnOnce(&mut FlexItemStyle) {
