@@ -10,7 +10,7 @@ opt-level = 3
 
 [patch.crates-io]
 #bevy = { path = "../bevy" }
-bevy_framepace = { path = "../bevy_framepace" }
-bevy_tweening = { path = "../bevy_tweening" }
+#bevy_framepace = { path = "../bevy_framepace" }
+#bevy_tweening = { path = "../bevy_tweening" }
 #bevy-steamworks = { path = "../bevy-steamworks" }
 #winit = { path = "../winit" }

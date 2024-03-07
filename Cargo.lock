@@ -531,7 +531,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_framepace"
-version = "0.14.1"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0848c70deb2c17a4d10f611e7c5f569fa4f8a4d1fc01a3179a77906ff4c111b9"
 dependencies = [
  "bevy",
  "spin_sleep",
@@ -962,7 +964,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_tweening"
-version = "0.9.0"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e85ee55885db7a35d9bdd3b27ef9d9e36f7188801dc24ad5d3a013ee62b0579a"
 dependencies = [
  "bevy",
  "interpolation",
@@ -2078,9 +2082,9 @@ dependencies = [
 
 [[package]]
 name = "interpolation"
-version = "0.2.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3b7357d2bbc5ee92f8e899ab645233e43d21407573cceb37fed8bc3dede2c02"
+checksum = "e9c13ae9d91148fcb4aab6654c4c2a7d02a15395ea9e23f65170f175f8b269ce"
 
 [[package]]
 name = "io-kit-sys"
