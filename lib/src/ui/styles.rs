@@ -245,7 +245,7 @@ pub fn highscore_screen_button_size(style: &mut FlexItemStyle) {
     style.dynamic_styles.push(Arc::new(
         |style: &mut FlexItemStyle, resources: &ResourceBag| {
             let (width, height) = if resources.screen_sizing.is_tablet() {
-                (Val::Pixel(600), Val::Pixel(60))
+                (Val::Vmin(60.), Val::Vmin(6.))
             } else {
                 (Val::Vmin(70.), Val::Vmin(10.))
             };
@@ -316,7 +316,7 @@ pub fn highscore_scroll_size(style: &mut FlexItemStyle) {
     style.dynamic_styles.push(Arc::new(
         |style: &mut FlexItemStyle, resources: &ResourceBag| {
             let (width, height) = if resources.screen_sizing.is_tablet() {
-                (Val::Pixel(700), Val::Pixel(190))
+                (Val::Vmin(70.), Val::Vmin(19.))
             } else {
                 (Val::Pixel(342), Val::Pixel(92))
             };
@@ -466,7 +466,7 @@ pub fn z_index(z_index: f32) -> impl FnOnce(&mut FlexItemStyle) {
 
 fn apply_highscore_scroll_padding(style: &mut FlexContainerStyle, resources: &ResourceBag) {
     style.padding = if resources.screen_sizing.is_tablet() {
-        Sides::new(Val::Pixel(30), Val::Pixel(22))
+        Sides::new(Val::Vmin(3.), Val::Vmin(2.2))
     } else {
         Sides::new(Val::Pixel(16), Val::Pixel(10))
     };

@@ -121,12 +121,12 @@ pub struct ScreenInteraction {
     screens: SmallVec<[ScreenState; 4]>,
 }
 
-/// Padding to reserve space on the screen edges, for things like status bars
-/// on mobile.
 #[derive(Clone, Copy, Resource)]
 pub struct ScreenSizing {
     width: f32,
     height: f32,
+    /// Padding to reserve space on the top screen edge, for things like status
+    /// bars on mobile.
     top_padding: i32,
 }
 
@@ -203,7 +203,7 @@ impl Plugin for AssetConfiguratorPlugin {
     }
 }
 
-fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
+fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
     let settings = Settings::load();
     let game = if settings.onboarding_finished {
         Game::load()
@@ -225,7 +225,7 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
         .insert_resource(settings)
         .insert_resource(Highscores::load())
         .insert_resource(SettingsToggleTimer::default())
-        .insert_resource(screen_padding)
+        .insert_resource(screen_sizing)
         .insert_resource(zoom_factor)
         .insert_resource(ClearColor(Color::WHITE))
         .init_state::<ScreenState>()
@@ -432,6 +432,7 @@ fn on_resize(
     mut commands: Commands,
     mut events: EventReader<WindowResized>,
     mut screens: Query<(&mut Screen, &mut Transform)>,
+    mut screen_sizing: ResMut<ScreenSizing>,
     current_screen: Res<State<ScreenState>>,
     animators: Query<Entity, With<Animator<Transform>>>,
 ) {
@@ -442,6 +443,9 @@ fn on_resize(
     for entity in &animators {
         commands.entity(entity).remove::<Animator<Transform>>();
     }
+
+    screen_sizing.width = *width;
+    screen_sizing.height = *height;
 
     for (mut screen, mut transform) in &mut screens {
         screen.width = *width;
