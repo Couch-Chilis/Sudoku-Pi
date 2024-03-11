@@ -18,7 +18,6 @@ pub use flex::*;
 pub use images::*;
 pub use interaction::*;
 pub use props::*;
-pub use style_enhancers::*;
 pub use styles::*;
 pub use widgets::*;
 

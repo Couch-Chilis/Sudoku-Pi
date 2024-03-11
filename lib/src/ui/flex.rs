@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 
-use crate::assets::ImageWithDimensions;
 use crate::resource_bag::ResourceBag;
 use crate::{utils::*, ScreenInteraction, ScreenState};
 use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
@@ -191,11 +190,13 @@ pub struct FlexImageBundle {
 }
 
 #[derive(Clone, Component)]
-pub struct DynamicImage(pub Arc<dyn Fn(&ResourceBag) -> ImageWithDimensions + Send + Sync>);
+pub struct DynamicImage(
+    pub Arc<dyn Fn(Mut<'_, Handle<Image>>, &ResourceBag) -> (f32, f32) + Send + Sync>,
+);
 
 impl DynamicImage {
-    pub fn get_image(&self, resources: &ResourceBag) -> ImageWithDimensions {
-        self.0(resources)
+    pub fn assign(&self, handle: Mut<'_, Handle<Image>>, resources: &ResourceBag) -> (f32, f32) {
+        self.0(handle, resources)
     }
 }
 

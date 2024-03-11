@@ -177,7 +177,7 @@ where
 
 pub fn dynamic_image<T>(dynamic_image: T, styles: impl FlexItemStyleEnhancer) -> impl Bundle
 where
-    T: Fn(&ResourceBag) -> ImageWithDimensions + Send + Sync + 'static,
+    T: Fn(Mut<'_, Handle<Image>>, &ResourceBag) -> (f32, f32) + Send + Sync + 'static,
 {
     let mut item = FlexItemBundle::default();
     styles.enhance(&mut item.style);

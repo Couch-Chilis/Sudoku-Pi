@@ -212,7 +212,7 @@ pub fn button_interaction(
                 };
 
                 if let Some(mut text) = children
-                    .get(0)
+                    .first()
                     .and_then(|child| text_query.get_mut(*child).ok())
                 {
                     text.sections[0].style.color = match *interaction {
@@ -231,7 +231,7 @@ pub fn button_interaction(
                 };
 
                 if let Some((mut background, children)) = children
-                    .get(0)
+                    .first()
                     .and_then(|child| background_query.get_mut(*child).ok())
                 {
                     *background = match *interaction {
@@ -242,7 +242,7 @@ pub fn button_interaction(
                     };
 
                     if let Some(mut text) = children
-                        .get(0)
+                        .first()
                         .and_then(|child| text_query.get_mut(*child).ok())
                     {
                         text.sections[0].style.color = match *interaction {
@@ -263,7 +263,7 @@ pub fn button_interaction(
                 };
 
                 if let Some((mut background, children)) = children
-                    .get(0)
+                    .first()
                     .and_then(|child| background_query.get_mut(*child).ok())
                 {
                     *background = match *interaction {
@@ -274,7 +274,7 @@ pub fn button_interaction(
                     };
 
                     if let Some(mut text) = children
-                        .get(0)
+                        .first()
                         .and_then(|child| text_query.get_mut(*child).ok())
                     {
                         text.sections[0].style.color = match *interaction {

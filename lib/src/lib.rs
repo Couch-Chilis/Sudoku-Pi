@@ -56,13 +56,13 @@ struct Screen {
     state: ScreenState,
     width: f32,
     height: f32,
-    tile_x: f32,
-    tile_y: f32,
+    tile_x: i8,
+    tile_y: i8,
 }
 
 impl Screen {
     fn for_state(state: ScreenState) -> Self {
-        let (tile_x, tile_y) = get_tile_offset_for_screen(state);
+        let (tile_x, tile_y) = state.tile_offsets();
         Self {
             state,
             tile_x,
@@ -84,6 +84,35 @@ pub enum ScreenState {
     Welcome,
     LearnNumbers,
     LearnNotes,
+}
+
+impl ScreenState {
+    fn from_tile_offsets(x: i8, y: i8) -> Option<Self> {
+        use ScreenState::*;
+        match (x, y) {
+            (0, 0) => Some(MainMenu),
+            (1, 0) => Some(Game),
+            (1, 1) => Some(Highscores),
+            (2, 0) => Some(Settings),
+            (-3, 0) => Some(Welcome),
+            (-2, 0) => Some(LearnNumbers),
+            (-1, 0) => Some(LearnNotes),
+            _ => None,
+        }
+    }
+
+    fn tile_offsets(self) -> (i8, i8) {
+        use ScreenState::*;
+        match self {
+            MainMenu | SelectDifficulty => (0, 0),
+            Game => (1, 0),
+            Highscores => (1, 1),
+            Settings => (2, 0),
+            Welcome => (-3, 0),
+            LearnNumbers => (-2, 0),
+            LearnNotes => (-1, 0),
+        }
+    }
 }
 
 /// Overrides the screen(s) for which the given entity provides interactivity.
@@ -209,6 +238,8 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
                 on_escape,
                 #[cfg(not(platform = "ios"))]
                 on_resize,
+                #[cfg(debug_assertions)]
+                on_keyboard_input,
                 on_screen_change,
                 on_window_close,
                 on_exit.after(on_window_close),
@@ -254,6 +285,35 @@ fn run(screen_padding: ScreenSizing, zoom_factor: ZoomFactor) {
 
 // #[cfg(not(feature = "steam"))]
 fn add_steamworks_plugin(_app: &mut App) {}
+
+#[cfg(debug_assertions)]
+fn on_keyboard_input(
+    mut screen_state: ResMut<NextState<ScreenState>>,
+    current_screen: Res<State<ScreenState>>,
+    keys: Res<ButtonInput<KeyCode>>,
+) {
+    if !keys.all_pressed([KeyCode::ControlLeft, KeyCode::AltLeft]) {
+        return;
+    }
+
+    let mut move_screen = |current_screen: &ScreenState, dx, dy| {
+        let (x, y) = current_screen.tile_offsets();
+        if let Some(new_screen) = ScreenState::from_tile_offsets(x + dx, y + dy) {
+            screen_state.set(new_screen);
+        }
+    };
+
+    for key in keys.get_just_pressed() {
+        use KeyCode::*;
+        match key {
+            ArrowUp => move_screen(current_screen.get(), 0, 1),
+            ArrowRight => move_screen(current_screen.get(), 1, 0),
+            ArrowDown => move_screen(current_screen.get(), 0, -1),
+            ArrowLeft => move_screen(current_screen.get(), -1, 0),
+            _ => {}
+        }
+    }
+}
 
 fn setup(
     mut commands: Commands,
@@ -343,7 +403,7 @@ fn on_screen_change(
         return;
     }
 
-    let (offset_x, offset_y) = get_tile_offset_for_screen(*screen_state.get());
+    let (offset_x, offset_y) = screen_state.get().tile_offsets();
 
     for (entity, screen, transform) in &screens {
         let tween = Tween::new(
@@ -356,8 +416,8 @@ fn on_screen_change(
             TransformPositionLens {
                 start: transform.translation,
                 end: Vec3::new(
-                    screen.width * (screen.tile_x - offset_x),
-                    screen.height * (screen.tile_y - offset_y),
+                    screen.width * (screen.tile_x - offset_x) as f32,
+                    screen.height * (screen.tile_y - offset_y) as f32,
                     1.,
                 ),
             },
@@ -387,10 +447,10 @@ fn on_resize(
         screen.width = *width;
         screen.height = *height;
 
-        let (offset_x, offset_y) = get_tile_offset_for_screen(*current_screen.get());
+        let (offset_x, offset_y) = current_screen.get().tile_offsets();
         transform.translation = Vec3::new(
-            width * (screen.tile_x - offset_x),
-            height * (screen.tile_y - offset_y),
+            width * (screen.tile_x - offset_x) as f32,
+            height * (screen.tile_y - offset_y) as f32,
             1.,
         );
         transform.scale = Vec3::new(*width, *height, 1.);
@@ -414,19 +474,6 @@ fn get_initial_window_mode() -> WindowMode {
     }
 }
 
-fn get_tile_offset_for_screen(screen: ScreenState) -> (f32, f32) {
-    use ScreenState::*;
-    match screen {
-        MainMenu | SelectDifficulty => (0., 0.),
-        Game => (1., 0.),
-        Highscores => (1., 1.),
-        Settings => (2., 0.),
-        Welcome => (-3., 0.),
-        LearnNumbers => (-2., 0.),
-        LearnNotes => (-1., 0.),
-    }
-}
-
 fn screen<B>(
     screen: ScreenState,
     resources: &ResourceBag,
@@ -441,12 +488,12 @@ where
     );
 
     let screen_sizing = resources.screen_sizing;
-    let (tile_x, tile_y) = get_tile_offset_for_screen(screen);
+    let (tile_x, tile_y) = screen.tile_offsets();
     bundle.transform = Transform {
         scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
         translation: Vec3::new(
-            screen_sizing.width * tile_x,
-            screen_sizing.height * tile_y,
+            screen_sizing.width * tile_x as f32,
+            screen_sizing.height * tile_y as f32,
             1.,
         ),
         ..default()

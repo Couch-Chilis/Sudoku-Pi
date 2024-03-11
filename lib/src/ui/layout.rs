@@ -127,19 +127,12 @@ impl<'a> LayoutInfo<'a> {
                         Cow::Borrowed(item_style)
                     };
 
-                    if let (Some(dynamic_image), Some(mut image_handle)) =
-                        (dynamic_image, image_handle)
+                    if let (Some(dynamic_image), Some(image_handle)) = (dynamic_image, image_handle)
                     {
-                        let image = dynamic_image.get_image(&resources);
-                        if *image_handle != image.handle {
-                            *image_handle = image.handle.clone();
-                        }
+                        let (width, height) = dynamic_image.assign(image_handle, &resources);
 
                         item_style = Cow::Owned(FlexItemStyle {
-                            transform: Transform::from_2d_scale(
-                                1. / image.width,
-                                1. / image.height,
-                            ),
+                            transform: Transform::from_2d_scale(1. / width, 1. / height),
                             ..(*item_style).clone()
                         });
                     }
