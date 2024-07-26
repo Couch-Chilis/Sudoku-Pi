@@ -34,7 +34,7 @@ pub fn on_transition(
             }
             Exit => match current_state.get() {
                 ScreenState::MainMenu => {
-                    app_exit_events.send(AppExit);
+                    app_exit_events.send(AppExit::Success);
                 }
                 ScreenState::Settings => {
                     screen_state.set(ScreenState::Game);

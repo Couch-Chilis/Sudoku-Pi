@@ -10,7 +10,7 @@ name = "sudoku_pi"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-bevy = { version = "0.13", default-features = false, features = [
+bevy = { version = "0.14", default-features = false, features = [
     "android_shared_stdcxx",
 ] }
 sudoku-lib = { path = "../lib" }

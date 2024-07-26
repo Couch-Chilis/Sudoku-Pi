@@ -171,7 +171,7 @@ struct TransformRotationZLens {
 }
 
 impl Lens<FlexItemStyle> for TransformRotationZLens {
-    fn lerp(&mut self, target: &mut FlexItemStyle, ratio: f32) {
+    fn lerp(&mut self, target: &mut dyn bevy_tweening::Targetable<FlexItemStyle>, ratio: f32) {
         let value = self.start + (self.end - self.start) * ratio;
         target.transform.rotation = Quat::from_rotation_z(value);
     }

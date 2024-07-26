@@ -21,10 +21,6 @@ pub enum ButtonType {
     Ternary,
 }
 
-/// Marker for button borders.
-#[derive(Clone, Component)]
-pub struct Border;
-
 /// A UI button with text that is also a flex item.
 #[derive(Bundle, Clone, Default)]
 pub struct ButtonBundle {

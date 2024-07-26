@@ -170,7 +170,7 @@ fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
     } else if game.start.has(x, y) {
         Color::BLACK
     } else {
-        Color::BLUE
+        Color::linear_rgb(0., 0., 1.)
     }
 }
 
@@ -193,7 +193,7 @@ pub(super) fn render_notes(
                 let (ratio, _) = get_mistake_animation_ratio(note.animation_timer);
                 if ratio < 1. {
                     note.animation_timer += time.delta().as_secs_f32();
-                    Color::rgba(0., 0., 0., ratio.powi(2))
+                    Color::srgba(0., 0., 0., ratio.powi(2))
                 } else {
                     note.animation_kind = None;
                     Color::BLACK
@@ -207,7 +207,7 @@ pub(super) fn render_notes(
                     Color::NONE
                 } else {
                     note.animation_timer += time.delta().as_secs_f32();
-                    Color::rgba(0., 0., 0., a)
+                    Color::srgba(0., 0., 0., a)
                 }
             } else {
                 Color::NONE
@@ -348,7 +348,7 @@ pub(super) fn render_note_highlights(
         };
         let color = match highlight_kind {
             Some(NoteHighlightKind::Note) => COLOR_CELL_SAME_NUMBER,
-            Some(NoteHighlightKind::Mistake) => COLOR_POP_DARK.with_a(0.5),
+            Some(NoteHighlightKind::Mistake) => COLOR_POP_DARK.with_alpha(0.5),
             None => Color::NONE,
         };
         if sprite.color != color {

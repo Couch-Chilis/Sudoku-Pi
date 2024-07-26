@@ -194,7 +194,7 @@ struct AssetConfiguratorPlugin {}
 impl Plugin for AssetConfiguratorPlugin {
     fn build(&self, app: &mut App) {
         let mut sources = app
-            .world
+            .world_mut()
             .get_resource_or_insert_with::<AssetSourceBuilders>(Default::default);
         sources.insert(
             AssetSourceId::Default,
@@ -228,7 +228,6 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
         .insert_resource(screen_sizing)
         .insert_resource(zoom_factor)
         .insert_resource(ClearColor(Color::WHITE))
-        .init_state::<ScreenState>()
         .add_event::<TransitionEvent>()
         .add_event::<WindowDestroyed>()
         .add_systems(Startup, setup)
@@ -236,7 +235,7 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
             Update,
             (
                 on_escape,
-                #[cfg(not(platform = "ios"))]
+                #[cfg(not(target_os = "ios"))]
                 on_resize,
                 #[cfg(debug_assertions)]
                 on_keyboard_input,
@@ -265,7 +264,8 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
             UiPlugin,
             game::GamePlugin,
             menus::MenuPlugin,
-        ));
+        ))
+        .init_state::<ScreenState>();
 
     // MSAA makes some Android devices panic, this is under investigation
     // https://github.com/bevyengine/bevy/issues/8229
@@ -427,7 +427,7 @@ fn on_screen_change(
     }
 }
 
-#[cfg(not(platform = "ios"))]
+#[cfg(not(target_os = "ios"))]
 fn on_resize(
     mut commands: Commands,
     mut events: EventReader<WindowResized>,
@@ -466,7 +466,7 @@ fn on_window_close(
     window_close_events: EventReader<WindowCloseRequested>,
 ) {
     if !window_close_events.is_empty() {
-        app_exit_events.send(AppExit);
+        app_exit_events.send(AppExit::Success);
     }
 }
 

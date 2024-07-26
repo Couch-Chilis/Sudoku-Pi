@@ -104,7 +104,7 @@ pub fn main_menu_button_actions(
                     screen_state.set(ScreenState::SelectDifficulty);
                 }
                 Quit => {
-                    app_exit_events.send(AppExit);
+                    app_exit_events.send(AppExit::Success);
                 }
             }
         }

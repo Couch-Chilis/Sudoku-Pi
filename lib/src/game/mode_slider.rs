@@ -292,7 +292,7 @@ struct TransformTranslateKnobLens {
 }
 
 impl Lens<FlexItemStyle> for TransformTranslateKnobLens {
-    fn lerp(&mut self, target: &mut FlexItemStyle, ratio: f32) {
+    fn lerp(&mut self, target: &mut dyn bevy_tweening::Targetable<FlexItemStyle>, ratio: f32) {
         let x = self.start + (self.end - self.start) * ratio;
         let distance_from_center = ((x - self.center) / self.center).abs();
         let scale = (0.25 + 0.75 * distance_from_center) * KNOB_SCALE;

@@ -50,9 +50,6 @@ enum StatKind {
     BestTime,
 }
 
-#[derive(Component)]
-pub struct BestTimeText;
-
 pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
     fragment3(
         // Scroll section.
