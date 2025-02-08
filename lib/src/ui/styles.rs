@@ -1,10 +1,9 @@
 use super::flex::*;
 use crate::constants::*;
-use crate::utils::SpriteExt;
 use crate::{ResourceBag, ScreenState};
 use bevy::prelude::*;
 use bevy::sprite::Anchor;
-use bevy::text::Text2dBounds;
+use bevy::text::TextBounds;
 use std::sync::Arc;
 
 const GAME_SCREEN_TIMER_LINE_HEIGHT: Val = Val::Pixel(1);
@@ -21,7 +20,7 @@ pub fn available_size(style: &mut FlexItemStyle) {
 
 pub fn background_color(color: Color) -> impl FnOnce(&mut FlexContainerBundle) {
     move |bundle: &mut FlexContainerBundle| {
-        bundle.background = Sprite::from_color(color);
+        bundle.sprite = Sprite::from_color(color, Vec2::new(1., 1.));
     }
 }
 
@@ -81,32 +80,26 @@ pub fn button_size_settings(style: &mut FlexItemStyle) {
     ));
 }
 
-pub fn button_text(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    button_text_color(bundle, resources);
-    button_text_font(bundle, resources);
-    button_text_size(bundle, resources);
+pub fn button_text(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    button_text_color(text_style, resources);
+    button_text_font(text_style, resources);
+    button_text_size(text_style, resources);
 }
 
-pub fn button_text_color(bundle: &mut Text2dBundle, _resources: &ResourceBag) {
-    for section in &mut bundle.text.sections {
-        section.style.color = COLOR_BUTTON_TEXT;
-    }
+pub fn button_text_color(text_style: &mut FlexTextStyle, _resources: &ResourceBag) {
+    text_style.color = TextColor::from(COLOR_BUTTON_TEXT);
 }
 
-pub fn button_text_font(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut bundle.text.sections {
-        section.style.font = resources.fonts.medium.clone();
-    }
+pub fn button_text_font(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font = resources.fonts.medium.clone();
 }
 
-pub fn button_text_size(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut bundle.text.sections {
-        section.style.font_size = if resources.screen_sizing.is_tablet() {
-            66.
-        } else {
-            44.
-        };
-    }
+pub fn button_text_size(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font_size = if resources.screen_sizing.is_tablet() {
+        55.
+    } else {
+        36.7
+    };
 }
 
 pub fn cog_size(style: &mut FlexItemStyle) {
@@ -127,16 +120,12 @@ pub fn fixed_aspect_ratio(style: &mut FlexItemStyle) {
     style.preserve_aspect_ratio = true;
 }
 
-pub fn font_bold(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut bundle.text.sections {
-        section.style.font = resources.fonts.bold.clone();
-    }
+pub fn font_bold(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font = resources.fonts.bold.clone();
 }
 
-pub fn font_medium(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut bundle.text.sections {
-        section.style.font = resources.fonts.medium.clone();
-    }
+pub fn font_medium(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font = resources.fonts.medium.clone();
 }
 
 pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
@@ -145,22 +134,18 @@ pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
     }
 }
 
-pub fn font_size(font_size: f32) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
-    move |text: &mut Text2dBundle, _resources: &ResourceBag| {
-        for section in &mut text.text.sections {
-            section.style.font_size = font_size;
-        }
+pub fn font_size(font_size: f32) -> impl FnOnce(&mut FlexTextStyle, &ResourceBag) {
+    move |text_style: &mut FlexTextStyle, _resources: &ResourceBag| {
+        text_style.font.font_size = font_size;
     }
 }
 
-pub fn game_screen_score_font_size(text: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut text.text.sections {
-        section.style.font_size = if resources.screen_sizing.is_tablet() {
-            86.
-        } else {
-            58.
-        };
-    }
+pub fn game_screen_score_font_size(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font_size = if resources.screen_sizing.is_tablet() {
+        71.7
+    } else {
+        48.3
+    };
 }
 
 pub fn game_screen_score_size(style: &mut FlexItemStyle) {
@@ -176,13 +161,11 @@ pub fn game_screen_score_size(style: &mut FlexItemStyle) {
     ));
 }
 
-pub fn game_screen_timer_font_size(text: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut text.text.sections {
-        section.style.font_size = if resources.screen_sizing.is_tablet() {
-            105.
-        } else {
-            70.
-        }
+pub fn game_screen_timer_font_size(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font_size = if resources.screen_sizing.is_tablet() {
+        87.5
+    } else {
+        58.3
     }
 }
 
@@ -274,16 +257,13 @@ pub fn highscore_scroll_author_padding(bundle: &mut FlexContainerBundle) {
         |style: &mut FlexContainerStyle, resources: &ResourceBag| {
             apply_highscore_scroll_padding(style, resources);
 
-            style.padding.top = Val::Pixel(if resources.screen_sizing.is_tablet() {
-                155
+            if resources.screen_sizing.is_tablet() {
+                style.padding.top = Val::Pixel(155);
+                style.padding.right += Val::Pixel(15);
             } else {
-                65
-            });
-            style.padding.right += Val::Pixel(if resources.screen_sizing.is_tablet() {
-                15
-            } else {
-                10
-            });
+                style.padding.top = Val::Pixel(65);
+                style.padding.right += Val::Pixel(10);
+            }
         },
     ));
 }
@@ -295,21 +275,45 @@ pub fn highscore_scroll_padding(bundle: &mut FlexContainerBundle) {
         .push(Arc::new(apply_highscore_scroll_padding));
 }
 
-pub fn highscore_scroll_quote_text_bounds(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    bundle.text_2d_bounds = Text2dBounds {
-        size: Vec2::new(
-            if resources.screen_sizing.is_tablet() {
-                1200.
-            } else {
-                580.
-            },
-            if resources.screen_sizing.is_tablet() {
-                400.
-            } else {
-                200.
-            },
-        ),
-    };
+pub fn highscore_scroll_quote(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font = resources.fonts.scroll.clone();
+    text_style.color = TextColor::from(Color::BLACK);
+    text_style.layout.justify = JustifyText::Left;
+
+    if resources.screen_sizing.is_tablet() {
+        text_style.font.font_size = 50.;
+        text_style.bounds = TextBounds {
+            width: Some(1200.),
+            height: None,
+        };
+    } else {
+        text_style.font.font_size = 29.;
+        text_style.bounds = TextBounds {
+            width: Some(580.),
+            height: None,
+        };
+    }
+}
+
+pub fn highscore_scroll_author(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.font.font = resources.fonts.scroll.clone();
+    text_style.color = TextColor::from(Color::BLACK);
+    text_style.layout.justify = JustifyText::Left;
+    text_style.anchor = Anchor::BottomRight;
+
+    if resources.screen_sizing.is_tablet() {
+        text_style.font.font_size = 41.7;
+        text_style.bounds = TextBounds {
+            width: Some(1200.),
+            height: None,
+        };
+    } else {
+        text_style.font.font_size = 25.;
+        text_style.bounds = TextBounds {
+            width: Some(580.),
+            height: None,
+        };
+    }
 }
 
 pub fn highscore_scroll_size(style: &mut FlexItemStyle) {
@@ -326,9 +330,9 @@ pub fn highscore_scroll_size(style: &mut FlexItemStyle) {
     ));
 }
 
-pub fn justify(justify: JustifyText) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
-    move |bundle: &mut Text2dBundle, _resources: &ResourceBag| {
-        bundle.text.justify = justify;
+pub fn justify(justify: JustifyText) -> impl FnOnce(&mut FlexTextStyle, &ResourceBag) {
+    move |text_style: &mut FlexTextStyle, _resources: &ResourceBag| {
+        text_style.layout.justify = justify;
     }
 }
 
@@ -418,31 +422,25 @@ pub fn screen_padding(
     }
 }
 
-pub fn settings_label_text(bundle: &mut Text2dBundle, resources: &ResourceBag) {
-    for section in &mut bundle.text.sections {
-        section.style = TextStyle {
-            color: COLOR_SECONDARY_BUTTON_TEXT,
-            font: resources.fonts.medium.clone(),
-            font_size: if resources.screen_sizing.is_tablet() {
-                72.
-            } else {
-                50.
-            },
-        }
+pub fn settings_label_text(text_style: &mut FlexTextStyle, resources: &ResourceBag) {
+    text_style.color = TextColor::from(COLOR_SECONDARY_BUTTON_TEXT);
+    text_style.font.font = resources.fonts.medium.clone();
+    text_style.font.font_size = if resources.screen_sizing.is_tablet() {
+        60.
+    } else {
+        41.7
+    };
+}
+
+pub fn text_anchor(anchor: Anchor) -> impl FnOnce(&mut FlexTextStyle, &ResourceBag) {
+    move |style: &mut FlexTextStyle, _resources: &ResourceBag| {
+        style.anchor = anchor;
     }
 }
 
-pub fn text_anchor(anchor: Anchor) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
-    move |bundle: &mut Text2dBundle, _resources: &ResourceBag| {
-        bundle.text_anchor = anchor;
-    }
-}
-
-pub fn text_color(color: Color) -> impl FnOnce(&mut Text2dBundle, &ResourceBag) {
-    move |bundle: &mut Text2dBundle, _resources: &ResourceBag| {
-        for section in &mut bundle.text.sections {
-            section.style.color = color;
-        }
+pub fn text_color(color: Color) -> impl FnOnce(&mut FlexTextStyle, &ResourceBag) {
+    move |style: &mut FlexTextStyle, _resources: &ResourceBag| {
+        style.color = TextColor::from(color);
     }
 }
 

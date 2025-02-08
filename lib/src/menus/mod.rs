@@ -5,7 +5,7 @@ mod settings_toggle;
 
 use crate::{ui::*, ScreenInteraction, ScreenState};
 use bevy::prelude::*;
-use bevy_tweening::{Animator, Delay, EaseFunction, EaseMethod, Lens, Tween};
+use bevy_tweening::{Animator, Delay, EaseMethod, Lens, Tween};
 use difficulty_menu::*;
 use main_menu::*;
 use settings_menu::*;
@@ -51,13 +51,11 @@ pub fn menu_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 fixed_size(Val::CrossPercent(46.19), Val::Percent(100.)),
                 fixed_aspect_ratio,
                 without_occupying_space,
+                z_index(2.),
             ),
         ),
         // Spacer.
-        leaf((
-            fixed_size(Val::Percent(100.), Val::Percent(50.)),
-            z_index(2.),
-        )),
+        leaf(fixed_size(Val::Percent(100.), Val::Percent(50.))),
         // Main menu buttons.
         button_section(ScreenState::MainMenu, 0., 2., main_menu_buttons),
         // Difficulty buttons.

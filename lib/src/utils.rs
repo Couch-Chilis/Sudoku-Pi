@@ -3,16 +3,6 @@ use std::{fs, path::PathBuf};
 
 const DEFAULT_TRANSLATION: Vec3 = Vec3::new(0., 0., 1.);
 
-pub trait SpriteExt {
-    fn from_color(color: Color) -> Sprite;
-}
-
-impl SpriteExt for Sprite {
-    fn from_color(color: Color) -> Sprite {
-        Sprite { color, ..default() }
-    }
-}
-
 pub trait TransformExt {
     fn default_2d() -> Transform;
     fn from_2d_scale(x: f32, y: f32) -> Transform;

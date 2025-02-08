@@ -66,7 +66,7 @@ where
     );
 }
 
-impl<'a, B> ChildBuilderExt<B> for ChildBuilder<'a>
+impl<B> ChildBuilderExt<B> for ChildBuilder<'_>
 where
     B: Bundle,
 {
@@ -92,7 +92,7 @@ where
     }
 }
 
-impl<'w, 's, B> ChildBuilderExt<B> for Commands<'w, 's>
+impl<B> ChildBuilderExt<B> for Commands<'_, '_>
 where
     B: Bundle,
 {

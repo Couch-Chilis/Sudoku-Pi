@@ -1,6 +1,6 @@
 use super::{board_numbers, wheel::wheel};
-use crate::{constants::*, ui::*, utils::*, ScreenState};
-use bevy::{prelude::*, sprite::SpriteBundle};
+use crate::{constants::*, ui::*, ScreenState};
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct Board;
@@ -83,15 +83,14 @@ fn line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
         Vertical => Vec3::new(thickness, 9.03 * CELL_SIZE, 1.),
     };
 
-    SpriteBundle {
-        sprite: Sprite::from_color(color),
-        transform: Transform {
+    (
+        Sprite::from_color(color, Vec2::new(1., 1.)),
+        Transform {
             translation,
             scale,
             ..default()
         },
-        ..default()
-    }
+    )
 }
 
 fn mistake_borders() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
@@ -123,13 +122,12 @@ fn mistake_line(edge: f32, orientation: Orientation) -> impl Bundle {
         Vertical => Vec3::new(0.06 * CELL_SIZE, 1.03 * CELL_SIZE, 1.),
     };
 
-    SpriteBundle {
-        sprite: Sprite::from_color(COLOR_POP_DARK),
-        transform: Transform {
+    (
+        Sprite::from_color(COLOR_POP_DARK, Vec2::new(1., 1.)),
+        Transform {
             translation,
             scale,
             ..default()
         },
-        ..default()
-    }
+    )
 }

@@ -73,11 +73,8 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
         cb.spawn((
             Wheel::default(),
             screen,
-            SpriteBundle {
-                texture: props.resources.images.wheel.handle.clone(),
-                transform: Transform::from_2d_scale(0., 0.),
-                ..default()
-            },
+            Sprite::from_image(props.resources.images.wheel.handle.clone()),
+            Transform::from_2d_scale(0., 0.),
         ))
         .with_children(|wheel| {
             for (i, disabled_slice) in get_disabled_slice_handles(props.resources.images)
@@ -86,12 +83,9 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
             {
                 wheel.spawn((
                     DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
-                    SpriteBundle {
-                        texture: disabled_slice.clone(),
-                        transform: Transform::default_2d(),
-                        visibility: Visibility::Hidden,
-                        ..default()
-                    },
+                    Sprite::from_image(disabled_slice.clone()),
+                    Transform::default_2d(),
+                    Visibility::Hidden,
                 ));
             }
         });
@@ -99,35 +93,32 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
         cb.spawn((
             Slice,
             screen,
-            SpriteBundle {
-                transform: Transform::from_2d_scale(0., 0.),
-                ..default()
-            },
+            Sprite::default(),
+            Transform::from_2d_scale(0., 0.),
         ));
 
-        let label_text_style = TextStyle {
-            font: props.resources.fonts.medium.clone(),
-            font_size: 50.,
-            color: COLOR_WHEEL_TOP_TEXT,
+        let label_text_style = FlexTextStyle {
+            font: TextFont {
+                font: props.resources.fonts.medium.clone(),
+                font_size: 41.7,
+                ..default()
+            },
+            color: TextColor::from(COLOR_WHEEL_TOP_TEXT),
+            ..default()
         };
 
         cb.spawn((
             TopLabel,
             screen,
-            SpriteBundle {
-                texture: props.resources.images.top_label.handle.clone(),
-                transform: Transform::from_2d_scale(0., 0.),
-                ..default()
-            },
+            Sprite::from_image(props.resources.images.top_label.handle.clone()),
+            Transform::from_2d_scale(0., 0.),
         ))
         .with_children(|center_label| {
             center_label.spawn((
                 TopLabelText,
-                Text2dBundle {
-                    text: Text::from_section("", label_text_style),
-                    transform: Transform::from_translation(Vec3::new(0., 8., 1.)),
-                    ..default()
-                },
+                Text2d::new(""),
+                label_text_style,
+                Transform::from_translation(Vec3::new(0., 8., 1.)),
             ));
         });
     }
@@ -288,15 +279,12 @@ pub fn render_wheel(
         (&mut Transform, &mut Wheel, &ScreenState),
         (Changed<Wheel>, Without<Slice>, Without<TopLabel>),
     >,
-    mut slice: Query<
-        (&mut Transform, &mut Handle<Image>, &ScreenState),
-        (With<Slice>, Without<TopLabel>),
-    >,
+    mut slice: Query<(&mut Transform, &mut Sprite, &ScreenState), (With<Slice>, Without<TopLabel>)>,
     mut top_label: Query<
         (&mut Transform, &ScreenState),
         (With<TopLabel>, Without<Wheel>, Without<Slice>),
     >,
-    mut top_label_text: Query<&mut Text, With<TopLabelText>>,
+    mut top_label_text: Query<&mut Text2d, With<TopLabelText>>,
     active_slice_handles: Res<ActiveSliceHandles>,
     screen: Res<State<ScreenState>>,
     screen_sizing: Res<ScreenSizing>,
@@ -350,7 +338,7 @@ pub fn render_wheel(
                     .max(0.);
         let scale = bounce * radius / WHEEL_SIZE;
 
-        *slice_texture = active_slice_handles.for_number(n);
+        slice_texture.image = active_slice_handles.for_number(n);
         slice_transform.translation = Vec3::new(cx, cy, WHEEL_Z + 1.);
         slice_transform.scale = Vec3::new(scale, scale, 1.);
 
@@ -358,7 +346,7 @@ pub fn render_wheel(
         top_label_transform.scale = Vec3::new(radius / WHEEL_SIZE, radius / WHEEL_SIZE, 1.);
 
         for mut top_label_text in &mut top_label_text {
-            top_label_text.sections[0].value = n.to_string();
+            top_label_text.0 = n.to_string();
         }
     } else {
         *slice_transform = Transform::from_2d_scale(0., 0.);

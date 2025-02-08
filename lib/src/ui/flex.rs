@@ -2,7 +2,7 @@
 
 use crate::resource_bag::ResourceBag;
 use crate::{utils::*, ScreenInteraction, ScreenState};
-use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
+use bevy::{prelude::*, sprite::Anchor, text::TextBounds};
 use smallvec::SmallVec;
 use std::ops::{Add, AddAssign, Mul, Sub};
 use std::sync::Arc;
@@ -56,26 +56,16 @@ impl FlexBundle {
 #[derive(Bundle, Clone)]
 pub struct FlexContainerBundle {
     pub style: FlexContainerStyle,
-    pub background: Sprite,
+    pub sprite: Sprite,
     pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub texture: Handle<Image>,
-    pub visibility: Visibility,
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
 }
 
 impl Default for FlexContainerBundle {
     fn default() -> Self {
         Self {
             style: FlexContainerStyle::default(),
-            background: Sprite::from_color(Color::NONE),
+            sprite: Sprite::from_color(Color::NONE, Vec2::new(1., 1.)),
             transform: Transform::default_2d(),
-            global_transform: Default::default(),
-            texture: Default::default(),
-            visibility: Default::default(),
-            inherited_visibility: Default::default(),
-            view_visibility: Default::default(),
         }
     }
 }
@@ -83,7 +73,7 @@ impl Default for FlexContainerBundle {
 impl FlexContainerBundle {
     pub fn with_background_color(self, color: Color) -> Self {
         Self {
-            background: Sprite::from_color(color),
+            sprite: Sprite::from_color(color, Vec2::new(1., 1.)),
             ..self
         }
     }
@@ -190,12 +180,10 @@ pub struct FlexImageBundle {
 }
 
 #[derive(Clone, Component)]
-pub struct DynamicImage(
-    pub Arc<dyn Fn(Mut<'_, Handle<Image>>, &ResourceBag) -> (f32, f32) + Send + Sync>,
-);
+pub struct DynamicImage(pub Arc<dyn Fn(Mut<Sprite>, &ResourceBag) -> (f32, f32) + Send + Sync>);
 
 impl DynamicImage {
-    pub fn assign(&self, handle: Mut<'_, Handle<Image>>, resources: &ResourceBag) -> (f32, f32) {
+    pub fn assign(&self, handle: Mut<Sprite>, resources: &ResourceBag) -> (f32, f32) {
         self.0(handle, resources)
     }
 }
@@ -361,11 +349,7 @@ pub struct FlexLeafBundle {
     pub flex: FlexItemBundle,
 
     pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub texture: Handle<Image>,
-    pub visibility: Visibility,
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
+    pub sprite: Sprite,
 }
 
 impl FlexLeafBundle {
@@ -384,46 +368,32 @@ impl FlexLeafBundle {
 #[derive(Bundle, Clone, Default)]
 pub struct FlexTextBundle {
     pub flex: Flex,
-    pub text: Text2dBundle,
+    pub text: Text2d,
     pub text_style: FlexTextStyle,
     pub computed_position: ComputedPosition,
 }
 
 impl FlexTextBundle {
-    pub fn from_text(text: Text) -> Self {
+    pub fn from_text(text: impl Into<String>) -> Self {
         Self {
-            text: Text2dBundle {
-                text,
-                transform: Transform::from_scale(Vec3::new(0., 0., 0.)),
-                ..default()
-            },
+            text: Text2d::new(text),
             ..default()
         }
     }
 
-    pub fn with_anchor(mut self, anchor: Anchor) -> Self {
-        self.text.text_anchor = anchor;
-        self
-    }
-
-    pub fn with_bounds(mut self, bounds: Text2dBounds) -> Self {
-        self.text.text_2d_bounds = bounds;
-        self
-    }
-
-    pub fn with_justify(mut self, justify: JustifyText) -> Self {
-        self.text.text.justify = justify;
+    pub fn with_style(mut self, style: FlexTextStyle) -> Self {
+        self.text_style = style;
         self
     }
 }
 
-#[derive(Clone, Component, Default)]
+#[derive(Bundle, Clone, Default)]
 pub struct FlexTextStyle {
-    /// Font to use.
-    pub font: Handle<Font>,
-
-    /// Optional enhancers that allow for determining style fields at runtime.
-    pub dynamic_styles: Vec<Arc<dyn Fn(&mut TextStyle, &ResourceBag) + Send + Sync>>,
+    pub font: TextFont,
+    pub color: TextColor,
+    pub bounds: TextBounds,
+    pub layout: TextLayout,
+    pub anchor: Anchor,
 }
 
 #[derive(Clone, Copy, Debug, Default)]

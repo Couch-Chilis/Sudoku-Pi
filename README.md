@@ -41,7 +41,7 @@ well as in binary form for release to app stores.
 
 # License
 
-Sudoku Pi is copyright 2023 by Couch Chilis and available under the
+Sudoku Pi is copyright 2025 by Couch Chilis and available under the
 [General Public License v3](LICENSE-GPLv3.md).
 
 If you use the source code for your own project, we ask you kindly to consider

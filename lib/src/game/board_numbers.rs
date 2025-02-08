@@ -4,10 +4,10 @@ use crate::{Fonts, ScreenSizing, Settings};
 use bevy::prelude::*;
 use std::num::NonZeroU8;
 
-const NUMBER_FONT_SIZE: f32 = 80.;
-const NUMBER_FONT_SIZE_IPAD: f32 = 100.;
-const NOTE_FONT_SIZE: f32 = 30.;
-const NOTE_FONT_SIZE_IPAD: f32 = 40.;
+const NUMBER_FONT_SIZE: f32 = 66.7;
+const NUMBER_FONT_SIZE_IPAD: f32 = 83.3;
+const NOTE_FONT_SIZE: f32 = 25.;
+const NOTE_FONT_SIZE_IPAD: f32 = 33.3;
 
 #[derive(Clone, Copy)]
 pub(super) enum CellHighlightKind {
@@ -54,32 +54,40 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
 
         let n = game.current.get(x, y);
 
-        let number_style = TextStyle {
-            font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
-                resources.fonts.light.clone()
-            } else {
-                resources.fonts.bold.clone()
+        let number_style = FlexTextStyle {
+            font: TextFont {
+                font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
+                    resources.fonts.light.clone()
+                } else {
+                    resources.fonts.bold.clone()
+                },
+                font_size: if resources.screen_sizing.is_tablet() {
+                    NUMBER_FONT_SIZE_IPAD
+                } else {
+                    NUMBER_FONT_SIZE
+                },
+                ..default()
             },
-            font_size: if resources.screen_sizing.is_tablet() {
-                NUMBER_FONT_SIZE_IPAD
-            } else {
-                NUMBER_FONT_SIZE
-            },
-            color: if n.is_some() {
+            color: TextColor::from(if n.is_some() {
                 get_number_color(game, settings, x, y)
             } else {
                 Color::NONE
-            },
+            }),
+            ..default()
         };
 
-        let note_style = TextStyle {
-            font: resources.fonts.bold.clone(),
-            font_size: if resources.screen_sizing.is_tablet() {
-                NOTE_FONT_SIZE_IPAD
-            } else {
-                NOTE_FONT_SIZE
+        let note_style = FlexTextStyle {
+            font: TextFont {
+                font: resources.fonts.bold.clone(),
+                font_size: if resources.screen_sizing.is_tablet() {
+                    NOTE_FONT_SIZE_IPAD
+                } else {
+                    NOTE_FONT_SIZE
+                },
+                ..default()
             },
-            color: Color::NONE,
+            color: TextColor::from(Color::NONE),
+            ..default()
         };
 
         cb.spawn(board_number(x, y, n, number_style));
@@ -111,25 +119,23 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
     (bundle, spawn_children)
 }
 
-fn board_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundle {
+fn board_number(x: u8, y: u8, cell: Cell, number_style: FlexTextStyle) -> impl Bundle {
     (
         Number(x, y),
-        FlexTextBundle::from_text(Text::from_section(
-            cell.map(|n| n.to_string()).unwrap_or_default(),
-            number_style,
-        )),
+        FlexTextBundle::from_text(cell.map(|n| n.to_string()).unwrap_or_default())
+            .with_style(number_style),
     )
 }
 
-fn note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
+fn note(x: u8, y: u8, n: NonZeroU8, note_style: FlexTextStyle) -> impl Bundle {
     (
         Note::new(x, y, n),
-        FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style)),
+        FlexTextBundle::from_text(n.to_string()).with_style(note_style),
     )
 }
 
 pub(super) fn render_numbers(
-    mut numbers: Query<(&Number, &mut Text)>,
+    mut numbers: Query<(&Number, &mut Text2d, &mut TextColor, &mut TextFont)>,
     fonts: Res<Fonts>,
     game: Res<Game>,
     settings: Res<Settings>,
@@ -138,11 +144,11 @@ pub(super) fn render_numbers(
         return;
     }
 
-    for (Number(x, y), mut text) in &mut numbers {
-        let current_color = text.sections[0].style.color;
+    for (Number(x, y), mut text, mut text_color, mut text_font) in &mut numbers {
+        let current_color = text_color.0;
         let new_color = if let Some(n) = game.current.get(*x, *y) {
-            text.sections[0].value = n.to_string();
-            text.sections[0].style.font = if game.is_completed(n) {
+            text.0 = n.to_string();
+            text_font.font = if game.is_completed(n) {
                 fonts.light.clone()
             } else {
                 fonts.bold.clone()
@@ -153,7 +159,7 @@ pub(super) fn render_numbers(
         };
 
         if new_color != current_color {
-            text.sections[0].style.color = new_color;
+            text_color.0 = new_color;
         }
     }
 }
@@ -175,17 +181,17 @@ fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
 }
 
 pub(super) fn render_notes(
-    mut notes: Query<(&mut Note, &mut Text)>,
+    mut notes: Query<(&mut Note, &mut TextColor)>,
     game: Res<Game>,
     settings: Res<Settings>,
     time: Res<Time>,
 ) {
-    for (mut note, mut text) in &mut notes {
+    for (mut note, mut text_color) in &mut notes {
         let x = note.x;
         let y = note.y;
         let n = note.n;
 
-        let current_color = text.sections[0].style.color;
+        let current_color = text_color.0;
         let new_color =
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
                 COLOR_POP_DARK
@@ -214,7 +220,7 @@ pub(super) fn render_notes(
             };
 
         if new_color != current_color {
-            text.sections[0].style.color = new_color;
+            text_color.0 = new_color;
         }
     }
 }
@@ -328,7 +334,7 @@ pub(super) fn render_cell_highlights(
             None => Color::NONE,
         };
         if sprite.color != color {
-            *sprite = Sprite::from_color(color);
+            *sprite = Sprite::from_color(color, Vec2::new(1., 1.));
         }
     }
 }
@@ -352,7 +358,7 @@ pub(super) fn render_note_highlights(
             None => Color::NONE,
         };
         if sprite.color != color {
-            *sprite = Sprite::from_color(color);
+            *sprite = Sprite::from_color(color, Vec2::new(1., 1.));
         }
 
         if note.animation_kind == Some(NoteAnimationKind::Mistake) {

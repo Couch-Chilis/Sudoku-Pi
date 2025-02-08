@@ -79,14 +79,11 @@ pub fn settings_toggle(
                     .with_alignment(Alignment::Centered)
                     .with_transform(Transform::from_2d_scale(1. / 121., 1. / 121.)),
             ),
-            SpriteBundle {
-                texture: if is_enabled {
-                    resources.images.toggle_selected.handle.clone()
-                } else {
-                    resources.images.toggle_deselected.handle.clone()
-                },
-                ..default()
-            },
+            Sprite::from_image(if is_enabled {
+                resources.images.toggle_selected.handle.clone()
+            } else {
+                resources.images.toggle_deselected.handle.clone()
+            }),
         );
 
         if is_enabled {
@@ -100,7 +97,7 @@ pub fn settings_toggle(
 }
 
 pub fn render_settings_toggles(
-    mut toggle_query: Query<(&mut Handle<Image>, Option<&ToggleEnabled>), With<Toggle>>,
+    mut toggle_query: Query<(&mut Sprite, Option<&ToggleEnabled>), With<Toggle>>,
     mut timer: ResMut<SettingsToggleTimer>,
     images: Res<Images>,
 ) {
@@ -115,14 +112,14 @@ pub fn render_settings_toggles(
         let animation_images = get_animation_images(&images, toggle_enabled.is_some());
         if let Some(index) = animation_images
             .iter()
-            .position(|&image| *texture == *image)
+            .position(|&image| texture.image == *image)
         {
             if index < animation_images.len() - 1 {
                 let next_image = animation_images[index + 1];
-                *texture = next_image.clone();
+                texture.image = next_image.clone();
             }
         } else {
-            *texture = animation_images[0].clone();
+            texture.image = animation_images[0].clone();
         }
     }
 }
