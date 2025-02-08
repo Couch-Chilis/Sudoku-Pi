@@ -17,22 +17,23 @@ mod transition_events;
 mod ui;
 mod utils;
 
-use assets::*;
+use std::time::Duration;
+
 use bevy::app::AppExit;
 use bevy::asset::io::memory::MemoryAssetReader;
 use bevy::asset::io::{AssetSourceBuilder, AssetSourceBuilders, AssetSourceId};
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
-use bevy_framepace::{FramepacePlugin, FramepaceSettings, Limiter};
-use bevy_tweening::{lens::TransformPositionLens, Animator, EaseFunction, Tween, TweeningPlugin};
+use bevy_tweening::{lens::TransformPositionLens, Animator, Tween, TweeningPlugin};
+use smallvec::SmallVec;
+
+use assets::*;
 use game::{game_screen, highscore_screen, ActiveSliceHandles};
 use highscores::Highscores;
 use menus::{menu_screen, settings_screen, SettingsToggleTimer};
 use onboarding::*;
 use resource_bag::ResourceBag;
 use settings::Settings;
-use smallvec::SmallVec;
-use std::time::Duration;
 use sudoku::Game;
 use transition_events::{on_transition, TransitionEvent};
 use ui::*;
@@ -118,8 +119,10 @@ impl ScreenState {
 /// Overrides the screen(s) for which the given entity provides interactivity.
 #[derive(Component)]
 pub struct ScreenInteraction {
-    screens: SmallVec<[ScreenState; 4]>,
+    screens: ScreenStates,
 }
+
+pub type ScreenStates = SmallVec<[ScreenState; 8]>;
 
 #[derive(Clone, Copy, Resource)]
 pub struct ScreenSizing {
@@ -259,7 +262,6 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
             ..default()
         }))
         .add_plugins((
-            FramepacePlugin,
             TweeningPlugin,
             UiPlugin,
             game::GamePlugin,
@@ -318,7 +320,6 @@ fn on_keyboard_input(
 fn setup(
     mut commands: Commands,
     fonts: ResMut<Assets<Font>>,
-    mut framepace_settings: ResMut<FramepaceSettings>,
     images: ResMut<Assets<Image>>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     settings: Res<Settings>,
@@ -326,9 +327,7 @@ fn setup(
     highscores: Res<Highscores>,
     screen_sizing: Res<ScreenSizing>,
 ) {
-    commands.spawn(Camera2dBundle::default());
-
-    framepace_settings.limiter = Limiter::from_framerate(60.0);
+    commands.spawn(Camera2d);
 
     let fonts = Fonts::load(fonts);
     let fortune = Fortune::load();
@@ -472,7 +471,7 @@ fn on_window_close(
 
 fn get_initial_window_mode() -> WindowMode {
     if cfg!(target_os = "ios") || std::env::var_os("SteamTenfoot").is_some() {
-        WindowMode::BorderlessFullscreen
+        WindowMode::BorderlessFullscreen(MonitorSelection::Current)
     } else {
         WindowMode::Windowed
     }

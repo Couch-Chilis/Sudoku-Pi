@@ -122,14 +122,14 @@ fn score() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
 }
 
 pub fn on_score_changed(
-    mut score: Query<&mut Text, With<Score>>,
+    mut score: Query<&mut Text2d, With<Score>>,
     mut highscores: ResMut<Highscores>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     game: Res<Game>,
 ) {
     if game.is_changed() {
         for mut score_text in &mut score {
-            score_text.sections[0].value = format_score(game.score);
+            score_text.0 = format_score(game.score);
         }
 
         if game.is_solved() {
@@ -139,10 +139,10 @@ pub fn on_score_changed(
     }
 }
 
-pub fn on_time_changed(mut timer: Query<&mut Text, With<Timer>>, game_timer: Res<GameTimer>) {
+pub fn on_time_changed(mut timer: Query<&mut Text2d, With<Timer>>, game_timer: Res<GameTimer>) {
     if game_timer.is_changed() {
         for mut timer_text in &mut timer {
-            timer_text.sections[0].value = format_time(game_timer.elapsed_secs);
+            timer_text.0 = format_time(game_timer.elapsed_secs);
         }
     }
 }
@@ -158,12 +158,12 @@ fn format_score(score: u32) -> String {
 pub fn settings_icon_interaction(
     images: Res<Images>,
     mut interaction_query: Query<
-        (&Interaction, &mut Handle<Image>),
+        (&Interaction, &mut Sprite),
         (Changed<Interaction>, With<SettingsIcon>),
     >,
 ) {
-    for (interaction, mut image) in &mut interaction_query {
-        *image = match *interaction {
+    for (interaction, mut sprite) in &mut interaction_query {
+        sprite.image = match interaction {
             Interaction::Selected => images.cog_pressed.handle.clone(),
             Interaction::Pressed | Interaction::None => images.cog.handle.clone(),
         };

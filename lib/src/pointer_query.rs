@@ -30,7 +30,7 @@ type MouseQuery<'w, 's, 'a> = (
     Query<'w, 's, (), (With<PrimaryWindow>, Changed<Window>)>,
 );
 
-impl<'w, 's, 'a> PointerQueryExt for MouseQuery<'w, 's, 'a> {
+impl PointerQueryExt for MouseQuery<'_, '_, '_> {
     fn get_changed_hover(&self) -> Option<Vec2> {
         let (buttons, window_query, window_changes) = self;
 
@@ -88,7 +88,7 @@ type TouchQuery<'w, 's, 'a> = (
     Res<'w, ZoomFactor>,
 );
 
-impl<'w, 's, 'a> PointerQueryExt for TouchQuery<'w, 's, 'a> {
+impl PointerQueryExt for TouchQuery<'_, '_, '_> {
     fn get_changed_input_with_position(&self) -> Option<(InputKind, Vec2)> {
         if self.0.is_changed() {
             self.get_input_with_position()

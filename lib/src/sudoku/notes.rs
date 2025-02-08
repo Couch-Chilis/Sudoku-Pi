@@ -679,7 +679,7 @@ fn get_twin_permutations(cell_notes: u16) -> Vec<u16> {
     for i in 0..9 {
         for j in 0..9 {
             if i != j {
-                let n = 2 << i | 2 << j;
+                let n = (2 << i) | (2 << j);
                 if cell_notes & n == n {
                     permutations.push(n);
                 }
@@ -726,7 +726,7 @@ fn get_triplet_permutations(notes_in_range: u16) -> Vec<u16> {
             if i != j {
                 for k in 0..9 {
                     if k != i && k != j {
-                        let n = 2 << i | 2 << j | 2 << k;
+                        let n = (2 << i) | (2 << j) | (2 << k);
                         if notes_in_range & n == n {
                             permutations.push(n);
                         }

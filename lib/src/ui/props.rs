@@ -3,19 +3,19 @@ use crate::resource_bag::ResourceTuple;
 use crate::{Game, ResourceBag, Settings};
 use bevy::prelude::*;
 
-pub type PropsTuple<'a> = (
-    Res<'a, Game>,
-    Res<'a, Highscores>,
-    ResourceTuple<'a>,
-    Res<'a, Settings>,
+pub type PropsTuple<'w> = (
+    Res<'w, Game>,
+    Res<'w, Highscores>,
+    ResourceTuple<'w>,
+    Res<'w, Settings>,
 );
 
 /// Bag of properties for constructing UI components.
-pub struct Props<'a> {
-    pub game: &'a Game,
-    pub highscores: &'a Highscores,
-    pub resources: ResourceBag<'a>,
-    pub settings: &'a Settings,
+pub struct Props<'w> {
+    pub game: &'w Game,
+    pub highscores: &'w Highscores,
+    pub resources: ResourceBag<'w>,
+    pub settings: &'w Settings,
 }
 
 impl<'a> Props<'a> {

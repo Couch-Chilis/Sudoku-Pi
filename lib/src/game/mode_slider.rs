@@ -1,8 +1,10 @@
+use std::time::Duration;
+
+use bevy::{prelude::*, sprite::*};
+use bevy_tweening::{Animator, Lens, Tween};
+
 use crate::{constants::*, pointer_query::*, ui::*};
 use crate::{utils::TransformExt, ResourceBag, ScreenSizing};
-use bevy::{prelude::*, sprite::*};
-use bevy_tweening::{Animator, EaseFunction, Lens, Tween};
-use std::time::Duration;
 
 const ACTIVE_KNOB_Z: f32 = INACTIVE_KNOB_Z + 2.;
 const INACTIVE_KNOB_Z: f32 = 2.;
@@ -96,24 +98,21 @@ fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {
                 .with_margin(Size::new(Val::None, Val::CrossPercent(1.5)))
                 .with_transform(Transform::from_2d_scale(1. / 1282., 1. / 118.)),
         ),
-        SpriteBundle {
-            texture: resources.images.mode_slider.handle.clone(),
-            ..default()
-        },
+        Sprite::from_image(resources.images.mode_slider.handle.clone()),
     ));
 }
 
 fn build_knobs(row: &mut ChildBuilder, resources: &ResourceBag) {
     build_knob(
         row,
-        &resources.images.pop_dark_circle.handle,
+        resources.images.pop_dark_circle.handle.clone(),
         ModeSliderKnob,
         0.,
         ACTIVE_KNOB_Z,
     );
     build_knob(
         row,
-        &resources.images.board_line_thin_circle.handle,
+        resources.images.board_line_thin_circle.handle.clone(),
         OppositeSliderKnob,
         0.91,
         INACTIVE_KNOB_Z,
@@ -122,7 +121,7 @@ fn build_knobs(row: &mut ChildBuilder, resources: &ResourceBag) {
 
 fn build_knob(
     row: &mut ChildBuilder,
-    image: &Handle<Image>,
+    image: Handle<Image>,
     knob: impl Component,
     x: f32,
     z_index: f32,
@@ -138,33 +137,27 @@ fn build_knob(
                     ..default()
                 }),
         ),
-        SpriteBundle {
-            texture: image.clone(),
-            ..default()
-        },
+        Sprite::from_image(image),
     ));
 }
 
 fn build_label(row: &mut ChildBuilder, resources: &ResourceBag, text: &str, anchor: Anchor) {
-    let text_style = TextStyle {
-        font: resources.fonts.medium.clone(),
-        font_size: if resources.screen_sizing.is_tablet() {
-            64.
-        } else {
-            48.
-        },
-        color: COLOR_MAIN_DARKER,
-    };
-
     row.spawn(FlexBundle::new(
         FlexItemStyle::available_size(),
         FlexContainerStyle::default(),
     ))
     .with_children(|label_container| {
-        label_container.spawn(
-            FlexTextBundle::from_text(Text::from_section(text, text_style.clone()))
-                .with_anchor(anchor),
-        );
+        let mut bundle = FlexTextBundle::from_text(text);
+        bundle.anchor = anchor;
+        bundle.color = COLOR_MAIN_DARKER.into();
+        bundle.font.font = resources.fonts.medium.clone();
+        bundle.font.font_size = if resources.screen_sizing.is_tablet() {
+            53.3
+        } else {
+            40.
+        };
+
+        label_container.spawn(bundle);
     });
 }
 

@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
+use bevy::prelude::*;
+
+use crate::{assets::*, constants::*, utils::*, ResourceBag};
+
 use super::{
     buttons::*, child_builder_ext::*, flex::*, interaction::*, props::*, style_enhancers::*,
 };
-use crate::ResourceBag;
-use crate::{assets::*, constants::*, utils::*};
-use bevy::prelude::*;
-use std::sync::Arc;
 
 pub fn primary_button<B>(
     action: impl Bundle,
@@ -177,7 +179,7 @@ where
 
 pub fn dynamic_image<T>(dynamic_image: T, styles: impl FlexItemStyleEnhancer) -> impl Bundle
 where
-    T: Fn(Mut<'_, Handle<Image>>, &ResourceBag) -> (f32, f32) + Send + Sync + 'static,
+    T: Fn(Mut<Sprite>, &ResourceBag) -> (f32, f32) + Send + Sync + 'static,
 {
     let mut item = FlexItemBundle::default();
     styles.enhance(&mut item.style);
@@ -186,7 +188,7 @@ where
         dynamic_image: DynamicImage(Arc::new(dynamic_image)),
     };
 
-    ((item, flex_image), SpriteBundle::default())
+    ((item, flex_image), Sprite::default())
 }
 
 pub fn fragment<B1, B2>(
@@ -297,10 +299,7 @@ pub fn image(image: ImageWithDimensions, styles: impl FlexItemStyleEnhancer) -> 
     styles.enhance(&mut item.style);
     item.style.transform = Transform::from_2d_scale(1. / image.width, 1. / image.height);
 
-    let sprite = SpriteBundle {
-        texture: image.handle,
-        ..default()
-    };
+    let sprite = Sprite::from_image(image.handle);
 
     (item, sprite)
 }
@@ -326,10 +325,7 @@ pub fn rect(color: Color, styles: impl FlexItemStyleEnhancer) -> impl Bundle {
     let mut item = FlexItemBundle::default();
     styles.enhance(&mut item.style);
 
-    let sprite = SpriteBundle {
-        sprite: Sprite::from_color(color),
-        ..default()
-    };
+    let sprite = Sprite::from_color(color, Vec2::new(1., 1.));
 
     (item, sprite)
 }
@@ -374,8 +370,8 @@ pub fn text(
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildBuilder) {
     |props: &Props, cb: &mut ChildBuilder| {
-        let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
-        styles.enhance(&mut bundle.text, &props.resources);
+        let mut bundle = FlexTextBundle::from_text(text);
+        styles.enhance(&mut bundle, &props.resources);
         cb.spawn(bundle);
     }
 }
@@ -386,8 +382,8 @@ pub fn text_t(
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildBuilder) {
     |props: &Props, cb: &mut ChildBuilder| {
-        let mut bundle = FlexTextBundle::from_text(Text::from_section(text, TextStyle::default()));
-        styles.enhance(&mut bundle.text, &props.resources);
+        let mut bundle = FlexTextBundle::from_text(text);
+        styles.enhance(&mut bundle, &props.resources);
         cb.spawn((bundle, marker));
     }
 }

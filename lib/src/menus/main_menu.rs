@@ -72,10 +72,10 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
             ),
             (),
             text(
-                "© 2023 Couch Chilis",
+                "© 2025 Couch Chilis",
                 (
                     font_medium,
-                    font_size(30.),
+                    font_size(25.),
                     text_anchor(Anchor::CenterRight),
                     text_color(COLOR_BOARD_LINE_MEDIUM),
                 ),

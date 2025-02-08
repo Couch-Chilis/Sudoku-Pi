@@ -10,10 +10,12 @@ name = "sudoku_pi"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-bevy = { version = "0.14", default-features = false, features = [
+bevy = { version = "0.15", default-features = false, features = [
     "android_shared_stdcxx",
 ] }
-sudoku-lib = { path = "../lib" }
+sudoku-lib = { path = "../lib", default-features = false, features = [
+    "android_shared_stdcxx",
+] }
 
 [package.metadata.android]
 package = "nl.couch_chilis.sudoku_pi"

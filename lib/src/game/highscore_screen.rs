@@ -1,7 +1,8 @@
-use crate::{constants::*, ui::*, utils::*, Fortune, ScreenSizing, TransitionEvent};
-use crate::{Fonts, Game, Highscores, ScreenState};
-use bevy::prelude::*;
-use bevy::sprite::Anchor;
+use bevy::{prelude::*, sprite::Anchor};
+
+use crate::{
+    constants::*, ui::*, utils::*, Fortune, Game, Highscores, ScreenState, TransitionEvent,
+};
 
 #[derive(Component)]
 pub enum HighscoreButtonAction {
@@ -72,10 +73,14 @@ pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 column(
                     (highscore_scroll_size, without_occupying_space, z_index(3.)),
                     highscore_scroll_padding,
-                    text_t(
-                        ScrollText::new(ScrollTextKind::Quote),
-                        "",
-                        highscore_scroll_quote_text_bounds,
+                    column(
+                        available_size,
+                        (),
+                        text_t(
+                            ScrollText::new(ScrollTextKind::Quote),
+                            "",
+                            highscore_scroll_quote,
+                        ),
                     ),
                 ),
                 column(
@@ -87,7 +92,7 @@ pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                         text_t(
                             ScrollText::new(ScrollTextKind::Author),
                             "",
-                            text_anchor(Anchor::BottomRight),
+                            highscore_scroll_author,
                         ),
                     ),
                 ),
@@ -154,7 +159,7 @@ pub fn highscore_button_actions(
 }
 
 pub fn on_highscores_changed(
-    mut stats_query: Query<(&mut Text, &StatTextMarker)>,
+    mut stats_query: Query<(&mut Text2d, &StatTextMarker)>,
     props_tuple: PropsTuple,
 ) {
     let highscores: &Res<Highscores> = &props_tuple.1;
@@ -163,7 +168,7 @@ pub fn on_highscores_changed(
     }
 
     for (mut text, marker) in &mut stats_query {
-        text.sections[0].value = get_stat_text(&Props::from_tuple(&props_tuple), marker.kind);
+        text.0 = get_stat_text(&Props::from_tuple(&props_tuple), marker.kind);
     }
 }
 
@@ -246,10 +251,8 @@ fn stat_row(kind: StatKind, label: &str) -> (impl Bundle, impl FnOnce(&Props, &m
 }
 
 pub fn on_fortune(
-    mut scroll_text: Query<(&mut Text, &ScrollText)>,
-    fonts: Res<Fonts>,
+    mut scroll_text: Query<(&mut Text2d, &mut TextLayout, &ScrollText)>,
     fortune: Res<Fortune>,
-    screen_sizing: Res<ScreenSizing>,
     screen_state: Res<State<ScreenState>>,
 ) {
     if !screen_state.is_changed() || screen_state.get() != &ScreenState::Highscores {
@@ -266,33 +269,18 @@ pub fn on_fortune(
         (line, "")
     };
 
-    for (mut text, ScrollText { kind }) in &mut scroll_text {
+    for (mut text, mut layout, ScrollText { kind }) in &mut scroll_text {
         match kind {
             ScrollTextKind::Quote => {
-                *text = Text::from_sections([TextSection::new(
-                    quote,
-                    TextStyle {
-                        font: fonts.scroll.clone(),
-                        font_size: if screen_sizing.is_tablet() { 60. } else { 35. },
-                        color: Color::BLACK,
-                    },
-                )])
-                .with_justify(if author.is_empty() {
+                text.0 = quote.to_owned();
+                layout.justify = if author.is_empty() {
                     JustifyText::Center
                 } else {
                     JustifyText::Left
-                })
+                };
             }
             ScrollTextKind::Author => {
-                *text = Text::from_sections([TextSection::new(
-                    author,
-                    TextStyle {
-                        font: fonts.scroll.clone(),
-                        font_size: if screen_sizing.is_tablet() { 50. } else { 30. },
-                        color: Color::BLACK,
-                    },
-                )])
-                .with_justify(JustifyText::Right)
+                text.0 = author.to_owned();
             }
         }
     }

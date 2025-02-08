@@ -1,13 +1,15 @@
-use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, Selection};
-use crate::{constants::*, sudoku::*, ui::*, utils::*};
-use crate::{Fonts, ScreenSizing, Settings};
-use bevy::prelude::*;
 use std::num::NonZeroU8;
 
-const NUMBER_FONT_SIZE: f32 = 80.;
-const NUMBER_FONT_SIZE_IPAD: f32 = 100.;
-const NOTE_FONT_SIZE: f32 = 30.;
-const NOTE_FONT_SIZE_IPAD: f32 = 40.;
+use bevy::prelude::*;
+
+use crate::{constants::*, sudoku::*, ui::*, utils::*, Fonts, ScreenSizing, Settings};
+
+use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, Selection};
+
+const NUMBER_FONT_SIZE: f32 = 66.7;
+const NUMBER_FONT_SIZE_IPAD: f32 = 83.3;
+const NOTE_FONT_SIZE: f32 = 25.;
+const NOTE_FONT_SIZE_IPAD: f32 = 33.3;
 
 #[derive(Clone, Copy)]
 pub(super) enum CellHighlightKind {
@@ -54,35 +56,41 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
 
         let n = game.current.get(x, y);
 
-        let number_style = TextStyle {
-            font: if n.map(|n| game.is_completed(n)).unwrap_or_default() {
+        let number_font =
+            TextFont::from_font(if n.map(|n| game.is_completed(n)).unwrap_or_default() {
                 resources.fonts.light.clone()
             } else {
                 resources.fonts.bold.clone()
-            },
-            font_size: if resources.screen_sizing.is_tablet() {
+            })
+            .with_font_size(if resources.screen_sizing.is_tablet() {
                 NUMBER_FONT_SIZE_IPAD
             } else {
                 NUMBER_FONT_SIZE
-            },
-            color: if n.is_some() {
-                get_number_color(game, settings, x, y)
-            } else {
-                Color::NONE
-            },
+            });
+        let number_color = if n.is_some() {
+            get_number_color(game, settings, x, y)
+        } else {
+            Color::NONE
         };
 
-        let note_style = TextStyle {
-            font: resources.fonts.bold.clone(),
-            font_size: if resources.screen_sizing.is_tablet() {
+        let note_font = TextFont::from_font(resources.fonts.bold.clone()).with_font_size(
+            if resources.screen_sizing.is_tablet() {
                 NOTE_FONT_SIZE_IPAD
             } else {
                 NOTE_FONT_SIZE
             },
-            color: Color::NONE,
-        };
+        );
+        let note_color = Color::NONE;
 
-        cb.spawn(board_number(x, y, n, number_style));
+        cb.spawn(FlexBundle::new(
+            FlexItemStyle::available_size()
+                .with_transform(Transform::from_translation(Vec3::new(0.33, 0., 1.)))
+                .without_occupying_space(),
+            FlexContainerStyle::default(),
+        ))
+        .with_children(|cb| {
+            cb.spawn(board_number(x, y, n, number_font, number_color));
+        });
 
         for note_x in 1..=3 {
             cb.spawn(FlexBundle::new(
@@ -101,7 +109,7 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
                             ),
                         ))
                         .with_children(|note_cell| {
-                            note_cell.spawn(note(x, y, n, note_style.clone()));
+                            note_cell.spawn(note(x, y, n, note_font.clone(), note_color));
                         });
                 }
             });
@@ -111,25 +119,31 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
     (bundle, spawn_children)
 }
 
-fn board_number(x: u8, y: u8, cell: Cell, number_style: TextStyle) -> impl Bundle {
-    (
-        Number(x, y),
-        FlexTextBundle::from_text(Text::from_section(
-            cell.map(|n| n.to_string()).unwrap_or_default(),
-            number_style,
-        )),
-    )
+fn board_number(
+    x: u8,
+    y: u8,
+    cell: Cell,
+    number_font: TextFont,
+    number_color: Color,
+) -> impl Bundle {
+    let mut text_bundle =
+        FlexTextBundle::from_text(cell.map(|n| n.to_string()).unwrap_or_default());
+    text_bundle.color = number_color.into();
+    text_bundle.font = number_font;
+
+    (Number(x, y), text_bundle)
 }
 
-fn note(x: u8, y: u8, n: NonZeroU8, note_style: TextStyle) -> impl Bundle {
-    (
-        Note::new(x, y, n),
-        FlexTextBundle::from_text(Text::from_section(n.to_string(), note_style)),
-    )
+fn note(x: u8, y: u8, n: NonZeroU8, note_font: TextFont, note_color: Color) -> impl Bundle {
+    let mut text_bundle = FlexTextBundle::from_text(n.to_string());
+    text_bundle.color = note_color.into();
+    text_bundle.font = note_font;
+
+    (Note::new(x, y, n), text_bundle)
 }
 
 pub(super) fn render_numbers(
-    mut numbers: Query<(&Number, &mut Text)>,
+    mut numbers: Query<(&Number, &mut Text2d, &mut TextColor, &mut TextFont)>,
     fonts: Res<Fonts>,
     game: Res<Game>,
     settings: Res<Settings>,
@@ -138,11 +152,11 @@ pub(super) fn render_numbers(
         return;
     }
 
-    for (Number(x, y), mut text) in &mut numbers {
-        let current_color = text.sections[0].style.color;
+    for (Number(x, y), mut text, mut text_color, mut text_font) in &mut numbers {
+        let current_color = text_color.0;
         let new_color = if let Some(n) = game.current.get(*x, *y) {
-            text.sections[0].value = n.to_string();
-            text.sections[0].style.font = if game.is_completed(n) {
+            text.0 = n.to_string();
+            text_font.font = if game.is_completed(n) {
                 fonts.light.clone()
             } else {
                 fonts.bold.clone()
@@ -153,7 +167,7 @@ pub(super) fn render_numbers(
         };
 
         if new_color != current_color {
-            text.sections[0].style.color = new_color;
+            text_color.0 = new_color;
         }
     }
 }
@@ -175,17 +189,17 @@ fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
 }
 
 pub(super) fn render_notes(
-    mut notes: Query<(&mut Note, &mut Text)>,
+    mut notes: Query<(&mut Note, &mut TextColor)>,
     game: Res<Game>,
     settings: Res<Settings>,
     time: Res<Time>,
 ) {
-    for (mut note, mut text) in &mut notes {
+    for (mut note, mut text_color) in &mut notes {
         let x = note.x;
         let y = note.y;
         let n = note.n;
 
-        let current_color = text.sections[0].style.color;
+        let current_color = text_color.0;
         let new_color =
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
                 COLOR_POP_DARK
@@ -214,7 +228,7 @@ pub(super) fn render_notes(
             };
 
         if new_color != current_color {
-            text.sections[0].style.color = new_color;
+            text_color.0 = new_color;
         }
     }
 }
@@ -328,7 +342,7 @@ pub(super) fn render_cell_highlights(
             None => Color::NONE,
         };
         if sprite.color != color {
-            *sprite = Sprite::from_color(color);
+            sprite.color = color;
         }
     }
 }
@@ -352,7 +366,7 @@ pub(super) fn render_note_highlights(
             None => Color::NONE,
         };
         if sprite.color != color {
-            *sprite = Sprite::from_color(color);
+            sprite.color = color;
         }
 
         if note.animation_kind == Some(NoteAnimationKind::Mistake) {
@@ -368,9 +382,9 @@ pub(super) fn render_note_highlights(
 }
 
 fn animate_mistake(
-    mut note: Mut<'_, Note>,
+    mut note: Mut<Note>,
     mistake_borders: &mut Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
-    mut style: Mut<'_, FlexItemStyle>,
+    mut style: Mut<FlexItemStyle>,
     delta: f32,
     screen_sizing: &ScreenSizing,
 ) {

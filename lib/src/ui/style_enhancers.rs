@@ -1,6 +1,6 @@
-use super::flex::*;
 use crate::resource_bag::ResourceBag;
-use bevy::text::Text2dBundle;
+
+use super::flex::*;
 
 /// Trait that defines enhancers for [FlexContainerBundle].
 pub trait FlexContainerBundleEnhancer: Sized {
@@ -73,22 +73,37 @@ where
     }
 }
 
+impl<T, U, V, W> FlexItemStyleEnhancer for (T, U, V, W)
+where
+    T: FlexItemStyleEnhancer,
+    U: FlexItemStyleEnhancer,
+    V: FlexItemStyleEnhancer,
+    W: FlexItemStyleEnhancer,
+{
+    fn enhance(self, style: &mut FlexItemStyle) {
+        self.0.enhance(style);
+        self.1.enhance(style);
+        self.2.enhance(style);
+        self.3.enhance(style);
+    }
+}
+
 /// Trait that defines enhancers for [Text2dBounde].
 pub trait TextEnhancer: Sized {
-    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag);
+    fn enhance(self, text: &mut FlexTextBundle, resources: &ResourceBag);
 }
 
 impl<T> TextEnhancer for T
 where
-    T: FnOnce(&mut Text2dBundle, &ResourceBag) + Sized,
+    T: FnOnce(&mut FlexTextBundle, &ResourceBag) + Sized,
 {
-    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
+    fn enhance(self, text: &mut FlexTextBundle, resources: &ResourceBag) {
         self(text, resources)
     }
 }
 
 impl TextEnhancer for () {
-    fn enhance(self, _text: &mut Text2dBundle, _resources: &ResourceBag) {}
+    fn enhance(self, _text: &mut FlexTextBundle, _resources: &ResourceBag) {}
 }
 
 impl<T, U> TextEnhancer for (T, U)
@@ -96,7 +111,7 @@ where
     T: TextEnhancer,
     U: TextEnhancer,
 {
-    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
+    fn enhance(self, text: &mut FlexTextBundle, resources: &ResourceBag) {
         self.0.enhance(text, resources);
         self.1.enhance(text, resources);
     }
@@ -108,7 +123,7 @@ where
     U: TextEnhancer,
     V: TextEnhancer,
 {
-    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
+    fn enhance(self, text: &mut FlexTextBundle, resources: &ResourceBag) {
         self.0.enhance(text, resources);
         self.1.enhance(text, resources);
         self.2.enhance(text, resources);
@@ -122,7 +137,7 @@ where
     V: TextEnhancer,
     W: TextEnhancer,
 {
-    fn enhance(self, text: &mut Text2dBundle, resources: &ResourceBag) {
+    fn enhance(self, text: &mut FlexTextBundle, resources: &ResourceBag) {
         self.0.enhance(text, resources);
         self.1.enhance(text, resources);
         self.2.enhance(text, resources);

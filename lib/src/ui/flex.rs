@@ -1,11 +1,9 @@
-#![allow(dead_code)]
-
-use crate::resource_bag::ResourceBag;
-use crate::{utils::*, ScreenInteraction, ScreenState};
-use bevy::{prelude::*, sprite::Anchor, text::Text2dBounds};
-use smallvec::SmallVec;
 use std::ops::{Add, AddAssign, Mul, Sub};
 use std::sync::Arc;
+
+use bevy::{prelude::*, sprite::Anchor, text::TextBounds};
+
+use crate::{resource_bag::ResourceBag, utils::*, ScreenInteraction, ScreenStates};
 
 /// Marker for any flex entity, be it an item or a container.
 #[derive(Clone, Component, Default)]
@@ -27,6 +25,7 @@ impl FlexBundle {
     pub fn new(item_style: FlexItemStyle, container_style: FlexContainerStyle) -> Self {
         Self {
             container: FlexContainerBundle {
+                sprite: Sprite::from_color(Color::NONE, Vec2::new(1., 1.)),
                 style: container_style,
                 ..default()
             },
@@ -55,27 +54,19 @@ impl FlexBundle {
 /// custom transforms on them.
 #[derive(Bundle, Clone)]
 pub struct FlexContainerBundle {
+    pub sprite: Sprite,
     pub style: FlexContainerStyle,
-    pub background: Sprite,
     pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub texture: Handle<Image>,
     pub visibility: Visibility,
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
 }
 
 impl Default for FlexContainerBundle {
     fn default() -> Self {
         Self {
+            sprite: Sprite::from_color(Color::NONE, Vec2::new(1., 1.)),
             style: FlexContainerStyle::default(),
-            background: Sprite::from_color(Color::NONE),
             transform: Transform::default_2d(),
-            global_transform: Default::default(),
-            texture: Default::default(),
             visibility: Default::default(),
-            inherited_visibility: Default::default(),
-            view_visibility: Default::default(),
         }
     }
 }
@@ -83,7 +74,7 @@ impl Default for FlexContainerBundle {
 impl FlexContainerBundle {
     pub fn with_background_color(self, color: Color) -> Self {
         Self {
-            background: Sprite::from_color(color),
+            sprite: Sprite::from_color(color, Vec2::new(1., 1.)),
             ..self
         }
     }
@@ -190,12 +181,10 @@ pub struct FlexImageBundle {
 }
 
 #[derive(Clone, Component)]
-pub struct DynamicImage(
-    pub Arc<dyn Fn(Mut<'_, Handle<Image>>, &ResourceBag) -> (f32, f32) + Send + Sync>,
-);
+pub struct DynamicImage(pub Arc<dyn Fn(Mut<Sprite>, &ResourceBag) -> (f32, f32) + Send + Sync>);
 
 impl DynamicImage {
-    pub fn assign(&self, handle: Mut<'_, Handle<Image>>, resources: &ResourceBag) -> (f32, f32) {
+    pub fn assign(&self, handle: Mut<Sprite>, resources: &ResourceBag) -> (f32, f32) {
         self.0(handle, resources)
     }
 }
@@ -265,18 +254,6 @@ impl FlexItemStyle {
         }
     }
 
-    /// Returns the style for an item with a minimum size, relative to its
-    /// parent.
-    ///
-    /// The item may grow if more space is available.
-    pub fn minimum_size(width: Val, height: Val) -> Self {
-        Self {
-            flex_base: Size::new(width, height),
-            flex_grow: 1.,
-            ..default()
-        }
-    }
-
     /// Returns the style for an item with a preferred size, relative to its
     /// parent.
     ///
@@ -285,20 +262,6 @@ impl FlexItemStyle {
         Self {
             flex_base: Size::new(width, height),
             flex_shrink: 1.,
-            ..default()
-        }
-    }
-
-    /// Returns the style for an item with a preferred size, relative to its
-    /// parent.
-    ///
-    /// The item may shrink if necessary, but not smaller than the given minimum
-    /// size.
-    pub fn preferred_and_minimum_size(flex_base: Size, min_size: Size) -> Self {
-        Self {
-            flex_base,
-            flex_shrink: 1.,
-            min_size,
             ..default()
         }
     }
@@ -361,20 +324,8 @@ pub struct FlexLeafBundle {
     pub flex: FlexItemBundle,
 
     pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    pub texture: Handle<Image>,
+    pub sprite: Sprite,
     pub visibility: Visibility,
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
-}
-
-impl FlexLeafBundle {
-    pub fn from_style(style: FlexItemStyle) -> Self {
-        Self {
-            flex: FlexItemBundle::from_style(style),
-            ..default()
-        }
-    }
 }
 
 /// A text item to be placed inside a flex container.
@@ -384,46 +335,22 @@ impl FlexLeafBundle {
 #[derive(Bundle, Clone, Default)]
 pub struct FlexTextBundle {
     pub flex: Flex,
-    pub text: Text2dBundle,
-    pub text_style: FlexTextStyle,
+    pub text: Text2d,
+    pub anchor: Anchor,
+    pub bounds: TextBounds,
+    pub color: TextColor,
+    pub font: TextFont,
+    pub layout: TextLayout,
     pub computed_position: ComputedPosition,
 }
 
 impl FlexTextBundle {
-    pub fn from_text(text: Text) -> Self {
+    pub fn from_text(text: impl Into<String>) -> Self {
         Self {
-            text: Text2dBundle {
-                text,
-                transform: Transform::from_scale(Vec3::new(0., 0., 0.)),
-                ..default()
-            },
+            text: Text2d(text.into()),
             ..default()
         }
     }
-
-    pub fn with_anchor(mut self, anchor: Anchor) -> Self {
-        self.text.text_anchor = anchor;
-        self
-    }
-
-    pub fn with_bounds(mut self, bounds: Text2dBounds) -> Self {
-        self.text.text_2d_bounds = bounds;
-        self
-    }
-
-    pub fn with_justify(mut self, justify: JustifyText) -> Self {
-        self.text.text.justify = justify;
-        self
-    }
-}
-
-#[derive(Clone, Component, Default)]
-pub struct FlexTextStyle {
-    /// Font to use.
-    pub font: Handle<Font>,
-
-    /// Optional enhancers that allow for determining style fields at runtime.
-    pub dynamic_styles: Vec<Arc<dyn Fn(&mut TextStyle, &ResourceBag) + Send + Sync>>,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -470,52 +397,12 @@ impl Sides {
         Self::new(val.clone(), val)
     }
 
-    pub fn bottom(bottom: Val) -> Self {
-        Self {
-            top: Val::None,
-            right: Val::None,
-            bottom,
-            left: Val::None,
-        }
-    }
-
-    pub fn horizontal(horizontal: Val) -> Self {
-        Self::new(horizontal, Val::None)
-    }
-
-    pub fn left(left: Val) -> Self {
-        Self {
-            top: Val::None,
-            right: Val::None,
-            bottom: Val::None,
-            left,
-        }
-    }
-
     pub fn new(horizontal: Val, vertical: Val) -> Self {
         Self {
             top: vertical.clone(),
             right: horizontal.clone(),
             bottom: vertical,
             left: horizontal,
-        }
-    }
-
-    pub fn right(right: Val) -> Self {
-        Self {
-            top: Val::None,
-            right,
-            bottom: Val::None,
-            left: Val::None,
-        }
-    }
-
-    pub fn top(top: Val) -> Self {
-        Self {
-            top,
-            right: Val::None,
-            bottom: Val::None,
-            left: Val::None,
         }
     }
 
@@ -535,14 +422,6 @@ impl Sides {
             FlexDirection::Column => self.bottom.clone(),
             FlexDirection::Row => self.right.clone(),
         }
-    }
-
-    pub fn with_top(self, top: Val) -> Self {
-        Self { top, ..self }
-    }
-
-    pub fn with_right(self, right: Val) -> Self {
-        Self { right, ..self }
     }
 }
 
@@ -720,7 +599,7 @@ impl Sub<Val> for Val {
 pub struct ComputedPosition {
     pub x: f32,
     pub y: f32,
-    pub screens: SmallVec<[ScreenState; 4]>,
+    pub screens: ScreenStates,
     pub width: f32,
     pub height: f32,
 }
@@ -763,7 +642,7 @@ impl ComputedPosition {
         &self,
         scale: Vec3,
         translation: Vec3,
-        screens: SmallVec<[ScreenState; 4]>,
+        screens: ScreenStates,
     ) -> Self {
         let width = self.width * scale.x;
         let height = self.height * scale.y;

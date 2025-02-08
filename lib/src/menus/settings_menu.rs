@@ -1,6 +1,8 @@
-use super::settings_toggle::*;
-use crate::{ui::*, ScreenState, Settings};
 use bevy::prelude::*;
+
+use crate::{ui::*, ScreenState, Settings};
+
+use super::settings_toggle::*;
 
 #[derive(Component)]
 pub enum SettingsButtonAction {

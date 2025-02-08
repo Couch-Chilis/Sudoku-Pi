@@ -1,12 +1,16 @@
-use super::flex::*;
-use crate::resource_bag::{ResourceBag, ResourceTuple};
-use crate::utils::TransformExt;
-use crate::{Screen, ScreenInteraction, ScreenState};
-use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
-use smallvec::smallvec;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
-use std::ops::DerefMut;
+
+use bevy::{prelude::*, sprite::Anchor, window::WindowResized};
+use smallvec::smallvec;
+
+use crate::{
+    resource_bag::{ResourceBag, ResourceTuple},
+    utils::TransformExt,
+    Screen, ScreenInteraction, ScreenState,
+};
+
+use super::flex::*;
 
 type FlexEntity<'a> = (
     Entity,
@@ -16,12 +20,10 @@ type FlexEntity<'a> = (
     Option<&'a mut ComputedPosition>,
     Option<&'a Children>,
     Option<&'a Screen>,
-    Option<&'a mut Text>,
-    Option<&'a FlexTextStyle>,
     Option<&'a Anchor>,
     Option<&'a ScreenInteraction>,
     Option<&'a DynamicImage>,
-    Option<&'a mut Handle<Image>>,
+    Option<&'a mut Sprite>,
 );
 type FlexQuery<'w, 's, 'a> = Query<'w, 's, FlexEntity<'a>, With<Flex>>;
 
@@ -32,13 +34,7 @@ type ItemMapEntry<'a> = (
     Option<&'a ScreenInteraction>,
 );
 
-type TextMapEntry<'a> = (
-    &'a Anchor,
-    Mut<'a, Text>,
-    &'a FlexTextStyle,
-    Mut<'a, Transform>,
-    Mut<'a, ComputedPosition>,
-);
+type TextMapEntry<'a> = (&'a Anchor, Mut<'a, Transform>, Mut<'a, ComputedPosition>);
 
 pub(crate) fn layout_system(
     mut flex_query: FlexQuery,
@@ -63,7 +59,6 @@ struct LayoutInfo<'a> {
     container_map: BTreeMap<Entity, (&'a Children, Cow<'a, FlexContainerStyle>)>,
     item_map: BTreeMap<Entity, ItemMapEntry<'a>>,
     text_map: BTreeMap<Entity, TextMapEntry<'a>>,
-    resources: ResourceBag<'a>,
 }
 
 impl<'a> LayoutInfo<'a> {
@@ -81,23 +76,21 @@ impl<'a> LayoutInfo<'a> {
             computed_position,
             children,
             screen,
-            text,
-            text_style,
             anchor,
             screen_interaction,
             dynamic_image,
-            image_handle,
+            sprite,
         ) in flex_query.iter_mut()
         {
             if let (Some(container_style), Some(children)) = (container_style, children) {
-                let container_style = if !container_style.dynamic_styles.is_empty() {
+                let container_style = if container_style.dynamic_styles.is_empty() {
+                    Cow::Borrowed(container_style)
+                } else {
                     let mut style = container_style.clone();
                     for enhance in &container_style.dynamic_styles {
                         enhance(&mut style, &resources);
                     }
                     Cow::Owned(style)
-                } else {
-                    Cow::Borrowed(container_style)
                 };
 
                 container_map.insert(entity, (children, container_style));
@@ -109,32 +102,29 @@ impl<'a> LayoutInfo<'a> {
                 }
             }
 
-            match (text, text_style, anchor, item_style, computed_position) {
-                (Some(text), Some(text_style), Some(anchor), _, Some(computed_position)) => {
-                    text_map.insert(
-                        entity,
-                        (anchor, text, text_style, transform, computed_position),
-                    );
+            match (anchor, item_style, computed_position) {
+                (Some(anchor), _, Some(computed_position)) => {
+                    text_map.insert(entity, (anchor, transform, computed_position));
                 }
-                (_, _, _, Some(item_style), Some(computed_position)) => {
-                    let mut item_style = if !item_style.dynamic_styles.is_empty() {
+                (_, Some(item_style), Some(computed_position)) => {
+                    let mut item_style = if item_style.dynamic_styles.is_empty() {
+                        Cow::Borrowed(item_style)
+                    } else {
                         let mut style = item_style.clone();
                         for enhance in &item_style.dynamic_styles {
                             enhance(&mut style, &resources);
                         }
                         Cow::Owned(style)
-                    } else {
-                        Cow::Borrowed(item_style)
                     };
 
-                    if let (Some(dynamic_image), Some(image_handle)) = (dynamic_image, image_handle)
-                    {
-                        let (width, height) = dynamic_image.assign(image_handle, &resources);
+                    if let (Some(dynamic_image), Some(sprite)) = (dynamic_image, sprite) {
+                        let (width, height) = dynamic_image.assign(sprite, &resources);
 
-                        item_style = Cow::Owned(FlexItemStyle {
-                            transform: Transform::from_2d_scale(1. / width, 1. / height),
-                            ..(*item_style).clone()
-                        });
+                        item_style = Cow::Owned(
+                            item_style
+                                .into_owned()
+                                .with_transform(Transform::from_2d_scale(1. / width, 1. / height)),
+                        );
                     }
 
                     item_map.insert(
@@ -151,7 +141,6 @@ impl<'a> LayoutInfo<'a> {
             container_map,
             item_map,
             text_map,
-            resources,
         }
     }
 
@@ -441,7 +430,7 @@ impl<'a> LayoutInfo<'a> {
 
     fn position_text(
         &self,
-        (anchor, mut text, text_style, mut transform, mut computed_position): TextMapEntry,
+        (anchor, mut transform, mut computed_position): TextMapEntry,
         position: &ComputedPosition,
     ) {
         let ComputedPosition { width, height, .. } = position;
@@ -458,14 +447,5 @@ impl<'a> LayoutInfo<'a> {
         );
 
         *computed_position = position.transformed(transform.scale, transform.translation);
-        if !text_style.dynamic_styles.is_empty() {
-            for enhance in &text_style.dynamic_styles {
-                for section in &mut text.sections {
-                    enhance(&mut section.style, &self.resources);
-                }
-            }
-        } else {
-            text.deref_mut(); // Prevent text appearing too small on iOS.
-        }
     }
 }

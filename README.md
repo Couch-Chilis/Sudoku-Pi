@@ -27,7 +27,7 @@ If you want to support us, please buy the game in the
 Please feel free to follow us or reach out to us!
 
 * Mastodon: https://mastodon.gamedev.place/@couchchilis
-* Spicy Lobster Discord: https://discord.gg/MTvGFhQWPK (look for the #sudoku-pi channel!)
+* Discord: https://discord.gg/kfryxbt4
 
 # Contributing
 
@@ -41,7 +41,7 @@ well as in binary form for release to app stores.
 
 # License
 
-Sudoku Pi is copyright 2023 by Couch Chilis and available under the
+Sudoku Pi is copyright 2023-2025 by Couch Chilis and is available under the
 [General Public License v3](LICENSE-GPLv3.md).
 
 If you use the source code for your own project, we ask you kindly to consider
