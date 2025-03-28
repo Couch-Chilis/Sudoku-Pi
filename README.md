@@ -27,7 +27,7 @@ If you want to support us, please buy the game in the
 Please feel free to follow us or reach out to us!
 
 * Mastodon: https://mastodon.gamedev.place/@couchchilis
-* Discord: https://discord.gg/kfryxbt4
+* Discord: https://discord.gg/X3ZJvrNZw5
 
 # Contributing
 
