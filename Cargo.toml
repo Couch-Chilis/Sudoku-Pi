@@ -1,12 +1,66 @@
-[workspace]
-members = ["android", "desktop", "lib"]
-resolver = "2"
+[package]
+name = "sudoku-pi"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "sudoku_pi"
+path = "src/lib.rs"
+crate-type = [
+    "staticlib",
+    "cdylib",    # needed for Android
+    "rlib",      # rlib needed for running locally
+]
+
+[[bin]]
+name = "sudoku_pi"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+bevy = { version = "0.15.2", default-features = false, features = [
+    "android_shared_stdcxx",
+    "animation",
+    "bevy_asset",
+    "bevy_gilrs",
+    "bevy_scene",
+    "bevy_winit",
+    "bevy_core_pipeline",
+    "bevy_pbr",
+    "bevy_gltf",
+    "bevy_render",
+    "bevy_sprite",
+    "bevy_state",
+    "bevy_text",
+    "jpeg",
+    "png",
+    "wayland",
+    "x11",
+] }
+#bevy-steamworks = { optional = true, version = "0.8" }
+bevy_tweening = { version = "0.12", default-features = false, features = [
+    "bevy_asset",
+    "bevy_sprite",
+    "bevy_text",
+] }
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+smallvec = "1.10"
+
+[target.'cfg(target_os = "android")'.dependencies]
+android-activity = { version = "0.6", features = ["game-activity"] }
 
 [profile.dev]
 opt-level = 1
 
 [profile.dev.package."*"]
 opt-level = 3
+
+[profile.release]
+lto = true
+panic = "abort"
 
 [patch.crates-io]
 #bevy = { path = "../bevy" }

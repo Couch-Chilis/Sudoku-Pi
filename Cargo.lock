@@ -327,7 +327,6 @@ version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f7715ae81a5b4b0839d5d515db2bbadb09abf1bb5ac5c721aa6a6edc06d7f33"
 dependencies = [
- "bevy_dylib",
  "bevy_internal",
 ]
 
@@ -543,15 +542,6 @@ dependencies = [
  "bevy_time",
  "bevy_utils",
  "const-fnv1a-hash",
-]
-
-[[package]]
-name = "bevy_dylib"
-version = "0.15.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a06fd62fbf045ff61555d0879095221c6dcba4e207fb2e70fdb82dded69a31fb"
-dependencies = [
- "bevy_internal",
 ]
 
 [[package]]
@@ -3704,9 +3694,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6637bab7722d379c8b41ba849228d680cc12d0a45ba1fa2b48f2a30577a06731"
 
 [[package]]
-name = "sudoku-lib"
+name = "sudoku-pi"
 version = "0.1.0"
 dependencies = [
+ "android-activity",
  "anyhow",
  "bevy",
  "bevy_tweening",
@@ -3714,21 +3705,6 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
-]
-
-[[package]]
-name = "sudoku-pi"
-version = "0.1.0"
-dependencies = [
- "sudoku-lib",
-]
-
-[[package]]
-name = "sudoku-pi-android"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "sudoku-lib",
 ]
 
 [[package]]

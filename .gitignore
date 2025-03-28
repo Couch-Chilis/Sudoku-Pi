@@ -1,3 +1,7 @@
 /target
+app/build
 .DS_Store
+.idea
 **/*.a
+**/.cxx
+**/jniLibs

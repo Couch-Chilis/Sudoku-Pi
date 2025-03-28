@@ -39,6 +39,27 @@ contribution in any way they see fit. This includes, but is not limited to,
 distribution under the terms of the [General Public License v3](#license) as
 well as in binary form for release to app stores.
 
+# Build Instructions
+
+## Desktop
+
+Just use `cargo run` to run the game.
+
+## Android
+
+0. Make sure you have the Android SDK and NDK installed, as well as `cargo-ndk`.
+1. Use the `build_android_arm.sh` script to build the library.
+2. Open this folder as a project in Android Studio. If the script above
+   completed, it should compile, link, and run successfully.
+
+## iOS
+
+1. Use either the `build_ios.sh` script or the `build_ios_sim.sh` script,
+   depending on whether you want to create a build for the Simulator or a
+   regular device.
+2. Open this folder as a project in Xcode. If the script above completed, it
+   should compile, link, and run successfully.
+
 # License
 
 Sudoku Pi is copyright 2023-2025 by Couch Chilis and is available under the

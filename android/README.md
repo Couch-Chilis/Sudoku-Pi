@@ -1,1 +1,0 @@
-## Sudoku Pi for Android
