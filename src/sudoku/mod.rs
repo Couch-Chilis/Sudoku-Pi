@@ -168,9 +168,7 @@ impl Game {
             self.mistakes.clear(x, y);
         }
 
-        if cfg!(target_os = "ios") {
-            self.save(); // Auto-save seems too unreliable otherwise.
-        }
+        self.save(); // Make sure we don't loose any progress.
 
         is_correct
     }
@@ -320,6 +318,12 @@ impl Game {
         }
 
         None
+    }
+
+    pub fn toggle_note(&mut self, x: u8, y: u8, n: NonZeroU8) {
+        self.notes.toggle(x, y, n);
+
+        self.save(); // Make sure we don't loose any progress.
     }
 }
 

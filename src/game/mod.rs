@@ -267,7 +267,7 @@ fn on_pointer_input(
                         .and_then(|(x, y)| game.current.get(x, y))
                         .or(selection.selected_note)
                     {
-                        game.notes.toggle(x, y, n);
+                        game.toggle_note(x, y, n);
                         selection.note_toggle = if game.notes.has(x, y, n) {
                             Some(NoteToggleMode::Set)
                         } else {
@@ -296,7 +296,7 @@ fn on_pointer_input(
                             if wheel.is_open && wheel.spawn_timer >= WHEEL_OPEN_DELAY {
                                 // Revert the initial toggle at the start of the long press.
                                 let (x, y) = wheel.cell;
-                                game.notes.toggle(x, y, n);
+                                game.toggle_note(x, y, n);
                                 selection.note_toggle = None;
                             } else {
                                 match note_toggle {
@@ -414,7 +414,7 @@ fn toggle_note(game: &mut Game, selection: &mut Selection, n: NonZeroU8) {
         return;
     };
 
-    game.notes.toggle(x, y, n);
+    game.toggle_note(x, y, n);
 
     if game.notes.has(x, y, n) {
         selection.selected_note = Some(n);
