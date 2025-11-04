@@ -1,5 +1,6 @@
 app/build
 build
+local.properties
 target
 .DS_Store
 .gradle
