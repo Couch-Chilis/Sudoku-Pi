@@ -50,7 +50,7 @@ pub fn main_menu_buttons(props: &Props, spawner: &mut ChildSpawnerCommands) {
         ),
     );
 
-    if cfg!(not(target_os = "ios")) {
+    if cfg!(not(any(target_os = "android", target_os = "ios"))) {
         spawner.spawn_with_children(
             props,
             ternary_button(

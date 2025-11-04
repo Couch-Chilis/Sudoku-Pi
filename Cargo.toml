@@ -62,6 +62,7 @@ lto = true
 panic = "abort"
 
 [patch.crates-io]
+android-activity = { git = "https://github.com/damus-io/android-activity", rev = "a8948332c7c551303d32eb26a59d0abd676e47a5" }
 #bevy = { path = "../bevy" }
 #bevy_framepace = { path = "../bevy_framepace" }
 #bevy_tweening = { path = "../bevy_tweening" }

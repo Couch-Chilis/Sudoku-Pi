@@ -24,9 +24,7 @@ use bevy::asset::io::memory::MemoryAssetReader;
 use bevy::asset::io::{AssetSourceBuilder, AssetSourceBuilders, AssetSourceId};
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
-#[cfg(not(target_os = "ios"))]
-use bevy_tweening::TweenAnim;
-use bevy_tweening::{lens::TransformPositionLens, Tween, TweeningPlugin};
+use bevy_tweening::{lens::TransformPositionLens, Tween, TweenAnim, TweeningPlugin};
 use smallvec::SmallVec;
 
 use assets::*;
@@ -162,10 +160,16 @@ impl Default for ScreenSizing {
 }
 
 /// Helps compensate zooming that occurs on iPhone Mini.
-#[derive(Default, Resource)]
+#[derive(Resource)]
 pub struct ZoomFactor {
     x: f32,
     y: f32,
+}
+
+impl Default for ZoomFactor {
+    fn default() -> Self {
+        Self { x: 1.0, y: 1.0 }
+    }
 }
 
 #[bevy_main]
