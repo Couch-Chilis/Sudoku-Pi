@@ -41,9 +41,9 @@ pub(crate) fn layout_system(
     changed_containers: Query<Entity, Changed<FlexContainerStyle>>,
     changed_items: Query<Entity, Changed<FlexItemStyle>>,
     resource_tuple: ResourceTuple,
-    events: EventReader<WindowResized>,
+    resized_windows: MessageReader<WindowResized>,
 ) {
-    if !changed_containers.is_empty() || !changed_items.is_empty() || !events.is_empty() {
+    if !changed_containers.is_empty() || !changed_items.is_empty() || !resized_windows.is_empty() {
         layout(&mut flex_query, &resource_tuple);
     }
 }
@@ -54,6 +54,7 @@ fn layout(flex_query: &mut FlexQuery, resource_tuple: &ResourceTuple) {
     layout_info.apply();
 }
 
+#[derive(Debug)]
 struct LayoutInfo<'a> {
     screens: Vec<(Entity, ScreenState, f32, f32)>,
     container_map: BTreeMap<Entity, (&'a Children, Cow<'a, FlexContainerStyle>)>,
@@ -103,9 +104,6 @@ impl<'a> LayoutInfo<'a> {
             }
 
             match (anchor, item_style, computed_position) {
-                (Some(anchor), _, Some(computed_position)) => {
-                    text_map.insert(entity, (anchor, transform, computed_position));
-                }
                 (_, Some(item_style), Some(computed_position)) => {
                     let mut item_style = if item_style.dynamic_styles.is_empty() {
                         Cow::Borrowed(item_style)
@@ -131,6 +129,9 @@ impl<'a> LayoutInfo<'a> {
                         entity,
                         (item_style, computed_position, transform, screen_interaction),
                     );
+                }
+                (Some(anchor), _, Some(computed_position)) => {
+                    text_map.insert(entity, (anchor, transform, computed_position));
                 }
                 _ => {}
             }
@@ -194,7 +195,7 @@ impl<'a> LayoutInfo<'a> {
             _ => {
                 (children
                     .iter()
-                    .filter_map(|entity| self.item_map.get(entity))
+                    .filter_map(|entity| self.item_map.get(&entity))
                     .filter(|(item_style, ..)| item_style.occupies_space)
                     .count()
                     .max(1)
@@ -214,7 +215,7 @@ impl<'a> LayoutInfo<'a> {
         };
         let (total_size, total_grow, total_shrink) = children
             .iter()
-            .filter_map(|entity| self.item_map.get(entity))
+            .filter_map(|entity| self.item_map.get(&entity))
             .filter(|(item_style, ..)| item_style.occupies_space)
             .map(|(item_style, ..)| {
                 (
@@ -436,15 +437,7 @@ impl<'a> LayoutInfo<'a> {
         let ComputedPosition { width, height, .. } = position;
 
         transform.scale = Vec3::new(0.5 / width, 0.5 / height, 1.);
-        transform.translation = Vec3::new(
-            match anchor {
-                Anchor::CenterLeft | Anchor::BottomLeft | Anchor::TopLeft => -0.5,
-                Anchor::CenterRight | Anchor::BottomRight | Anchor::TopRight => 0.5,
-                _ => 0.,
-            },
-            0.,
-            1.,
-        );
+        transform.translation = Vec3::new(anchor.as_vec().x, 0., 1.);
 
         *computed_position = position.transformed(transform.scale, transform.translation);
     }

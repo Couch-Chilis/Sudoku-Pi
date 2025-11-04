@@ -1,8 +1,6 @@
 use bevy::{prelude::*, sprite::Anchor};
 
-use crate::{
-    constants::*, ui::*, utils::*, Fortune, Game, Highscores, ScreenState, TransitionEvent,
-};
+use crate::{constants::*, ui::*, utils::*, Fortune, Game, Highscores, ScreenState, Transition};
 
 #[derive(Component)]
 pub enum HighscoreButtonAction {
@@ -51,7 +49,7 @@ enum StatKind {
     BestTime,
 }
 
-pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     fragment3(
         // Scroll section.
         column(
@@ -142,7 +140,7 @@ pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
 
 pub fn highscore_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
-    mut transition_events: EventWriter<TransitionEvent>,
+    mut transitions: MessageWriter<Transition>,
     query: Query<(&Interaction, &HighscoreButtonAction), (Changed<Interaction>, With<Button>)>,
     game: Res<Game>,
 ) {
@@ -151,7 +149,7 @@ pub fn highscore_button_actions(
             match action {
                 HighscoreButtonAction::Back => screen_state.set(ScreenState::MainMenu),
                 HighscoreButtonAction::NewGame => {
-                    transition_events.send(TransitionEvent::StartGame(game.difficulty));
+                    transitions.write(Transition::StartGame(game.difficulty));
                 }
             }
         }
@@ -193,7 +191,7 @@ fn get_stat_text(props: &Props, kind: StatKind) -> String {
     }
 }
 
-fn scores() -> impl FnOnce(&Props, &mut ChildBuilder) {
+fn scores() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     fragment7(
         stat_row(StatKind::Score, "Score:"),
         stat_row(StatKind::Time, "Time:"),
@@ -205,7 +203,10 @@ fn scores() -> impl FnOnce(&Props, &mut ChildBuilder) {
     )
 }
 
-fn stat_row(kind: StatKind, label: &str) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+fn stat_row(
+    kind: StatKind,
+    label: &str,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
     let font = if matches!(kind, StatKind::HighestScore | StatKind::BestTime) {
         font_bold
     } else {
@@ -224,7 +225,7 @@ fn stat_row(kind: StatKind, label: &str) -> (impl Bundle, impl FnOnce(&Props, &m
                     (
                         button_text_size,
                         font,
-                        text_anchor(Anchor::CenterRight),
+                        text_anchor(Anchor::CENTER_RIGHT),
                         text_color(COLOR_MAIN_DARKER),
                     ),
                 ),
@@ -241,7 +242,7 @@ fn stat_row(kind: StatKind, label: &str) -> (impl Bundle, impl FnOnce(&Props, &m
                     (
                         button_text_size,
                         font,
-                        text_anchor(Anchor::CenterLeft),
+                        text_anchor(Anchor::CENTER_LEFT),
                         text_color(COLOR_POP_FOCUS),
                     ),
                 ),
@@ -274,9 +275,9 @@ pub fn on_fortune(
             ScrollTextKind::Quote => {
                 text.0 = quote.to_owned();
                 layout.justify = if author.is_empty() {
-                    JustifyText::Center
+                    Justify::Center
                 } else {
-                    JustifyText::Left
+                    Justify::Left
                 };
             }
             ScrollTextKind::Author => {

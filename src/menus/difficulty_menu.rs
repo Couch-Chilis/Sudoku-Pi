@@ -1,4 +1,4 @@
-use crate::{sudoku::Difficulty, ui::*, TransitionEvent};
+use crate::{sudoku::Difficulty, ui::*, Transition};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -7,7 +7,7 @@ pub enum DifficultyScreenButtonAction {
     StartGameAtDifficulty(Difficulty),
 }
 
-pub fn difficulty_menu_buttons() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn difficulty_menu_buttons() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     use Difficulty::*;
     use DifficultyScreenButtonAction::*;
 
@@ -42,7 +42,7 @@ pub fn difficulty_menu_buttons() -> impl FnOnce(&Props, &mut ChildBuilder) {
 
 // Handles screen navigation based on button actions in the difficulty screen.
 pub fn difficulty_screen_button_actions(
-    mut transition_events: EventWriter<TransitionEvent>,
+    mut transitions: MessageWriter<Transition>,
     interaction_query: Query<
         (&Interaction, &DifficultyScreenButtonAction),
         (Changed<Interaction>, With<Button>),
@@ -53,10 +53,10 @@ pub fn difficulty_screen_button_actions(
             use DifficultyScreenButtonAction::*;
             match action {
                 BackToMain => {
-                    transition_events.send(TransitionEvent::Exit);
+                    transitions.write(Transition::Exit);
                 }
                 StartGameAtDifficulty(difficulty) => {
-                    transition_events.send(TransitionEvent::StartGame(*difficulty));
+                    transitions.write(Transition::StartGame(*difficulty));
                 }
             }
         }

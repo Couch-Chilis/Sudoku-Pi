@@ -6,13 +6,13 @@ where
     B: Bundle,
 {
     bundle: Option<B>,
-    spawn_children: Option<Box<dyn FnOnce(&Props, &mut ChildBuilder)>>,
+    spawn_children: Option<Box<dyn FnOnce(&Props, &mut ChildSpawnerCommands)>>,
 }
 
 impl BundleWithChildren<()> {
     pub fn from_closure<C>(spawn_children: C) -> Self
     where
-        C: FnOnce(&Props, &mut ChildBuilder) + 'static,
+        C: FnOnce(&Props, &mut ChildSpawnerCommands) + 'static,
     {
         Self {
             bundle: None,
@@ -35,7 +35,7 @@ where
 
 impl<C> From<C> for BundleWithChildren<()>
 where
-    C: FnOnce(&Props, &mut ChildBuilder) + 'static,
+    C: FnOnce(&Props, &mut ChildSpawnerCommands) + 'static,
 {
     fn from(spawn_children: C) -> Self {
         Self::from_closure(spawn_children)
@@ -45,7 +45,7 @@ where
 impl<B, C> From<(B, C)> for BundleWithChildren<B>
 where
     B: Bundle,
-    C: FnOnce(&Props, &mut ChildBuilder) + 'static,
+    C: FnOnce(&Props, &mut ChildSpawnerCommands) + 'static,
 {
     fn from((bundle, spawn_children): (B, C)) -> Self {
         Self {
@@ -55,7 +55,7 @@ where
     }
 }
 
-pub trait ChildBuilderExt<B>
+pub trait ChildSpawnerCommandsExt<B>
 where
     B: Bundle,
 {
@@ -66,7 +66,7 @@ where
     );
 }
 
-impl<B> ChildBuilderExt<B> for ChildBuilder<'_>
+impl<B> ChildSpawnerCommandsExt<B> for ChildSpawnerCommands<'_>
 where
     B: Bundle,
 {
@@ -84,7 +84,7 @@ where
             let mut entity_commands = self.spawn(bundle);
 
             if let Some(spawn_children) = spawn_children {
-                entity_commands.with_children(|cb| spawn_children(props, cb));
+                entity_commands.with_children(|spawner| spawn_children(props, spawner));
             }
         } else if let Some(spawn_children) = spawn_children {
             spawn_children(props, self);
@@ -92,7 +92,7 @@ where
     }
 }
 
-impl<B> ChildBuilderExt<B> for Commands<'_, '_>
+impl<B> ChildSpawnerCommandsExt<B> for Commands<'_, '_>
 where
     B: Bundle,
 {
@@ -110,7 +110,7 @@ where
             let mut entity_commands = self.spawn(bundle);
 
             if let Some(spawn_children) = spawn_children {
-                entity_commands.with_children(|cb| spawn_children(props, cb));
+                entity_commands.with_children(|spawner| spawn_children(props, spawner));
             }
         } else {
             unimplemented!("Need a bundle to spawn top-level entities");

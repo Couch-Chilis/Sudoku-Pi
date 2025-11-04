@@ -1,5 +1,5 @@
 use crate::{constants::*, game::*, ui::*};
-use crate::{Fonts, Game, ScreenState, Settings, TransitionEvent};
+use crate::{Fonts, Game, ScreenState, Settings, Transition};
 use bevy::prelude::*;
 
 const INITIAL_NUMBER_INSTRUCTION: &str =
@@ -30,7 +30,7 @@ pub struct OnboardingNotesInstruction;
 #[derive(Component)]
 pub struct OnboardingNotesHint;
 
-pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     fragment4(
         row(
             available_size,
@@ -38,7 +38,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "Welcome to\nSudoku Pi",
                 (
-                    justify(JustifyText::Center),
+                    justify(Justify::Center),
                     font_bold,
                     font_size(66.7),
                     text_color(COLOR_MAIN_DARKER),
@@ -51,7 +51,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "You are about to\nexperience a new way\nto play Sudoku.",
                 (
-                    justify(JustifyText::Center),
+                    justify(Justify::Center),
                     font_medium,
                     font_size(41.7),
                     text_color(COLOR_MAIN_DARKER),
@@ -64,7 +64,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "But first, let us show you\nhow to play.",
                 (
-                    justify(JustifyText::Center),
+                    justify(Justify::Center),
                     font_medium,
                     font_size(33.3),
                     text_color(COLOR_MAIN_DARKER),
@@ -83,7 +83,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
     )
 }
 
-pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     fragment5(
         row(
             available_size,
@@ -91,7 +91,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
             text(
                 "A New Way\nto Fill In Numbers",
                 (
-                    justify(JustifyText::Center),
+                    justify(Justify::Center),
                     font_bold,
                     font_size(66.7),
                     text_color(COLOR_MAIN_DARKER)
@@ -106,7 +106,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 OnboardingNumberInstruction,
                 INITIAL_NUMBER_INSTRUCTION,
                 (
-                    justify(JustifyText::Center),
+                    justify(Justify::Center),
                     font_medium,
                     font_size(33.3),
                     text_color(COLOR_MAIN_DARKER)
@@ -123,7 +123,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 OnboardingNumberHint,
                 "Noticed how numbers in range were disabled?\nThis is the wheel aid that helps avoid mistakes.",
                 (
-                    justify(JustifyText::Center),
+                    justify(Justify::Center),
                     font_medium,
                     font_size(30.),
                     text_color(COLOR_MAIN_DARKER)
@@ -143,8 +143,8 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
     )
 }
 
-pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
-    |props: &Props, cb: &mut ChildBuilder| {
+pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    |props: &Props, spawner: &mut ChildSpawnerCommands| {
         fragment5(
             row(
                 available_size,
@@ -152,7 +152,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                 text(
                     "A New Way\nto Draw Notes",
                     (
-                        justify(JustifyText::Center),
+                        justify(Justify::Center),
                         font_bold,
                         font_size(66.7),
                         text_color(COLOR_MAIN_DARKER)
@@ -167,7 +167,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                     OnboardingNotesInstruction,
                     INITIAL_NOTES_INSTRUCTION,
                     (
-                        justify(JustifyText::Center),
+                        justify(Justify::Center),
                         font_medium,
                         font_size(33.3),
                         text_color(COLOR_MAIN_DARKER)
@@ -184,7 +184,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                     OnboardingNotesHint,
                     "Do you want to use the wheel to select a note?\nIt's still available if you long-press.",
                     (
-                        justify(JustifyText::Center),
+                        justify(Justify::Center),
                         font_medium,
                         font_size(30.),
                         text_color(COLOR_MAIN_DARKER)
@@ -208,19 +208,19 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
                     )
                 )
             ),
-        )(props, cb)
+        )(props, spawner)
     }
 }
 
 pub fn onboarding_screen_button_interaction(
-    mut transition_events: EventWriter<TransitionEvent>,
+    mut transitions: MessageWriter<Transition>,
     interaction_query: Query<&Interaction, (Changed<Interaction>, With<OnboardingScreenAction>)>,
     screen: Res<State<ScreenState>>,
 ) {
     let next_transition = match screen.get() {
-        ScreenState::Welcome => TransitionEvent::LearnNumbers,
-        ScreenState::LearnNumbers => TransitionEvent::LearnNotes,
-        ScreenState::LearnNotes => TransitionEvent::FinishOnboarding,
+        ScreenState::Welcome => Transition::LearnNumbers,
+        ScreenState::LearnNumbers => Transition::LearnNotes,
+        ScreenState::LearnNotes => Transition::FinishOnboarding,
         _ => return,
     };
 
@@ -228,7 +228,7 @@ pub fn onboarding_screen_button_interaction(
         .iter()
         .any(|&interaction| interaction == Interaction::Pressed)
     {
-        transition_events.send(next_transition);
+        transitions.write(next_transition);
     }
 }
 

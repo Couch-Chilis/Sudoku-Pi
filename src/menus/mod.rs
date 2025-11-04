@@ -7,7 +7,7 @@ use std::f32::consts::PI;
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_tweening::{Animator, Delay, EaseMethod, Lens, Tween};
+use bevy_tweening::{Delay, EaseMethod, Lens, Tween, TweenAnim};
 use smallvec::smallvec;
 
 use crate::{ui::*, ScreenInteraction, ScreenState};
@@ -45,7 +45,7 @@ impl Plugin for MenuPlugin {
     }
 }
 
-pub fn menu_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn menu_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     fragment4(
         // Logo.
         dynamic_image(
@@ -75,8 +75,8 @@ fn button_section(
     screen_state: ScreenState,
     initial_rotation: f32,
     z_index: f32,
-    children: impl FnOnce(&Props, &mut ChildBuilder) + 'static,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+    children: impl FnOnce(&Props, &mut ChildSpawnerCommands) + 'static,
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
     column_t(
         ButtonSection {
             initial_rotation,
@@ -106,7 +106,7 @@ fn button_section(
 fn on_screen_change(
     mut commands: Commands,
     mut button_sections: Query<(Entity, &mut ButtonSection)>,
-    button_containers: Query<(Entity, &Children, &ScreenInteraction)>,
+    button_containers: Query<(Entity, &ScreenInteraction)>,
     props: PropsTuple,
     screen_state: Res<State<ScreenState>>,
 ) {
@@ -120,12 +120,11 @@ fn on_screen_change(
     if screen_state.get() == &MainMenu {
         // Respawn buttons when going back to main screen, because the
         // Continue button may have (dis)appeared.
-        for (container_entity, children, screen_interaction) in &button_containers {
+        for (container_entity, screen_interaction) in &button_containers {
             if screen_interaction.screens.contains(&ScreenState::MainMenu) {
                 let mut button_container = commands.entity(container_entity);
-                button_container.despawn_descendants();
-                button_container.remove_children(children);
-                button_container.with_children(|cb| main_menu_buttons(&props, cb));
+                button_container.despawn_children();
+                button_container.with_children(|spawner| main_menu_buttons(&props, spawner));
             }
         }
     }
@@ -147,12 +146,12 @@ fn on_screen_change(
             // When going from the difficulty selection to the game, we just
             // reset the transform without animation so everything is back to
             // the starting position when going out of the game.
-            Game => Animator::new(Delay::new(Duration::from_millis(200)).then(Tween::new(
+            Game => TweenAnim::new(Delay::new(Duration::from_millis(200)).then(Tween::new(
                 EaseMethod::Discrete(0.),
                 Duration::from_millis(1),
                 TransformRotationZLens { start, end },
             ))),
-            _ => Animator::new(Tween::new(
+            _ => TweenAnim::new(Tween::new(
                 EaseFunction::QuadraticInOut,
                 Duration::from_millis(200),
                 TransformRotationZLens { start, end },
@@ -172,7 +171,7 @@ struct TransformRotationZLens {
 }
 
 impl Lens<FlexItemStyle> for TransformRotationZLens {
-    fn lerp(&mut self, target: &mut dyn bevy_tweening::Targetable<FlexItemStyle>, ratio: f32) {
+    fn lerp(&mut self, mut target: Mut<FlexItemStyle>, ratio: f32) {
         let value = self.start + (self.end - self.start) * ratio;
         target.transform.rotation = Quat::from_rotation_z(value);
     }

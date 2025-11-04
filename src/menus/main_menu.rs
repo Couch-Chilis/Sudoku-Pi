@@ -10,11 +10,48 @@ pub enum MainScreenButtonAction {
     Quit,
 }
 
-pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
+pub fn main_menu_buttons(props: &Props, spawner: &mut ChildSpawnerCommands) {
     use MainScreenButtonAction::*;
 
+    if props.game.may_continue() {
+        spawner.spawn_with_children(
+            props,
+            selected_button(
+                ContinueGame,
+                (button_size_main, button_margin),
+                text("Continue", button_text),
+            ),
+        );
+        spawner.spawn_with_children(
+            props,
+            secondary_button(
+                GoToNewGame,
+                (button_size_main, button_margin),
+                text("New Game", button_text),
+            ),
+        );
+    } else {
+        spawner.spawn_with_children(
+            props,
+            selected_button(
+                GoToNewGame,
+                (button_size_main, button_margin),
+                text("New Game", button_text),
+            ),
+        );
+    }
+
+    spawner.spawn_with_children(
+        props,
+        secondary_button(
+            GoToHowToPlay,
+            (button_size_main, button_margin_extra_height_on_ios),
+            text("How to Play", button_text),
+        ),
+    );
+
     if cfg!(not(target_os = "ios")) {
-        cb.spawn_with_children(
+        spawner.spawn_with_children(
             props,
             ternary_button(
                 Quit,
@@ -24,46 +61,9 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
         );
     }
 
-    cb.spawn_with_children(
-        props,
-        secondary_button(
-            GoToHowToPlay,
-            (button_size_main, button_margin_extra_height_on_ios),
-            text("How to Play", button_text),
-        ),
-    );
+    spawner.spawn_with_children(props, leaf(available_size));
 
-    if props.game.may_continue() {
-        cb.spawn_with_children(
-            props,
-            secondary_button(
-                GoToNewGame,
-                (button_size_main, button_margin),
-                text("New Game", button_text),
-            ),
-        );
-        cb.spawn_with_children(
-            props,
-            selected_button(
-                ContinueGame,
-                (button_size_main, button_margin),
-                text("Continue", button_text),
-            ),
-        );
-    } else {
-        cb.spawn_with_children(
-            props,
-            selected_button(
-                GoToNewGame,
-                (button_size_main, button_margin),
-                text("New Game", button_text),
-            ),
-        );
-    }
-
-    cb.spawn_with_children(props, leaf(available_size));
-
-    cb.spawn_with_children(
+    spawner.spawn_with_children(
         props,
         row(
             (
@@ -76,7 +76,7 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
                 (
                     font_medium,
                     font_size(25.),
-                    text_anchor(Anchor::CenterRight),
+                    text_anchor(Anchor::CENTER_RIGHT),
                     text_color(COLOR_BOARD_LINE_MEDIUM),
                 ),
             ),
@@ -86,8 +86,8 @@ pub fn main_menu_buttons(props: &Props, cb: &mut ChildBuilder) {
 
 pub fn main_menu_button_actions(
     mut screen_state: ResMut<NextState<ScreenState>>,
-    mut app_exit_events: EventWriter<AppExit>,
-    mut transition_events: EventWriter<TransitionEvent>,
+    mut app_exit: MessageWriter<AppExit>,
+    mut transitions: MessageWriter<Transition>,
     interaction_query: Query<(&Interaction, &MainScreenButtonAction), Changed<Interaction>>,
 ) {
     for (interaction, action) in &interaction_query {
@@ -95,16 +95,16 @@ pub fn main_menu_button_actions(
             use MainScreenButtonAction::*;
             match action {
                 ContinueGame => {
-                    transition_events.send(TransitionEvent::ContinueGame);
+                    transitions.write(Transition::ContinueGame);
                 }
                 GoToHowToPlay => {
-                    transition_events.send(TransitionEvent::LearnNumbers);
+                    transitions.write(Transition::LearnNumbers);
                 }
                 GoToNewGame => {
                     screen_state.set(ScreenState::SelectDifficulty);
                 }
                 Quit => {
-                    app_exit_events.send(AppExit::Success);
+                    app_exit.write(AppExit::Success);
                 }
             }
         }

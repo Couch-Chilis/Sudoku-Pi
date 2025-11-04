@@ -5,14 +5,15 @@ use bevy::prelude::*;
 use crate::{assets::*, constants::*, utils::*, ResourceBag};
 
 use super::{
-    buttons::*, child_builder_ext::*, flex::*, interaction::*, props::*, style_enhancers::*,
+    buttons::*, child_spawner_commands_ext::*, flex::*, interaction::*, props::*,
+    style_enhancers::*,
 };
 
 pub fn primary_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
@@ -21,8 +22,8 @@ where
 
     let bundle = ButtonBundle::from_style(style);
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, child);
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner.spawn_with_children(props, child);
     };
 
     ((action, bundle), spawn_children)
@@ -32,7 +33,7 @@ pub fn selected_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
@@ -45,8 +46,8 @@ where
         ..default()
     };
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, child);
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner.spawn_with_children(props, child);
     };
 
     ((action, InitialSelection, bundle), spawn_children)
@@ -56,7 +57,7 @@ pub fn secondary_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
@@ -72,18 +73,19 @@ where
         ..default()
     };
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn((
-            ButtonBackground,
-            FlexBundle::new(
-                FlexItemStyle::available_size().without_occupying_space(),
-                FlexContainerStyle::row(),
-            )
-            .with_background_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-        ))
-        .with_children(|child_builder| {
-            child_builder.spawn_with_children(props, child);
-        });
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner
+            .spawn((
+                ButtonBackground,
+                FlexBundle::new(
+                    FlexItemStyle::available_size().without_occupying_space(),
+                    FlexContainerStyle::row(),
+                )
+                .with_background_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
+            ))
+            .with_children(|child_builder| {
+                child_builder.spawn_with_children(props, child);
+            });
     };
 
     ((action, ButtonType::Secondary, bundle), spawn_children)
@@ -93,7 +95,7 @@ pub fn ternary_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
@@ -109,18 +111,19 @@ where
         ..default()
     };
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn((
-            ButtonBackground,
-            FlexBundle::new(
-                FlexItemStyle::available_size().without_occupying_space(),
-                FlexContainerStyle::row(),
-            )
-            .with_background_color(COLOR_TERNARY_BUTTON_BACKGROUND),
-        ))
-        .with_children(|child_builder| {
-            child_builder.spawn_with_children(props, child);
-        });
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner
+            .spawn((
+                ButtonBackground,
+                FlexBundle::new(
+                    FlexItemStyle::available_size().without_occupying_space(),
+                    FlexContainerStyle::row(),
+                )
+                .with_background_color(COLOR_TERNARY_BUTTON_BACKGROUND),
+            ))
+            .with_children(|child_builder| {
+                child_builder.spawn_with_children(props, child);
+            });
     };
 
     ((action, ButtonType::Ternary, bundle), spawn_children)
@@ -130,7 +133,7 @@ pub fn column<B>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
@@ -138,8 +141,8 @@ where
     item_styles.enhance(&mut bundle.item.style);
     container_styles.enhance(&mut bundle.container);
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, child);
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner.spawn_with_children(props, child);
     };
 
     (bundle, spawn_children)
@@ -150,7 +153,7 @@ pub fn column_t<B, T>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
     T: Bundle,
@@ -163,15 +166,18 @@ where
 pub fn container<B>(
     styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (FlexContainerBundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (
+    FlexContainerBundle,
+    impl FnOnce(&Props, &mut ChildSpawnerCommands),
+)
 where
     B: Bundle,
 {
     let mut bundle = FlexContainerBundle::default();
     styles.enhance(&mut bundle);
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, child);
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner.spawn_with_children(props, child);
     };
 
     (bundle, spawn_children)
@@ -194,14 +200,14 @@ where
 pub fn fragment<B1, B2>(
     child1: impl Into<BundleWithChildren<B1>>,
     child2: impl Into<BundleWithChildren<B2>>,
-) -> impl FnOnce(&Props, &mut ChildBuilder)
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B1: Bundle,
     B2: Bundle,
 {
-    |props, cb| {
-        cb.spawn_with_children(props, child1);
-        cb.spawn_with_children(props, child2);
+    |props, spawner| {
+        spawner.spawn_with_children(props, child1);
+        spawner.spawn_with_children(props, child2);
     }
 }
 
@@ -209,16 +215,16 @@ pub fn fragment3<B1, B2, B3>(
     child1: impl Into<BundleWithChildren<B1>>,
     child2: impl Into<BundleWithChildren<B2>>,
     child3: impl Into<BundleWithChildren<B3>>,
-) -> impl FnOnce(&Props, &mut ChildBuilder)
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B1: Bundle,
     B2: Bundle,
     B3: Bundle,
 {
-    |props, cb| {
-        cb.spawn_with_children(props, child1);
-        cb.spawn_with_children(props, child2);
-        cb.spawn_with_children(props, child3);
+    |props, spawner| {
+        spawner.spawn_with_children(props, child1);
+        spawner.spawn_with_children(props, child2);
+        spawner.spawn_with_children(props, child3);
     }
 }
 
@@ -227,18 +233,18 @@ pub fn fragment4<B1, B2, B3, B4>(
     child2: impl Into<BundleWithChildren<B2>>,
     child3: impl Into<BundleWithChildren<B3>>,
     child4: impl Into<BundleWithChildren<B4>>,
-) -> impl FnOnce(&Props, &mut ChildBuilder)
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B1: Bundle,
     B2: Bundle,
     B3: Bundle,
     B4: Bundle,
 {
-    |props, cb| {
-        cb.spawn_with_children(props, child1);
-        cb.spawn_with_children(props, child2);
-        cb.spawn_with_children(props, child3);
-        cb.spawn_with_children(props, child4);
+    |props, spawner| {
+        spawner.spawn_with_children(props, child1);
+        spawner.spawn_with_children(props, child2);
+        spawner.spawn_with_children(props, child3);
+        spawner.spawn_with_children(props, child4);
     }
 }
 
@@ -248,7 +254,7 @@ pub fn fragment5<B1, B2, B3, B4, B5>(
     child3: impl Into<BundleWithChildren<B3>>,
     child4: impl Into<BundleWithChildren<B4>>,
     child5: impl Into<BundleWithChildren<B5>>,
-) -> impl FnOnce(&Props, &mut ChildBuilder)
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B1: Bundle,
     B2: Bundle,
@@ -256,12 +262,12 @@ where
     B4: Bundle,
     B5: Bundle,
 {
-    |props, cb| {
-        cb.spawn_with_children(props, child1);
-        cb.spawn_with_children(props, child2);
-        cb.spawn_with_children(props, child3);
-        cb.spawn_with_children(props, child4);
-        cb.spawn_with_children(props, child5);
+    |props, spawner| {
+        spawner.spawn_with_children(props, child1);
+        spawner.spawn_with_children(props, child2);
+        spawner.spawn_with_children(props, child3);
+        spawner.spawn_with_children(props, child4);
+        spawner.spawn_with_children(props, child5);
     }
 }
 
@@ -273,7 +279,7 @@ pub fn fragment7<B1, B2, B3, B4, B5, B6, B7>(
     child5: impl Into<BundleWithChildren<B5>>,
     child6: impl Into<BundleWithChildren<B6>>,
     child7: impl Into<BundleWithChildren<B7>>,
-) -> impl FnOnce(&Props, &mut ChildBuilder)
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B1: Bundle,
     B2: Bundle,
@@ -283,14 +289,14 @@ where
     B6: Bundle,
     B7: Bundle,
 {
-    |props, cb| {
-        cb.spawn_with_children(props, child1);
-        cb.spawn_with_children(props, child2);
-        cb.spawn_with_children(props, child3);
-        cb.spawn_with_children(props, child4);
-        cb.spawn_with_children(props, child5);
-        cb.spawn_with_children(props, child6);
-        cb.spawn_with_children(props, child7);
+    |props, spawner| {
+        spawner.spawn_with_children(props, child1);
+        spawner.spawn_with_children(props, child2);
+        spawner.spawn_with_children(props, child3);
+        spawner.spawn_with_children(props, child4);
+        spawner.spawn_with_children(props, child5);
+        spawner.spawn_with_children(props, child6);
+        spawner.spawn_with_children(props, child7);
     }
 }
 
@@ -334,7 +340,7 @@ pub fn row<B>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
@@ -343,8 +349,8 @@ where
     item_styles.enhance(&mut bundle.item.style);
     container_styles.enhance(&mut bundle.container);
 
-    let spawn_children = |props: &Props, cb: &mut ChildBuilder| {
-        cb.spawn_with_children(props, child);
+    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner.spawn_with_children(props, child);
     };
 
     (bundle, spawn_children)
@@ -355,7 +361,7 @@ pub fn row_t<B, T>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
     T: Bundle,
@@ -368,11 +374,11 @@ where
 pub fn text(
     text: impl Into<String>,
     styles: impl TextEnhancer,
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    |props: &Props, cb: &mut ChildBuilder| {
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    |props: &Props, spawner: &mut ChildSpawnerCommands| {
         let mut bundle = FlexTextBundle::from_text(text);
         styles.enhance(&mut bundle, &props.resources);
-        cb.spawn(bundle);
+        spawner.spawn(bundle);
     }
 }
 
@@ -380,10 +386,10 @@ pub fn text_t(
     marker: impl Bundle,
     text: impl Into<String>,
     styles: impl TextEnhancer,
-) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    |props: &Props, cb: &mut ChildBuilder| {
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    |props: &Props, spawner: &mut ChildSpawnerCommands| {
         let mut bundle = FlexTextBundle::from_text(text);
         styles.enhance(&mut bundle, &props.resources);
-        cb.spawn((bundle, marker));
+        spawner.spawn((bundle, marker));
     }
 }

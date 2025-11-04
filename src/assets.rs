@@ -1,6 +1,6 @@
+use bevy::asset::RenderAssetUsages;
 use bevy::image::{CompressedImageFormats, ImageSampler, ImageType};
 use bevy::prelude::*;
-use bevy::render::render_asset::RenderAssetUsages;
 
 const BOLD_FONT: &[u8] = include_bytes!("../assets/Poppins/Poppins-Bold.ttf");
 const MEDIUM_FONT: &[u8] = include_bytes!("../assets/Poppins/Poppins-Medium.ttf");

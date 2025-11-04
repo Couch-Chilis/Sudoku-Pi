@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::ops::{Add, AddAssign, Mul, Sub};
 use std::sync::Arc;
 
@@ -99,6 +100,16 @@ pub struct FlexContainerStyle {
     pub dynamic_styles: Vec<Arc<dyn Fn(&mut FlexContainerStyle, &ResourceBag) + Send + Sync>>,
 }
 
+impl Debug for FlexContainerStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FlexContainerStyle")
+            .field("direction", &self.direction)
+            .field("gap", &self.gap)
+            .field("padding", &self.padding)
+            .finish()
+    }
+}
+
 impl FlexContainerStyle {
     pub fn column() -> Self {
         Self::default()
@@ -120,7 +131,7 @@ impl FlexContainerStyle {
     }
 }
 
-#[derive(Clone, Copy, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum FlexDirection {
     #[default]
     Column,
@@ -234,6 +245,22 @@ pub struct FlexItemStyle {
 
     /// Optional enhancers that allow for determining style fields at runtime.
     pub dynamic_styles: Vec<Arc<dyn Fn(&mut FlexItemStyle, &ResourceBag) + Send + Sync>>,
+}
+
+impl Debug for FlexItemStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FlexItemStyle")
+            .field("align_self", &self.align_self)
+            .field("flex_base", &self.flex_base)
+            .field("flex_grow", &self.flex_grow)
+            .field("flex_shrink", &self.flex_shrink)
+            .field("margin", &self.margin)
+            .field("min_size", &self.min_size)
+            .field("occupies_space", &self.occupies_space)
+            .field("preserve_aspect_ratio", &self.preserve_aspect_ratio)
+            .field("transform", &self.transform)
+            .finish()
+    }
 }
 
 impl FlexItemStyle {

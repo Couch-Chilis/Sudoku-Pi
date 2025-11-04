@@ -3,8 +3,8 @@ use bevy::app::AppExit;
 use bevy::prelude::*;
 use std::num::NonZeroU8;
 
-#[derive(Clone, Copy, Event)]
-pub enum TransitionEvent {
+#[derive(Clone, Copy, Message)]
+pub enum Transition {
     ContinueGame,
     Exit,
     FinishOnboarding,
@@ -15,8 +15,8 @@ pub enum TransitionEvent {
 
 pub fn on_transition(
     current_state: Res<State<ScreenState>>,
-    mut reader: EventReader<TransitionEvent>,
-    mut app_exit_events: EventWriter<AppExit>,
+    mut reader: MessageReader<Transition>,
+    mut app_exit_events: MessageWriter<AppExit>,
     mut screen_state: ResMut<NextState<ScreenState>>,
     mut mode_state: ResMut<NextState<ModeState>>,
     mut game: ResMut<Game>,
@@ -25,7 +25,7 @@ pub fn on_transition(
     mut settings: ResMut<Settings>,
 ) {
     for event in reader.read() {
-        use TransitionEvent::*;
+        use Transition::*;
         match event {
             ContinueGame => {
                 *selection = Selection::new_for_game(&game);
@@ -34,7 +34,7 @@ pub fn on_transition(
             }
             Exit => match current_state.get() {
                 ScreenState::MainMenu => {
-                    app_exit_events.send(AppExit::Success);
+                    app_exit_events.write(AppExit::Success);
                 }
                 ScreenState::Settings => {
                     screen_state.set(ScreenState::Game);

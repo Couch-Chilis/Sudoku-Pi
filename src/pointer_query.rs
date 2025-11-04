@@ -37,7 +37,7 @@ impl PointerQueryExt for MouseQuery<'_, '_, '_> {
         if (buttons.is_changed() || !window_changes.is_empty())
             && !buttons.pressed(MouseButton::Left)
         {
-            if let Ok(window) = window_query.get_single() {
+            if let Ok(window) = window_query.single() {
                 if let Some(mut position) = window.cursor_position() {
                     position.y = window.height() - position.y;
                     return Some(position);
@@ -71,7 +71,7 @@ impl PointerQueryExt for MouseQuery<'_, '_, '_> {
             return None;
         };
 
-        if let Ok(window) = window_query.get_single() {
+        if let Ok(window) = window_query.single() {
             if let Some(mut position) = window.cursor_position() {
                 position.y = window.height() - position.y;
                 return Some((input_kind, position));
@@ -107,7 +107,7 @@ impl PointerQueryExt for TouchQuery<'_, '_, '_> {
                 InputKind::PressedMovement
             };
 
-            if let Ok(window) = window_query.get_single() {
+            if let Ok(window) = window_query.single() {
                 touch_position.x *= zoom_factor.x;
                 touch_position.y = window.height() - touch_position.y * zoom_factor.y;
                 Some((input_kind, touch_position))

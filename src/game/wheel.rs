@@ -68,50 +68,52 @@ impl ActiveSliceHandles {
     }
 }
 
-pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildBuilder) {
-    move |props, cb| {
-        cb.spawn((
-            Wheel::default(),
-            screen,
-            Sprite::from_image(props.resources.images.wheel.handle.clone()),
-            Transform::from_2d_scale(0., 0.),
-        ))
-        .with_children(|wheel| {
-            for (i, disabled_slice) in get_disabled_slice_handles(props.resources.images)
-                .into_iter()
-                .enumerate()
-            {
-                wheel.spawn((
-                    DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
-                    Sprite::from_image(disabled_slice.clone()),
-                    Transform::default_2d(),
-                    Visibility::Hidden,
-                ));
-            }
-        });
+pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    move |props, spawner| {
+        spawner
+            .spawn((
+                Wheel::default(),
+                screen,
+                Sprite::from_image(props.resources.images.wheel.handle.clone()),
+                Transform::from_2d_scale(0., 0.),
+            ))
+            .with_children(|wheel| {
+                for (i, disabled_slice) in get_disabled_slice_handles(props.resources.images)
+                    .into_iter()
+                    .enumerate()
+                {
+                    wheel.spawn((
+                        DisabledSlice(NonZeroU8::new(i as u8 + 1).unwrap()),
+                        Sprite::from_image(disabled_slice.clone()),
+                        Transform::default_2d(),
+                        Visibility::Hidden,
+                    ));
+                }
+            });
 
-        cb.spawn((
+        spawner.spawn((
             Slice,
             screen,
             Sprite::default(),
             Transform::from_2d_scale(0., 0.),
         ));
 
-        cb.spawn((
-            TopLabel,
-            screen,
-            Sprite::from_image(props.resources.images.top_label.handle.clone()),
-            Transform::from_2d_scale(0., 0.),
-        ))
-        .with_children(|center_label| {
-            center_label.spawn((
-                TopLabelText,
-                Text2d::default(),
-                TextColor(COLOR_WHEEL_TOP_TEXT),
-                TextFont::from_font(props.resources.fonts.medium.clone()).with_font_size(41.7),
-                Transform::from_translation(Vec3::new(0., 8., 1.)),
-            ));
-        });
+        spawner
+            .spawn((
+                TopLabel,
+                screen,
+                Sprite::from_image(props.resources.images.top_label.handle.clone()),
+                Transform::from_2d_scale(0., 0.),
+            ))
+            .with_children(|center_label| {
+                center_label.spawn((
+                    TopLabelText,
+                    Text2d::default(),
+                    TextColor(COLOR_WHEEL_TOP_TEXT),
+                    TextFont::from(props.resources.fonts.medium.clone()).with_font_size(41.7),
+                    Transform::from_translation(Vec3::new(0., 8., 1.)),
+                ));
+            });
     }
 }
 

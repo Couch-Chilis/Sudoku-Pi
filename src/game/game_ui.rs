@@ -20,7 +20,7 @@ pub struct SettingsIcon;
 #[derive(Component)]
 pub struct Timer;
 
-pub fn game_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn game_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     fragment5(
         // Row with settings icon.
         top_row(fragment(leaf(available_size), settings_icon())),
@@ -47,8 +47,8 @@ pub fn game_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
     )
 }
 
-fn settings_icon() -> impl FnOnce(&Props, &mut ChildBuilder) {
-    |props: &Props, cb: &mut ChildBuilder| {
+fn settings_icon() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    |props: &Props, cb: &mut ChildSpawnerCommands| {
         cb.spawn_with_children(
             props,
             image_t(
@@ -64,7 +64,7 @@ fn settings_icon() -> impl FnOnce(&Props, &mut ChildBuilder) {
     }
 }
 
-fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
     column(
         (
             preferred_size(Val::Vmin(90.), Val::Pixel(42)),
@@ -94,7 +94,7 @@ fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
 
 fn top_row<B: Bundle>(
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
     row(
         (
             game_screen_top_row_size,
@@ -105,7 +105,7 @@ fn top_row<B: Bundle>(
     )
 }
 
-fn score() -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+fn score() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
     row(
         game_screen_score_size,
         (),

@@ -1,6 +1,8 @@
-/target
 app/build
+build
+target
 .DS_Store
+.gradle
 .idea
 **/*.a
 **/.cxx

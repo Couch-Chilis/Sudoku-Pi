@@ -1,5 +1,5 @@
 mod buttons;
-mod child_builder_ext;
+mod child_spawner_commands_ext;
 mod flex;
 mod images;
 mod interaction;
@@ -9,11 +9,11 @@ mod style_enhancers;
 mod styles;
 mod widgets;
 
-use bevy::{prelude::*, transform::TransformSystem};
-use bevy_tweening::component_animator_system;
+use bevy::{prelude::*, transform::TransformSystems};
 
+use bevy_tweening::TweenAnim;
 pub use buttons::*;
-pub use child_builder_ext::*;
+pub use child_spawner_commands_ext::*;
 pub use flex::*;
 pub use images::*;
 pub use interaction::*;
@@ -32,13 +32,13 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(
             PostUpdate,
-            LayoutSystem::ApplyLayout.before(TransformSystem::TransformPropagate),
+            LayoutSystem::ApplyLayout.before(TransformSystems::Propagate),
         )
         .add_systems(
             PostUpdate,
             (
                 layout::layout_system.in_set(LayoutSystem::ApplyLayout),
-                component_animator_system::<FlexItemStyle>.before(LayoutSystem::ApplyLayout),
+                animator_system.before(LayoutSystem::ApplyLayout),
             ),
         )
         .add_systems(
@@ -55,4 +55,9 @@ impl Plugin for UiPlugin {
             ),
         );
     }
+}
+
+fn animator_system(world: &mut World) {
+    let delta_time = world.resource::<Time>().delta();
+    TweenAnim::step_all(world, delta_time);
 }

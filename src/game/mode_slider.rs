@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::{prelude::*, sprite::*};
-use bevy_tweening::{Animator, Lens, Tween};
+use bevy_tweening::{Lens, Tween, TweenAnim};
 
 use crate::{constants::*, pointer_query::*, ui::*};
 use crate::{utils::TransformExt, ResourceBag, ScreenSizing};
@@ -29,46 +29,24 @@ pub struct ModeSliderKnob;
 #[derive(Component)]
 pub struct OppositeSliderKnob;
 
-pub fn mode_slider(props: &Props, cb: &mut ChildBuilder) {
+pub fn mode_slider(props: &Props, spawner: &mut ChildSpawnerCommands) {
     let resources = &props.resources;
 
     if resources.screen_sizing.is_tablet() {
-        cb.spawn((
-            ModeSlider { active: false },
-            FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Vmin(80.), Val::Pixel(105))
-                    .with_margin(Size::new(Val::None, Val::Pixel(15))),
-                FlexContainerStyle::row(),
-            ),
-        ))
-        .with_children(|row| {
-            build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
-
-            row.spawn(FlexBundle::new(
-                FlexItemStyle::fixed_size(Val::Percent(66.), Val::CrossPercent(6.))
-                    .with_fixed_aspect_ratio(),
-                FlexContainerStyle::row(),
+        spawner
+            .spawn((
+                ModeSlider { active: false },
+                FlexBundle::new(
+                    FlexItemStyle::preferred_size(Val::Vmin(80.), Val::Pixel(105))
+                        .with_margin(Size::new(Val::None, Val::Pixel(15))),
+                    FlexContainerStyle::row(),
+                ),
             ))
             .with_children(|row| {
-                build_background(row, resources);
-                build_knobs(row, resources);
-            });
+                build_label(row, resources, "Normal\nmode", Anchor::CENTER_LEFT);
 
-            build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
-        });
-    } else {
-        cb.spawn((
-            ModeSlider { active: false },
-            FlexBundle::new(
-                FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(105))
-                    .with_margin(Size::new(Val::None, Val::Pixel(15))),
-                FlexContainerStyle::column(),
-            ),
-        ))
-        .with_children(|column| {
-            column
-                .spawn(FlexBundle::new(
-                    FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
+                row.spawn(FlexBundle::new(
+                    FlexItemStyle::fixed_size(Val::Percent(66.), Val::CrossPercent(6.))
                         .with_fixed_aspect_ratio(),
                     FlexContainerStyle::row(),
                 ))
@@ -77,20 +55,44 @@ pub fn mode_slider(props: &Props, cb: &mut ChildBuilder) {
                     build_knobs(row, resources);
                 });
 
-            column
-                .spawn(FlexBundle::new(
-                    FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(70)),
-                    FlexContainerStyle::row(),
-                ))
-                .with_children(|row| {
-                    build_label(row, resources, "Normal\nmode", Anchor::CenterLeft);
-                    build_label(row, resources, "Notes\nmode", Anchor::CenterRight);
-                });
-        });
+                build_label(row, resources, "Notes\nmode", Anchor::CENTER_RIGHT);
+            });
+    } else {
+        spawner
+            .spawn((
+                ModeSlider { active: false },
+                FlexBundle::new(
+                    FlexItemStyle::preferred_size(Val::Vmin(90.), Val::Pixel(105))
+                        .with_margin(Size::new(Val::None, Val::Pixel(15))),
+                    FlexContainerStyle::column(),
+                ),
+            ))
+            .with_children(|column| {
+                column
+                    .spawn(FlexBundle::new(
+                        FlexItemStyle::fixed_size(Val::Percent(100.), Val::CrossPercent(9.2))
+                            .with_fixed_aspect_ratio(),
+                        FlexContainerStyle::row(),
+                    ))
+                    .with_children(|row| {
+                        build_background(row, resources);
+                        build_knobs(row, resources);
+                    });
+
+                column
+                    .spawn(FlexBundle::new(
+                        FlexItemStyle::preferred_size(Val::Percent(100.), Val::Pixel(70)),
+                        FlexContainerStyle::row(),
+                    ))
+                    .with_children(|row| {
+                        build_label(row, resources, "Normal\nmode", Anchor::CENTER_LEFT);
+                        build_label(row, resources, "Notes\nmode", Anchor::CENTER_RIGHT);
+                    });
+            });
     }
 }
 
-fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {
+fn build_background(row: &mut ChildSpawnerCommands, resources: &ResourceBag) {
     row.spawn((
         FlexItemBundle::from_style(
             FlexItemStyle::fixed_size(Val::Percent(100.), Val::Percent(100.))
@@ -102,7 +104,7 @@ fn build_background(row: &mut ChildBuilder, resources: &ResourceBag) {
     ));
 }
 
-fn build_knobs(row: &mut ChildBuilder, resources: &ResourceBag) {
+fn build_knobs(row: &mut ChildSpawnerCommands, resources: &ResourceBag) {
     build_knob(
         row,
         resources.images.pop_dark_circle.handle.clone(),
@@ -120,7 +122,7 @@ fn build_knobs(row: &mut ChildBuilder, resources: &ResourceBag) {
 }
 
 fn build_knob(
-    row: &mut ChildBuilder,
+    row: &mut ChildSpawnerCommands,
     image: Handle<Image>,
     knob: impl Component,
     x: f32,
@@ -141,7 +143,12 @@ fn build_knob(
     ));
 }
 
-fn build_label(row: &mut ChildBuilder, resources: &ResourceBag, text: &str, anchor: Anchor) {
+fn build_label(
+    row: &mut ChildSpawnerCommands,
+    resources: &ResourceBag,
+    text: &str,
+    anchor: Anchor,
+) {
     row.spawn(FlexBundle::new(
         FlexItemStyle::available_size(),
         FlexContainerStyle::default(),
@@ -171,7 +178,7 @@ pub fn slider_interaction(
         return;
     };
 
-    let Ok((slider_position, mut mode_slider)) = slider_query.get_single_mut() else {
+    let Ok((slider_position, mut mode_slider)) = slider_query.single_mut() else {
         return;
     };
 
@@ -204,7 +211,7 @@ pub fn render_slider_knobs(
     screen_sizing: Res<ScreenSizing>,
 ) {
     let Ok((slider_active, slider_position)) = slider_query
-        .get_single()
+        .single()
         .map(|(slider, position)| (slider.active, position))
     else {
         return;
@@ -214,7 +221,7 @@ pub fn render_slider_knobs(
         return;
     }
 
-    let Ok((knob, knob_position)) = knob_query.get_single() else {
+    let Ok((knob, knob_position)) = knob_query.single() else {
         return;
     };
 
@@ -248,7 +255,7 @@ pub fn render_slider_knobs(
         ModeState::Notes => width,
     };
 
-    let animator = Animator::new(Tween::new(
+    let animator = TweenAnim::new(Tween::new(
         EaseFunction::QuadraticInOut,
         ANIMATION_DURATION,
         TransformTranslateKnobLens {
@@ -261,8 +268,8 @@ pub fn render_slider_knobs(
     commands.entity(knob).insert(animator);
 
     if mode.is_changed() {
-        if let Ok(opposite) = opposite_knob_query.get_single() {
-            let animator = Animator::new(Tween::new(
+        if let Ok(opposite) = opposite_knob_query.single() {
+            let animator = TweenAnim::new(Tween::new(
                 EaseFunction::QuadraticInOut,
                 ANIMATION_DURATION,
                 TransformTranslateKnobLens {
@@ -285,7 +292,7 @@ struct TransformTranslateKnobLens {
 }
 
 impl Lens<FlexItemStyle> for TransformTranslateKnobLens {
-    fn lerp(&mut self, target: &mut dyn bevy_tweening::Targetable<FlexItemStyle>, ratio: f32) {
+    fn lerp(&mut self, mut target: Mut<FlexItemStyle>, ratio: f32) {
         let x = self.start + (self.end - self.start) * ratio;
         let distance_from_center = ((x - self.center) / self.center).abs();
         let scale = (0.25 + 0.75 * distance_from_center) * KNOB_SCALE;

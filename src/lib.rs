@@ -24,7 +24,9 @@ use bevy::asset::io::memory::MemoryAssetReader;
 use bevy::asset::io::{AssetSourceBuilder, AssetSourceBuilders, AssetSourceId};
 use bevy::prelude::*;
 use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
-use bevy_tweening::{lens::TransformPositionLens, Animator, Tween, TweeningPlugin};
+#[cfg(not(target_os = "ios"))]
+use bevy_tweening::TweenAnim;
+use bevy_tweening::{lens::TransformPositionLens, Tween, TweeningPlugin};
 use smallvec::SmallVec;
 
 use assets::*;
@@ -35,16 +37,16 @@ use onboarding::*;
 use resource_bag::ResourceBag;
 use settings::Settings;
 use sudoku::Game;
-use transition_events::{on_transition, TransitionEvent};
+use transition_events::{on_transition, Transition};
 use ui::*;
 
 // iPhone:
-const INITIAL_WIDTH: f32 = 390.;
-const INITIAL_HEIGHT: f32 = 845.;
+const INITIAL_WIDTH: u32 = 390;
+const INITIAL_HEIGHT: u32 = 845;
 
 // iPad:
-//const INITIAL_WIDTH: f32 = 768.;
-//const INITIAL_HEIGHT: f32 = 1024.;
+//const INITIAL_WIDTH: u32 = 768;
+//const INITIAL_HEIGHT: u32 = 1024;
 
 #[derive(Default, Resource)]
 pub struct GameTimer {
@@ -117,7 +119,7 @@ impl ScreenState {
 }
 
 /// Overrides the screen(s) for which the given entity provides interactivity.
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct ScreenInteraction {
     screens: ScreenStates,
 }
@@ -152,8 +154,8 @@ impl Default for ScreenSizing {
     fn default() -> Self {
         // Dimensions will be determined in `on_resize()`.
         Self {
-            width: INITIAL_WIDTH,
-            height: INITIAL_HEIGHT,
+            width: INITIAL_WIDTH as f32,
+            height: INITIAL_HEIGHT as f32,
             top_padding: 0,
         }
     }
@@ -232,8 +234,8 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
         .insert_resource(screen_sizing)
         .insert_resource(zoom_factor)
         .insert_resource(ClearColor(Color::WHITE))
-        .add_event::<TransitionEvent>()
-        .add_event::<WindowDestroyed>()
+        .add_message::<Transition>()
+        .add_message::<WindowDestroyed>()
         .add_systems(Startup, setup)
         .add_systems(
             Update,
@@ -376,22 +378,19 @@ fn setup(
 fn on_exit(
     mut game: ResMut<Game>,
     game_timer: Res<GameTimer>,
-    app_exit_events: EventReader<AppExit>,
-    destroyed_events: EventReader<WindowDestroyed>,
+    app_exit_messages: MessageReader<AppExit>,
+    destroyed_windows: MessageReader<WindowDestroyed>,
 ) {
-    if !app_exit_events.is_empty() || !destroyed_events.is_empty() {
+    if !app_exit_messages.is_empty() || !destroyed_windows.is_empty() {
         println!("Saving before exit");
         game.elapsed_secs = game_timer.elapsed_secs;
         game.save();
     }
 }
 
-fn on_escape(
-    input: Res<ButtonInput<KeyCode>>,
-    mut transition_events: EventWriter<TransitionEvent>,
-) {
+fn on_escape(input: Res<ButtonInput<KeyCode>>, mut transitions: MessageWriter<Transition>) {
     if input.just_pressed(KeyCode::Escape) {
-        transition_events.send(TransitionEvent::Exit);
+        transitions.write(Transition::Exit);
     }
 }
 
@@ -424,25 +423,25 @@ fn on_screen_change(
             },
         );
 
-        commands.entity(entity).insert(Animator::new(tween));
+        commands.entity(entity).insert(TweenAnim::new(tween));
     }
 }
 
 #[cfg(not(target_os = "ios"))]
 fn on_resize(
     mut commands: Commands,
-    mut events: EventReader<WindowResized>,
+    mut window_resizes: MessageReader<WindowResized>,
     mut screens: Query<(&mut Screen, &mut Transform)>,
     mut screen_sizing: ResMut<ScreenSizing>,
     current_screen: Res<State<ScreenState>>,
-    animators: Query<Entity, With<Animator<Transform>>>,
+    animators: Query<Entity, With<TweenAnim>>,
 ) {
-    let Some(WindowResized { width, height, .. }) = events.read().last() else {
+    let Some(WindowResized { width, height, .. }) = window_resizes.read().last() else {
         return;
     };
 
     for entity in &animators {
-        commands.entity(entity).remove::<Animator<Transform>>();
+        commands.entity(entity).remove::<TweenAnim>();
     }
 
     screen_sizing.width = *width;
@@ -463,11 +462,11 @@ fn on_resize(
 }
 
 fn on_window_close(
-    mut app_exit_events: EventWriter<AppExit>,
-    window_close_events: EventReader<WindowCloseRequested>,
+    mut app_exit: MessageWriter<AppExit>,
+    window_close_requests: MessageReader<WindowCloseRequested>,
 ) {
-    if !window_close_events.is_empty() {
-        app_exit_events.send(AppExit::Success);
+    if !window_close_requests.is_empty() {
+        app_exit.write(AppExit::Success);
     }
 }
 
@@ -483,7 +482,7 @@ fn screen<B>(
     screen: ScreenState,
     resources: &ResourceBag,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder))
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {

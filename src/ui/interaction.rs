@@ -358,7 +358,7 @@ fn is_child_of(entity: Entity, parent: Entity, children_map: &BTreeMap<Entity, &
         children.contains(&entity)
             || children
                 .iter()
-                .any(|child| is_child_of(entity, *child, children_map))
+                .any(|child| is_child_of(entity, child, children_map))
     } else {
         false
     }

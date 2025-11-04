@@ -35,7 +35,7 @@ impl SettingsToggle {
 pub fn settings_toggle(
     label: impl Into<String>,
     toggle: SettingsToggle,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildBuilder)) {
+) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
     let bundle = (
         Interaction::None,
         FlexBundle::new(
@@ -52,7 +52,7 @@ pub fn settings_toggle(
     );
 
     let label: String = label.into();
-    let spawn_children = move |props: &Props, cb: &mut ChildBuilder| {
+    let spawn_children = move |props: &Props, cb: &mut ChildSpawnerCommands| {
         let Props {
             resources,
             settings,
@@ -66,7 +66,7 @@ pub fn settings_toggle(
                 (),
                 text(
                     label,
-                    (settings_label_text, text_anchor(Anchor::CenterLeft)),
+                    (settings_label_text, text_anchor(Anchor::CENTER_LEFT)),
                 ),
             ),
         );

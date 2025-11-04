@@ -277,7 +277,7 @@ pub fn highscore_scroll_padding(bundle: &mut FlexContainerBundle) {
 }
 
 pub fn highscore_scroll_quote(bundle: &mut FlexTextBundle, resources: &ResourceBag) {
-    bundle.anchor = Anchor::Center;
+    bundle.anchor = Anchor::CENTER;
     bundle.color = Color::BLACK.into();
     bundle.font.font = resources.fonts.scroll.clone();
 
@@ -297,7 +297,7 @@ pub fn highscore_scroll_quote(bundle: &mut FlexTextBundle, resources: &ResourceB
 }
 
 pub fn highscore_scroll_author(bundle: &mut FlexTextBundle, resources: &ResourceBag) {
-    bundle.anchor = Anchor::BottomRight;
+    bundle.anchor = Anchor::BOTTOM_RIGHT;
     bundle.color = Color::BLACK.into();
     bundle.font.font = resources.fonts.scroll.clone();
     bundle.font.font_size = if resources.screen_sizing.is_tablet() {
@@ -305,7 +305,7 @@ pub fn highscore_scroll_author(bundle: &mut FlexTextBundle, resources: &Resource
     } else {
         25.
     };
-    bundle.layout.justify = JustifyText::Right;
+    bundle.layout.justify = Justify::Right;
 }
 
 pub fn highscore_scroll_size(style: &mut FlexItemStyle) {
@@ -322,7 +322,7 @@ pub fn highscore_scroll_size(style: &mut FlexItemStyle) {
     ));
 }
 
-pub fn justify(justify: JustifyText) -> impl FnOnce(&mut FlexTextBundle, &ResourceBag) {
+pub fn justify(justify: Justify) -> impl FnOnce(&mut FlexTextBundle, &ResourceBag) {
     move |bundle: &mut FlexTextBundle, _resources: &ResourceBag| {
         bundle.layout.justify = justify;
     }

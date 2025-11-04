@@ -9,7 +9,7 @@ pub enum SettingsButtonAction {
     Back,
 }
 
-pub fn settings_screen() -> impl FnOnce(&Props, &mut ChildBuilder) {
+pub fn settings_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     use SettingsButtonAction::*;
     use SettingsToggle::*;
 
