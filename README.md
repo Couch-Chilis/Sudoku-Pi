@@ -39,11 +39,14 @@ contribution in any way they see fit. This includes, but is not limited to,
 distribution under the terms of the [General Public License v3](#license) as
 well as in binary form for release to app stores.
 
+We offer [paid bounties](https://github.com/Couch-Chilis/Sudoku-Pi/issues?q=is%3Aissue%20state%3Aopen%20label%3Abounty) for some issues!
+
 # Build Instructions
 
 ## Desktop
 
-Just use `cargo run` to run the game.
+0. Make sure you have the [Rust toolchain installed](https://rustup.rs/).
+1. Use `cargo run` to run the game.
 
 ## Android
 
@@ -62,7 +65,7 @@ Just use `cargo run` to run the game.
 
 # License
 
-Sudoku Pi is copyright 2023-2025 by Couch Chilis and is available under the
+Sudoku Pi is copyright 2023-2026 by Couch Chilis and is available under the
 [General Public License v3](LICENSE-GPLv3.md).
 
 If you use the source code for your own project, we ask you kindly to consider
