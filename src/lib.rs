@@ -274,7 +274,8 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
             game::GamePlugin,
             menus::MenuPlugin,
         ))
-        .init_state::<ScreenState>();
+        .init_state::<ScreenState>()
+        .insert_resource(Time::<Virtual>::from_max_delta(Duration::from_secs_f32(0.25)));
 
     add_steamworks_plugin(&mut app);
 
