@@ -57,6 +57,8 @@ We offer [paid bounties](https://github.com/Couch-Chilis/Sudoku-Pi/issues?q=is%3
 
 ## iOS
 
+0. Make sure you have Xcode and a recent Rust toolchain installed.
+   - You'll also need the iOS toolchain: `rustup target install aarch64-apple-ios`
 1. Use either the `build_ios.sh` script or the `build_ios_sim.sh` script,
    depending on whether you want to create a build for the Simulator or a
    regular device.
