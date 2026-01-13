@@ -1,5 +1,5 @@
 #/usr/bin/env bash
 
-cargo rustc --crate-type staticlib --lib --release --target aarch64-apple-ios-sim
+cargo rustc --crate-type staticlib --lib --target aarch64-apple-ios-sim
 
-cp target/aarch64-apple-ios-sim/release/libsudoku_pi.a ios/Sudoku\ Pi/Frameworks/
+cp target/aarch64-apple-ios-sim/debug/libsudoku_pi.a ios/Sudoku\ Pi/Frameworks/
