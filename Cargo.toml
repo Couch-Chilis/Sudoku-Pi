@@ -9,7 +9,7 @@ name = "sudoku_pi"
 path = "src/lib.rs"
 crate-type = [
     "staticlib",
-    "cdylib",    # needed for Android
+    #"cdylib",    # needed for Android
     "rlib",      # rlib needed for running locally
 ]
 
