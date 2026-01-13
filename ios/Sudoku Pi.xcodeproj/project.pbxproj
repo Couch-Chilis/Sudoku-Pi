@@ -10,7 +10,8 @@
 		953030F12AA907F30022579D /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 953030F02AA907F30022579D /* Launch Screen.storyboard */; };
 		95317E5A2A4CD0F800F6DEB0 /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95317E592A4CD0F800F6DEB0 /* Resources.xcassets */; };
 		95F989692A421E860028C43B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 95F989682A421E860028C43B /* main.m */; };
-		95F989832A422BB00028C43B /* libsudoku_lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95F989822A422B990028C43B /* libsudoku_lib.a */; };
+		D23A6C102F1690FC005E2D7B /* libsudoku_pi.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D23A6C0F2F1690EA005E2D7B /* libsudoku_pi.a */; };
+		D23A6C162F169313005E2D7B /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D23A6C152F169313005E2D7B /* AudioToolbox.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,10 +19,12 @@
 		95317E592A4CD0F800F6DEB0 /* Resources.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources.xcassets; sourceTree = "<group>"; };
 		95F989502A421E850028C43B /* Sudoku Pi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sudoku Pi.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		95F989682A421E860028C43B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		95F989732A42247B0028C43B /* libsudoku_lib.d */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.dtrace; name = libsudoku_lib.d; path = "../target/aarch64-apple-ios/release/libsudoku_lib.d"; sourceTree = "<group>"; };
 		95F989762A4225710028C43B /* Sudoku Pi */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Sudoku Pi"; sourceTree = "<group>"; };
 		95F989812A422B710028C43B /* Frameworks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Frameworks; path = "Sudoku Pi/Frameworks"; sourceTree = "<group>"; };
-		95F989822A422B990028C43B /* libsudoku_lib.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsudoku_lib.a; path = "Sudoku Pi/Frameworks/libsudoku_lib.a"; sourceTree = "<group>"; };
+		D23A6C0F2F1690EA005E2D7B /* libsudoku_pi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsudoku_pi.a; path = "Sudoku Pi/Frameworks/libsudoku_pi.a"; sourceTree = "<group>"; };
+		D23A6C112F1692AB005E2D7B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		D23A6C132F1692D9005E2D7B /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		D23A6C152F169313005E2D7B /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,7 +32,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				95F989832A422BB00028C43B /* libsudoku_lib.a in Frameworks */,
+				D23A6C102F1690FC005E2D7B /* libsudoku_pi.a in Frameworks */,
+				D23A6C162F169313005E2D7B /* AudioToolbox.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -66,10 +70,12 @@
 		95F989722A42247B0028C43B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				95F989822A422B990028C43B /* libsudoku_lib.a */,
+				D23A6C152F169313005E2D7B /* AudioToolbox.framework */,
+				D23A6C132F1692D9005E2D7B /* CoreAudio.framework */,
+				D23A6C112F1692AB005E2D7B /* AVFoundation.framework */,
+				D23A6C0F2F1690EA005E2D7B /* libsudoku_pi.a */,
 				95F989812A422B710028C43B /* Frameworks */,
 				95F989762A4225710028C43B /* Sudoku Pi */,
-				95F989732A42247B0028C43B /* libsudoku_lib.d */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -201,7 +207,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "2025 Couch Chilis";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "2026 Couch Chilis";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -257,7 +263,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "2025 Couch Chilis";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "2026 Couch Chilis";
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -296,6 +302,7 @@
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
+					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nl.couch-chilis.Sudoku-Pi";
@@ -330,6 +337,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
+					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
 					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
