@@ -1,6 +1,7 @@
 use bevy::{prelude::*, sprite::Anchor};
 
-use crate::{constants::*, ui::*, utils::*, Fortune, Game, Highscores, ScreenState, Transition};
+use crate::{ui::*, utils::*};
+use crate::{Fortune, Game, Highscores, ScreenState, Theme, Transition};
 
 #[derive(Component)]
 pub enum HighscoreButtonAction {
@@ -63,10 +64,10 @@ pub fn highscore_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                         without_occupying_space,
                     ),
                     (
-                        background_color(COLOR_BOARD_LINE_THIN),
+                        theme_background_color(Theme::board_line_thin),
                         highscore_scroll_padding,
                     ),
-                    rect(COLOR_CREAM, available_size),
+                    theme_rect(Theme::background, available_size),
                 ),
                 column(
                     (highscore_scroll_size, without_occupying_space, z_index(3.)),
@@ -203,10 +204,7 @@ fn scores() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     )
 }
 
-fn stat_row(
-    kind: StatKind,
-    label: &str,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
+fn stat_row(kind: StatKind, label: &str) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     let font = if matches!(kind, StatKind::HighestScore | StatKind::BestTime) {
         font_bold
     } else {
@@ -226,7 +224,7 @@ fn stat_row(
                         button_text_size,
                         font,
                         text_anchor(Anchor::CENTER_RIGHT),
-                        text_color(COLOR_MAIN_DARKER),
+                        theme_text_color(Theme::text),
                     ),
                 ),
             ),
@@ -243,7 +241,7 @@ fn stat_row(
                         button_text_size,
                         font,
                         text_anchor(Anchor::CENTER_LEFT),
-                        text_color(COLOR_POP_FOCUS),
+                        theme_text_color(Theme::text_highlight),
                     ),
                 ),
             ),

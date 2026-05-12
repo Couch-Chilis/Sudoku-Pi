@@ -1,6 +1,8 @@
-use super::{flex::*, Interaction};
-use crate::constants::*;
 use bevy::prelude::*;
+
+use crate::themes::Theme;
+
+use super::{flex::*, Interaction};
 
 pub const BORDER_THICKNESS: Val = Val::Pixel(1);
 
@@ -30,10 +32,10 @@ pub struct ButtonBundle {
 }
 
 impl ButtonBundle {
-    pub fn from_style(style: FlexItemStyle) -> Self {
+    pub fn from_theme_and_style(theme: &Theme, style: FlexItemStyle) -> Self {
         Self {
             flex: FlexBundle::new(style, FlexContainerStyle::row())
-                .with_background_color(COLOR_BUTTON_BACKGROUND),
+                .with_background_color(theme.button_background),
             ..default()
         }
     }

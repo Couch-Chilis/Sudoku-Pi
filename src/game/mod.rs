@@ -5,16 +5,19 @@ mod highscore_screen;
 mod mode_slider;
 mod wheel;
 
+use std::num::NonZeroU8;
+use std::time::Duration;
+
+use bevy::prelude::*;
+
 use crate::{pointer_query::*, sudoku::*, ui::*};
 use crate::{GameTimer, ScreenState, Settings};
-use bevy::prelude::*;
+
 use board::{Board, MistakeCellBorders};
 use board_numbers::*;
 use game_ui::{on_score_changed, on_time_changed, settings_icon_interaction, UiButtonAction};
 use highscore_screen::{highscore_button_actions, on_fortune, on_highscores_changed};
 use mode_slider::{render_slider_knobs, slider_interaction};
-use std::num::NonZeroU8;
-use std::time::Duration;
 use wheel::{
     on_wheel_input, on_wheel_timer, render_disabled_wheel_slices, render_wheel, WHEEL_OPEN_DELAY,
 };

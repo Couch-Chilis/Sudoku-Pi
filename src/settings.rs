@@ -1,8 +1,28 @@
-use crate::utils::ensure_sudoku_dir;
+use crate::{
+    themes::{Theme, DARK_THEME, LIGHT_THEME},
+    utils::ensure_sudoku_dir,
+};
 use anyhow::Context;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
+
+#[derive(Clone, Copy, Default, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeSetting {
+    #[default]
+    Light,
+    Dark,
+}
+
+impl ThemeSetting {
+    pub fn into_theme(self) -> Theme {
+        match self {
+            ThemeSetting::Light => LIGHT_THEME,
+            ThemeSetting::Dark => DARK_THEME,
+        }
+    }
+}
 
 #[derive(Deserialize, Resource, Serialize)]
 pub struct Settings {
@@ -20,6 +40,9 @@ pub struct Settings {
 
     #[serde(default)]
     pub onboarding_finished: bool,
+
+    #[serde(default)]
+    pub theme: ThemeSetting,
 }
 
 fn default_autofill_correct_notes() -> bool {
@@ -46,6 +69,7 @@ impl Default for Settings {
             selected_cell_highlight: default_selected_cell_highlight(),
             show_mistakes: default_show_mistakes(),
             onboarding_finished: false,
+            theme: ThemeSetting::default(),
         }
     }
 }

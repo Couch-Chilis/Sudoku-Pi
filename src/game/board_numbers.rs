@@ -2,7 +2,9 @@ use std::num::NonZeroU8;
 
 use bevy::prelude::*;
 
-use crate::{constants::*, sudoku::*, ui::*, utils::*, Fonts, ScreenSizing, Settings};
+use crate::{
+    constants::*, sudoku::*, themes::Theme, ui::*, utils::*, Fonts, ScreenSizing, Settings,
+};
 
 use super::{MistakeCellBorders, Note, NoteAnimationKind, Number, Selection};
 
@@ -68,7 +70,7 @@ fn cell(x: u8, y: u8) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerComm
             NUMBER_FONT_SIZE
         });
         let number_color = if n.is_some() {
-            get_number_color(game, settings, x, y)
+            get_number_color(props.resources.theme, game, settings, x, y)
         } else {
             Color::NONE
         };
@@ -149,6 +151,7 @@ pub(super) fn render_numbers(
     fonts: Res<Fonts>,
     game: Res<Game>,
     settings: Res<Settings>,
+    theme: Res<Theme>,
 ) {
     if !game.is_changed() && !settings.is_changed() {
         return;
@@ -163,7 +166,7 @@ pub(super) fn render_numbers(
             } else {
                 fonts.bold.clone()
             };
-            get_number_color(&game, &settings, *x, *y)
+            get_number_color(&theme, &game, &settings, *x, *y)
         } else {
             Color::NONE
         };
@@ -174,19 +177,19 @@ pub(super) fn render_numbers(
     }
 }
 
-fn get_number_color(game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
+fn get_number_color(theme: &Theme, game: &Game, settings: &Settings, x: u8, y: u8) -> Color {
     if settings.show_mistakes {
-        // If we show mistakes, there's no reason to visually differentiate
-        // between starting numbers and numbers filled in correctly.
         if game.current.get(x, y) != game.solution.get(x, y) {
-            COLOR_POP_DARK
+            theme.mistake
         } else {
-            Color::BLACK
+            // If we show mistakes, there's no reason to visually differentiate
+            // between starting numbers and numbers filled in correctly.
+            theme.board_number
         }
     } else if game.start.has(x, y) {
-        Color::BLACK
+        theme.board_number
     } else {
-        Color::linear_rgb(0., 0., 1.)
+        theme.board_prefill_number
     }
 }
 
@@ -194,6 +197,7 @@ pub(super) fn render_notes(
     mut notes: Query<(&mut Note, &mut TextColor)>,
     game: Res<Game>,
     settings: Res<Settings>,
+    theme: Res<Theme>,
     time: Res<Time>,
 ) {
     for (mut note, mut text_color) in &mut notes {
@@ -204,18 +208,18 @@ pub(super) fn render_notes(
         let current_color = text_color.0;
         let new_color =
             if settings.show_mistakes && game.mistakes.has(x, y, n) && !game.current.has(x, y) {
-                COLOR_POP_DARK
+                theme.mistake
             } else if note.animation_kind == Some(NoteAnimationKind::MistakeInCell) {
                 let (ratio, _) = get_mistake_animation_ratio(note.animation_timer);
                 if ratio < 1. {
                     note.animation_timer += time.delta().as_secs_f32();
-                    Color::srgba(0., 0., 0., ratio.powi(2))
+                    theme.board_number.with_alpha(ratio.powi(2))
                 } else {
                     note.animation_kind = None;
-                    Color::BLACK
+                    theme.board_number
                 }
             } else if game.notes.has(x, y, n) && !game.current.has(x, y) {
-                Color::BLACK
+                theme.board_number
             } else if let Some(NoteAnimationKind::FadeOut(duration)) = note.animation_kind {
                 let a = 1. - note.animation_timer / duration.as_secs_f32();
                 if a <= 0. {
@@ -223,7 +227,7 @@ pub(super) fn render_notes(
                     Color::NONE
                 } else {
                     note.animation_timer += time.delta().as_secs_f32();
-                    Color::srgba(0., 0., 0., a)
+                    theme.board_number.with_alpha(a)
                 }
             } else {
                 Color::NONE
@@ -328,6 +332,7 @@ pub(super) fn calculate_highlights(
 pub(super) fn render_cell_highlights(
     mut cells: Query<(&Number, &mut Sprite)>,
     highlights: Res<Highlights>,
+    theme: Res<Theme>,
 ) {
     if !highlights.is_changed() {
         return;
@@ -337,10 +342,10 @@ pub(super) fn render_cell_highlights(
         let pos = get_pos(number.0, number.1);
         let highlight_kind = highlights.cell_highlights[pos];
         let color = match highlight_kind {
-            Some(CellHighlightKind::Selection) => COLOR_CELL_SELECTION,
-            Some(CellHighlightKind::SameNumber) => COLOR_CELL_SAME_NUMBER,
-            Some(CellHighlightKind::InRange) => COLOR_CELL_HIGHLIGHT,
-            Some(CellHighlightKind::Hint) => COLOR_HINT,
+            Some(CellHighlightKind::Selection) => theme.cell_selection,
+            Some(CellHighlightKind::SameNumber) => theme.cell_same_number,
+            Some(CellHighlightKind::InRange) => theme.cell_highlight,
+            Some(CellHighlightKind::Hint) => theme.hint,
             None => Color::NONE,
         };
         if sprite.color != color {
@@ -354,6 +359,7 @@ pub(super) fn render_note_highlights(
     mut mistake_borders: Query<(&mut Transform, &mut Visibility), With<MistakeCellBorders>>,
     screen_sizing: Res<ScreenSizing>,
     highlights: Res<Highlights>,
+    theme: Res<Theme>,
     time: Res<Time>,
 ) {
     for (note, flex_item_style, mut sprite) in &mut notes {
@@ -363,8 +369,8 @@ pub(super) fn render_note_highlights(
             None
         };
         let color = match highlight_kind {
-            Some(NoteHighlightKind::Note) => COLOR_CELL_SAME_NUMBER,
-            Some(NoteHighlightKind::Mistake) => COLOR_POP_DARK.with_alpha(0.5),
+            Some(NoteHighlightKind::Note) => theme.cell_same_number,
+            Some(NoteHighlightKind::Mistake) => theme.mistake.with_alpha(0.5),
             None => Color::NONE,
         };
         if sprite.color != color {

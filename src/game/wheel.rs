@@ -1,9 +1,12 @@
+use std::{f32::consts::PI, num::NonZeroU8};
+
+use bevy::prelude::*;
+
+use crate::{pointer_query::*, ui::*, utils::*};
+use crate::{ComputedPosition, Game, GameTimer, Images, ScreenSizing, ScreenState, Settings};
+
 use super::mode_slider::*;
 use super::{fill_number, get_board_x_and_y, toggle_note, Board, InputKind, Note, Selection};
-use crate::{constants::*, pointer_query::*, ui::*, utils::*};
-use crate::{ComputedPosition, Game, GameTimer, Images, ScreenSizing, ScreenState, Settings};
-use bevy::prelude::*;
-use std::{f32::consts::PI, num::NonZeroU8};
 
 const MAX_RADIUS: f32 = 0.6;
 const MAX_RADIUS_IPAD: f32 = 0.4;
@@ -109,7 +112,7 @@ pub fn wheel(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildSpawnerComman
                 center_label.spawn((
                     TopLabelText,
                     Text2d::default(),
-                    TextColor(COLOR_WHEEL_TOP_TEXT),
+                    TextColor(props.resources.theme.wheel_top_text),
                     TextFont::from(props.resources.fonts.medium.clone()).with_font_size(41.7),
                     Transform::from_translation(Vec3::new(0., 8., 1.)),
                 ));

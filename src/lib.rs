@@ -13,6 +13,7 @@ mod settings;
 //mod steam;
 mod resource_bag;
 mod sudoku;
+mod themes;
 mod transition_events;
 mod ui;
 mod utils;
@@ -35,6 +36,7 @@ use onboarding::*;
 use resource_bag::ResourceBag;
 use settings::Settings;
 use sudoku::Game;
+use themes::Theme;
 use transition_events::{on_transition, Transition};
 use ui::*;
 
@@ -318,6 +320,7 @@ fn setup(
     let fonts = Fonts::load(fonts);
     let fortune = Fortune::load();
     let images = Images::load(images);
+    let theme = settings.theme.into_theme();
 
     let props = Props {
         game: &game,
@@ -326,6 +329,7 @@ fn setup(
             fonts: &fonts,
             images: &images,
             screen_sizing: &screen_sizing,
+            theme: &theme,
         },
         settings: &settings,
     };
@@ -352,6 +356,7 @@ fn setup(
     commands.insert_resource(fonts);
     commands.insert_resource(fortune);
     commands.insert_resource(images);
+    commands.insert_resource(theme);
 }
 
 // Synchronize the timer to the game state right before the game exits.
@@ -461,18 +466,38 @@ fn get_initial_window_mode() -> WindowMode {
 
 fn screen<B>(
     screen: ScreenState,
-    resources: &ResourceBag,
+    bag: &ResourceBag,
     child: impl Into<BundleWithChildren<B>>,
 ) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
 where
     B: Bundle,
 {
-    let (mut bundle, spawn_children) = container(
-        (screen_gap(screen), screen_padding(resources, screen)),
-        child,
-    );
+    let is_tablet = bag.screen_sizing.is_tablet();
 
-    let screen_sizing = resources.screen_sizing;
+    let mut bundle = FlexContainerBundle::default();
+    bundle.style.gap = if screen == ScreenState::Game {
+        Val::Auto
+    } else {
+        Val::None
+    };
+    bundle.style.padding = Sides {
+        top: if screen == ScreenState::MainMenu {
+            Val::None
+        } else if is_tablet && screen == ScreenState::Game {
+            Val::Auto
+        } else {
+            Val::Pixel(bag.screen_sizing.top_padding)
+        },
+        right: Val::None,
+        bottom: if is_tablet && screen == ScreenState::Game {
+            Val::Auto
+        } else {
+            Val::None
+        },
+        left: Val::None,
+    };
+
+    let screen_sizing = bag.screen_sizing;
     let (tile_x, tile_y) = screen.tile_offsets();
     bundle.transform = Transform {
         scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
@@ -484,5 +509,8 @@ where
         ..default()
     };
 
-    ((Screen::for_state(screen), Flex, bundle), spawn_children)
+    (
+        (Screen::for_state(screen), Flex, bundle),
+        |props, spawner| spawner.spawn_with_children(props, child),
+    )
 }

@@ -3,7 +3,7 @@ use std::time::Duration;
 use bevy::{prelude::*, sprite::*};
 use bevy_tweening::{Lens, Tween, TweenAnim};
 
-use crate::{constants::*, pointer_query::*, ui::*};
+use crate::{pointer_query::*, ui::*};
 use crate::{utils::TransformExt, ResourceBag, ScreenSizing};
 
 const ACTIVE_KNOB_Z: f32 = INACTIVE_KNOB_Z + 2.;
@@ -156,7 +156,7 @@ fn build_label(
     .with_children(|label_container| {
         let mut bundle = FlexTextBundle::from_text(text);
         bundle.anchor = anchor;
-        bundle.color = COLOR_MAIN_DARKER.into();
+        bundle.color = resources.theme.text.into();
         bundle.font.font = resources.fonts.medium.clone();
         bundle.font.font_size = if resources.screen_sizing.is_tablet() {
             53.3

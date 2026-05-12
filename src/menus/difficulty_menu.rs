@@ -1,5 +1,6 @@
-use crate::{sudoku::Difficulty, ui::*, Transition};
 use bevy::prelude::*;
+
+use crate::{sudoku::Difficulty, ui::*, Transition};
 
 #[derive(Component)]
 pub enum DifficultyScreenButtonAction {

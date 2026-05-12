@@ -1,8 +1,11 @@
+use bevy::prelude::*;
+
+use crate::themes::Theme;
+use crate::{ui::*, utils::*};
+use crate::{Game, GameTimer, Highscores, Images, ScreenState};
+
 use super::board;
 use super::mode_slider::mode_slider;
-use crate::{constants::*, ui::*, utils::*};
-use crate::{Game, GameTimer, Highscores, Images, ScreenState};
-use bevy::prelude::*;
 
 #[derive(Component)]
 pub enum UiButtonAction {
@@ -48,8 +51,8 @@ pub fn game_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
 }
 
 fn settings_icon() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
-    |props: &Props, cb: &mut ChildSpawnerCommands| {
-        cb.spawn_with_children(
+    |props: &Props, spawner: &mut ChildSpawnerCommands| {
+        spawner.spawn_with_children(
             props,
             image_t(
                 (
@@ -64,7 +67,7 @@ fn settings_icon() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     }
 }
 
-fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
+fn timer() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     column(
         (
             preferred_size(Val::Vmin(90.), Val::Pixel(42)),
@@ -73,7 +76,7 @@ fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
         (),
         fragment4(
             leaf(available_size),
-            rect(COLOR_TIMER_BORDER, game_screen_timer_line_size),
+            theme_rect(Theme::timer_border, game_screen_timer_line_size),
             row(
                 game_screen_timer_inner_size,
                 (),
@@ -83,18 +86,18 @@ fn timer() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
                     (
                         font_medium,
                         game_screen_timer_font_size,
-                        text_color(COLOR_TIMER_TEXT),
+                        theme_text_color(Theme::timer_text),
                     ),
                 ),
             ),
-            rect(COLOR_TIMER_BORDER, game_screen_timer_line_size),
+            theme_rect(Theme::timer_border, game_screen_timer_line_size),
         ),
     )
 }
 
 fn top_row<B: Bundle>(
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     row(
         (
             game_screen_top_row_size,
@@ -105,7 +108,7 @@ fn top_row<B: Bundle>(
     )
 }
 
-fn score() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
+fn score() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     row(
         game_screen_score_size,
         (),
@@ -115,7 +118,7 @@ fn score() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
             (
                 font_medium,
                 game_screen_score_font_size,
-                text_color(COLOR_SCORE_TEXT),
+                theme_text_color(Theme::score_text),
             ),
         ),
     )

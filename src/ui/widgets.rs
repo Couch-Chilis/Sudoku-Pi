@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use bevy::prelude::*;
 
-use crate::{assets::*, constants::*, utils::*, ResourceBag};
+use crate::{assets::*, themes::Theme, utils::*, ResourceBag};
 
 use super::{
     buttons::*, child_spawner_commands_ext::*, flex::*, interaction::*, props::*,
@@ -13,20 +13,20 @@ pub fn primary_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
 {
-    let mut style = FlexItemStyle::default();
-    styles.enhance(&mut style);
+    |props, spawner| {
+        let mut style = FlexItemStyle::default();
+        styles.enhance(&mut style);
 
-    let bundle = ButtonBundle::from_style(style);
+        let bundle = ButtonBundle::from_theme_and_style(&props.resources.theme, style);
 
-    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
-        spawner.spawn_with_children(props, child);
-    };
-
-    ((action, bundle), spawn_children)
+        spawner.spawn((action, bundle)).with_children(|spawner| {
+            spawner.spawn_with_children(props, child);
+        });
+    }
 }
 
 pub fn selected_button<B>(
@@ -57,95 +57,91 @@ pub fn secondary_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
 {
-    let mut style = FlexItemStyle::default();
-    styles.enhance(&mut style);
+    |props, spawner| {
+        let mut style = FlexItemStyle::default();
+        styles.enhance(&mut style);
 
-    let bundle = ButtonBundle {
-        flex: FlexBundle::new(
-            style,
-            FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
-        )
-        .with_background_color(COLOR_SECONDARY_BUTTON_BORDER),
-        ..default()
-    };
+        let bundle = ButtonBundle {
+            flex: FlexBundle::new(
+                style,
+                FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
+            )
+            .with_background_color(props.resources.theme.secondary_button_border),
+            ..default()
+        };
 
-    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
         spawner
-            .spawn((
-                ButtonBackground,
-                FlexBundle::new(
-                    FlexItemStyle::available_size().without_occupying_space(),
-                    FlexContainerStyle::row(),
-                )
-                .with_background_color(COLOR_SECONDARY_BUTTON_BACKGROUND),
-            ))
-            .with_children(|child_builder| {
-                child_builder.spawn_with_children(props, child);
+            .spawn((action, ButtonType::Secondary, bundle))
+            .with_children(|spawner| {
+                spawner
+                    .spawn((
+                        ButtonBackground,
+                        FlexBundle::new(
+                            FlexItemStyle::available_size().without_occupying_space(),
+                            FlexContainerStyle::row(),
+                        )
+                        .with_background_color(props.resources.theme.secondary_button_background),
+                    ))
+                    .with_children(|spawner| {
+                        spawner.spawn_with_children(props, child);
+                    });
             });
-    };
-
-    ((action, ButtonType::Secondary, bundle), spawn_children)
+    }
 }
 
 pub fn ternary_button<B>(
     action: impl Bundle,
     styles: impl FlexItemStyleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
 {
-    let mut style = FlexItemStyle::default();
-    styles.enhance(&mut style);
+    |props, spawner| {
+        let mut style = FlexItemStyle::default();
+        styles.enhance(&mut style);
 
-    let bundle = ButtonBundle {
-        flex: FlexBundle::new(
-            style,
-            FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
-        )
-        .with_background_color(COLOR_TERNARY_BUTTON_BORDER),
-        ..default()
-    };
+        let bundle = ButtonBundle {
+            flex: FlexBundle::new(
+                style,
+                FlexContainerStyle::row().with_padding(Sides::all(BORDER_THICKNESS)),
+            )
+            .with_background_color(props.resources.theme.ternary_button_border),
+            ..default()
+        };
 
-    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
         spawner
-            .spawn((
-                ButtonBackground,
-                FlexBundle::new(
-                    FlexItemStyle::available_size().without_occupying_space(),
-                    FlexContainerStyle::row(),
-                )
-                .with_background_color(COLOR_TERNARY_BUTTON_BACKGROUND),
-            ))
-            .with_children(|child_builder| {
-                child_builder.spawn_with_children(props, child);
+            .spawn((action, ButtonType::Ternary, bundle))
+            .with_children(|spawner| {
+                spawner
+                    .spawn((
+                        ButtonBackground,
+                        FlexBundle::new(
+                            FlexItemStyle::available_size().without_occupying_space(),
+                            FlexContainerStyle::row(),
+                        )
+                        .with_background_color(props.resources.theme.ternary_button_background),
+                    ))
+                    .with_children(|spawner| {
+                        spawner.spawn_with_children(props, child);
+                    });
             });
-    };
-
-    ((action, ButtonType::Ternary, bundle), spawn_children)
+    }
 }
 
 pub fn column<B>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
 {
-    let mut bundle = FlexBundle::default();
-    item_styles.enhance(&mut bundle.item.style);
-    container_styles.enhance(&mut bundle.container);
-
-    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
-        spawner.spawn_with_children(props, child);
-    };
-
-    (bundle, spawn_children)
+    column_t((), item_styles, container_styles, child)
 }
 
 pub fn column_t<B, T>(
@@ -153,34 +149,20 @@ pub fn column_t<B, T>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
     T: Bundle,
 {
-    let (bundle, spawn_children) = column(item_styles, container_styles, child);
+    |props, spawner| {
+        let mut bundle = FlexBundle::default();
+        item_styles.enhance(&mut bundle.item.style);
+        container_styles.enhance(&mut bundle.container, &props.resources);
 
-    ((bundle, marker), spawn_children)
-}
-
-pub fn container<B>(
-    styles: impl FlexContainerBundleEnhancer,
-    child: impl Into<BundleWithChildren<B>>,
-) -> (
-    FlexContainerBundle,
-    impl FnOnce(&Props, &mut ChildSpawnerCommands),
-)
-where
-    B: Bundle,
-{
-    let mut bundle = FlexContainerBundle::default();
-    styles.enhance(&mut bundle);
-
-    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
-        spawner.spawn_with_children(props, child);
-    };
-
-    (bundle, spawn_children)
+        spawner.spawn((bundle, marker)).with_children(|spawner| {
+            spawner.spawn_with_children(props, child);
+        });
+    }
 }
 
 pub fn dynamic_image<T>(dynamic_image: T, styles: impl FlexItemStyleEnhancer) -> impl Bundle
@@ -327,33 +309,15 @@ pub fn leaf(styles: impl FlexItemStyleEnhancer) -> FlexLeafBundle {
     bundle
 }
 
-pub fn rect(color: Color, styles: impl FlexItemStyleEnhancer) -> impl Bundle {
-    let mut item = FlexItemBundle::default();
-    styles.enhance(&mut item.style);
-
-    let sprite = Sprite::from_color(color, Vec2::new(1., 1.));
-
-    (item, sprite)
-}
-
 pub fn row<B>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
 {
-    let mut bundle = FlexBundle::default();
-    bundle.container.style.direction = FlexDirection::Row;
-    item_styles.enhance(&mut bundle.item.style);
-    container_styles.enhance(&mut bundle.container);
-
-    let spawn_children = |props: &Props, spawner: &mut ChildSpawnerCommands| {
-        spawner.spawn_with_children(props, child);
-    };
-
-    (bundle, spawn_children)
+    row_t((), item_styles, container_styles, child)
 }
 
 pub fn row_t<B, T>(
@@ -361,21 +325,28 @@ pub fn row_t<B, T>(
     item_styles: impl FlexItemStyleEnhancer,
     container_styles: impl FlexContainerBundleEnhancer,
     child: impl Into<BundleWithChildren<B>>,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands))
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands)
 where
     B: Bundle,
     T: Bundle,
 {
-    let (bundle, spawn_children) = row(item_styles, container_styles, child);
+    |props, spawner| {
+        let mut bundle = FlexBundle::default();
+        bundle.container.style.direction = FlexDirection::Row;
+        item_styles.enhance(&mut bundle.item.style);
+        container_styles.enhance(&mut bundle.container, &props.resources);
 
-    ((bundle, marker), spawn_children)
+        spawner.spawn((bundle, marker)).with_children(|spawner| {
+            spawner.spawn_with_children(props, child);
+        });
+    }
 }
 
 pub fn text(
     text: impl Into<String>,
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
-    |props: &Props, spawner: &mut ChildSpawnerCommands| {
+    |props, spawner| {
         let mut bundle = FlexTextBundle::from_text(text);
         styles.enhance(&mut bundle, &props.resources);
         spawner.spawn(bundle);
@@ -387,9 +358,23 @@ pub fn text_t(
     text: impl Into<String>,
     styles: impl TextEnhancer,
 ) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
-    |props: &Props, spawner: &mut ChildSpawnerCommands| {
+    |props, spawner| {
         let mut bundle = FlexTextBundle::from_text(text);
         styles.enhance(&mut bundle, &props.resources);
         spawner.spawn((bundle, marker));
+    }
+}
+
+pub fn theme_rect(
+    selector: impl FnOnce(&Theme) -> Color,
+    styles: impl FlexItemStyleEnhancer,
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    |props, spawner| {
+        let mut item = FlexItemBundle::default();
+        styles.enhance(&mut item.style);
+
+        let sprite = Sprite::from_color(selector(props.resources.theme), Vec2::new(1., 1.));
+
+        spawner.spawn((item, sprite));
     }
 }

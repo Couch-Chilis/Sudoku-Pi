@@ -2,7 +2,7 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
-use crate::{constants::*, game::Wheel, pointer_query::*, Screen, ScreenState};
+use crate::{game::Wheel, pointer_query::*, themes::Theme, Screen, ScreenState};
 
 use super::{Button, ButtonBackground, ButtonType, ComputedPosition};
 
@@ -204,19 +204,20 @@ pub fn button_interaction(
     >,
     mut background_query: Query<(&mut Sprite, &Children), With<ButtonBackground>>,
     mut text_color_query: Query<&mut TextColor>,
+    theme: Res<Theme>,
 ) {
     for (interaction, children, mut sprite, button_type) in &mut interaction_query {
         match button_type.cloned().unwrap_or_default() {
             ButtonType::Primary => {
                 *sprite = match *interaction {
                     Interaction::Pressed => {
-                        Sprite::from_color(COLOR_BUTTON_BACKGROUND_PRESS, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.button_background_press, Vec2::new(1., 1.))
                     }
                     Interaction::Selected => {
-                        Sprite::from_color(COLOR_BUTTON_BACKGROUND_SELECTED, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.button_background_selected, Vec2::new(1., 1.))
                     }
                     Interaction::None => {
-                        Sprite::from_color(COLOR_BUTTON_BACKGROUND, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.button_background, Vec2::new(1., 1.))
                     }
                 };
 
@@ -225,22 +226,22 @@ pub fn button_interaction(
                     .and_then(|child| text_color_query.get_mut(*child).ok())
                 {
                     text_color.0 = match *interaction {
-                        Interaction::Pressed => COLOR_BUTTON_TEXT_PRESS,
-                        _ => COLOR_BUTTON_TEXT,
+                        Interaction::Pressed => theme.button_text_press,
+                        _ => theme.button_text,
                     };
                 }
             }
             ButtonType::Secondary => {
                 *sprite = match interaction {
                     Interaction::Pressed => {
-                        Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER_PRESS, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.secondary_button_border_press, Vec2::new(1., 1.))
                     }
                     Interaction::Selected => Sprite::from_color(
-                        COLOR_SECONDARY_BUTTON_BORDER_SELECTED,
+                        theme.secondary_button_border_selected,
                         Vec2::new(1., 1.),
                     ),
                     Interaction::None => {
-                        Sprite::from_color(COLOR_SECONDARY_BUTTON_BORDER, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.secondary_button_border, Vec2::new(1., 1.))
                     }
                 };
 
@@ -250,11 +251,11 @@ pub fn button_interaction(
                 {
                     *background = match interaction {
                         Interaction::Pressed => Sprite::from_color(
-                            COLOR_SECONDARY_BUTTON_BACKGROUND_PRESS,
+                            theme.secondary_button_background_press,
                             Vec2::new(1., 1.),
                         ),
                         _ => {
-                            Sprite::from_color(COLOR_SECONDARY_BUTTON_BACKGROUND, Vec2::new(1., 1.))
+                            Sprite::from_color(theme.secondary_button_background, Vec2::new(1., 1.))
                         }
                     };
 
@@ -263,9 +264,9 @@ pub fn button_interaction(
                         .and_then(|child| text_color_query.get_mut(*child).ok())
                     {
                         text_color.0 = match interaction {
-                            Interaction::Pressed => COLOR_SECONDARY_BUTTON_TEXT_PRESS,
-                            Interaction::Selected => COLOR_SECONDARY_BUTTON_TEXT_SELECTED,
-                            Interaction::None => COLOR_SECONDARY_BUTTON_TEXT,
+                            Interaction::Pressed => theme.secondary_button_text_press,
+                            Interaction::Selected => theme.secondary_button_text_selected,
+                            Interaction::None => theme.secondary_button_text,
                         };
                     }
                 }
@@ -273,13 +274,13 @@ pub fn button_interaction(
             ButtonType::Ternary => {
                 *sprite = match interaction {
                     Interaction::Pressed => {
-                        Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_PRESS, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.ternary_button_border_press, Vec2::new(1., 1.))
                     }
                     Interaction::Selected => {
-                        Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER_SELECTED, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.ternary_button_border_selected, Vec2::new(1., 1.))
                     }
                     Interaction::None => {
-                        Sprite::from_color(COLOR_TERNARY_BUTTON_BORDER, Vec2::new(1., 1.))
+                        Sprite::from_color(theme.ternary_button_border, Vec2::new(1., 1.))
                     }
                 };
 
@@ -289,10 +290,10 @@ pub fn button_interaction(
                 {
                     *background = match interaction {
                         Interaction::Pressed => Sprite::from_color(
-                            COLOR_TERNARY_BUTTON_BACKGROUND_PRESS,
+                            theme.ternary_button_background_press,
                             Vec2::new(1., 1.),
                         ),
-                        _ => Sprite::from_color(COLOR_TERNARY_BUTTON_BACKGROUND, Vec2::new(1., 1.)),
+                        _ => Sprite::from_color(theme.ternary_button_background, Vec2::new(1., 1.)),
                     };
 
                     if let Some(mut text_color) = children
@@ -300,9 +301,9 @@ pub fn button_interaction(
                         .and_then(|child| text_color_query.get_mut(*child).ok())
                     {
                         text_color.0 = match interaction {
-                            Interaction::Pressed => COLOR_TERNARY_BUTTON_TEXT_PRESS,
-                            Interaction::Selected => COLOR_TERNARY_BUTTON_TEXT_SELECTED,
-                            Interaction::None => COLOR_TERNARY_BUTTON_TEXT,
+                            Interaction::Pressed => theme.ternary_button_text_press,
+                            Interaction::Selected => theme.ternary_button_text_selected,
+                            Interaction::None => theme.ternary_button_text,
                         };
                     }
                 }

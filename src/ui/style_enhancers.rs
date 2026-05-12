@@ -4,20 +4,20 @@ use super::flex::*;
 
 /// Trait that defines enhancers for [FlexContainerBundle].
 pub trait FlexContainerBundleEnhancer: Sized {
-    fn enhance(self, bundle: &mut FlexContainerBundle);
+    fn enhance(self, bundle: &mut FlexContainerBundle, bag: &ResourceBag);
 }
 
 impl<T> FlexContainerBundleEnhancer for T
 where
-    T: FnOnce(&mut FlexContainerBundle) + Sized,
+    T: FnOnce(&mut FlexContainerBundle, &ResourceBag) + Sized,
 {
-    fn enhance(self, bundle: &mut FlexContainerBundle) {
-        self(bundle)
+    fn enhance(self, bundle: &mut FlexContainerBundle, bag: &ResourceBag) {
+        self(bundle, bag)
     }
 }
 
 impl FlexContainerBundleEnhancer for () {
-    fn enhance(self, _bundle: &mut FlexContainerBundle) {}
+    fn enhance(self, _bundle: &mut FlexContainerBundle, _bag: &ResourceBag) {}
 }
 
 impl<T, U> FlexContainerBundleEnhancer for (T, U)
@@ -25,9 +25,9 @@ where
     T: FlexContainerBundleEnhancer,
     U: FlexContainerBundleEnhancer,
 {
-    fn enhance(self, bundle: &mut FlexContainerBundle) {
-        self.0.enhance(bundle);
-        self.1.enhance(bundle);
+    fn enhance(self, bundle: &mut FlexContainerBundle, bag: &ResourceBag) {
+        self.0.enhance(bundle, bag);
+        self.1.enhance(bundle, bag);
     }
 }
 

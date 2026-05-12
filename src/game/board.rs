@@ -17,7 +17,7 @@ pub struct MistakeCellBordersBundle {
     pub visibility: Visibility,
 }
 
-pub fn board(screen: ScreenState) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
+pub fn board(screen: ScreenState) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     row_t(
         (Board, screen),
         board_size,
@@ -37,38 +37,40 @@ enum Thickness {
     Thick,
 }
 
-fn board_lines(_props: &Props, spawner: &mut ChildSpawnerCommands) {
+fn board_lines(props: &Props, spawner: &mut ChildSpawnerCommands) {
     use Orientation::*;
     use Thickness::*;
 
-    spawner.spawn(line(0, Horizontal, Thick));
-    spawner.spawn(line(1, Horizontal, Thin));
-    spawner.spawn(line(2, Horizontal, Thin));
-    spawner.spawn(line(3, Horizontal, Medium));
-    spawner.spawn(line(4, Horizontal, Thin));
-    spawner.spawn(line(5, Horizontal, Thin));
-    spawner.spawn(line(6, Horizontal, Medium));
-    spawner.spawn(line(7, Horizontal, Thin));
-    spawner.spawn(line(8, Horizontal, Thin));
-    spawner.spawn(line(9, Horizontal, Thick));
-    spawner.spawn(line(0, Vertical, Thick));
-    spawner.spawn(line(1, Vertical, Thin));
-    spawner.spawn(line(2, Vertical, Thin));
-    spawner.spawn(line(3, Vertical, Medium));
-    spawner.spawn(line(4, Vertical, Thin));
-    spawner.spawn(line(5, Vertical, Thin));
-    spawner.spawn(line(6, Vertical, Medium));
-    spawner.spawn(line(7, Vertical, Thin));
-    spawner.spawn(line(8, Vertical, Thin));
-    spawner.spawn(line(9, Vertical, Thick));
+    spawner.spawn(line(props, 0, Horizontal, Thick));
+    spawner.spawn(line(props, 1, Horizontal, Thin));
+    spawner.spawn(line(props, 2, Horizontal, Thin));
+    spawner.spawn(line(props, 3, Horizontal, Medium));
+    spawner.spawn(line(props, 4, Horizontal, Thin));
+    spawner.spawn(line(props, 5, Horizontal, Thin));
+    spawner.spawn(line(props, 6, Horizontal, Medium));
+    spawner.spawn(line(props, 7, Horizontal, Thin));
+    spawner.spawn(line(props, 8, Horizontal, Thin));
+    spawner.spawn(line(props, 9, Horizontal, Thick));
+    spawner.spawn(line(props, 0, Vertical, Thick));
+    spawner.spawn(line(props, 1, Vertical, Thin));
+    spawner.spawn(line(props, 2, Vertical, Thin));
+    spawner.spawn(line(props, 3, Vertical, Medium));
+    spawner.spawn(line(props, 4, Vertical, Thin));
+    spawner.spawn(line(props, 5, Vertical, Thin));
+    spawner.spawn(line(props, 6, Vertical, Medium));
+    spawner.spawn(line(props, 7, Vertical, Thin));
+    spawner.spawn(line(props, 8, Vertical, Thin));
+    spawner.spawn(line(props, 9, Vertical, Thick));
 }
 
-fn line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
+fn line(props: &Props, n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
+    let theme = props.resources.theme;
+
     use Thickness::*;
     let (thickness, color, z) = match thickness {
-        Thin => (0.03 * CELL_SIZE, COLOR_BOARD_LINE_THIN, 5.),
-        Medium => (0.03 * CELL_SIZE, COLOR_BOARD_LINE_MEDIUM, 6.),
-        Thick => (0.06 * CELL_SIZE, COLOR_BOARD_LINE_THICK, 7.),
+        Thin => (0.03 * CELL_SIZE, theme.board_line_thin, 5.),
+        Medium => (0.03 * CELL_SIZE, theme.board_line_medium, 6.),
+        Thick => (0.06 * CELL_SIZE, theme.board_line_thick, 7.),
     };
 
     use Orientation::*;
@@ -92,24 +94,29 @@ fn line(n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
     )
 }
 
-fn mistake_borders() -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
-    let bundle = MistakeCellBordersBundle {
-        transform: Transform::from_translation(Vec3::new(0., 0., 8.)),
-        visibility: Visibility::Hidden,
-        ..default()
-    };
-
-    let spawn_children = fragment4(
-        mistake_line(-0.5, Orientation::Horizontal),
-        mistake_line(0.5, Orientation::Horizontal),
-        mistake_line(-0.5, Orientation::Vertical),
-        mistake_line(0.5, Orientation::Vertical),
-    );
-
-    (bundle, spawn_children)
+fn mistake_borders() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
+    |props, spawner| {
+        spawner
+            .spawn(MistakeCellBordersBundle {
+                transform: Transform::from_translation(Vec3::new(0., 0., 8.)),
+                visibility: Visibility::Hidden,
+                ..default()
+            })
+            .with_children(|spawner| {
+                spawner.spawn_with_children(
+                    props,
+                    fragment4(
+                        mistake_line(props, -0.5, Orientation::Horizontal),
+                        mistake_line(props, 0.5, Orientation::Horizontal),
+                        mistake_line(props, -0.5, Orientation::Vertical),
+                        mistake_line(props, 0.5, Orientation::Vertical),
+                    ),
+                );
+            });
+    }
 }
 
-fn mistake_line(edge: f32, orientation: Orientation) -> impl Bundle {
+fn mistake_line(props: &Props, edge: f32, orientation: Orientation) -> impl Bundle {
     use Orientation::*;
     let translation = match orientation {
         Horizontal => Vec3::new(0., edge * CELL_SIZE, 1.),
@@ -122,7 +129,7 @@ fn mistake_line(edge: f32, orientation: Orientation) -> impl Bundle {
     };
 
     (
-        Sprite::from_color(COLOR_POP_DARK, Vec2::new(1., 1.)),
+        Sprite::from_color(props.resources.theme.mistake, Vec2::new(1., 1.)),
         Transform {
             translation,
             scale,

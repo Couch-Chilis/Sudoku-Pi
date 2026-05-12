@@ -1,5 +1,6 @@
-use crate::{constants::*, transition_events::*, ui::*, ScreenState};
 use bevy::{app::AppExit, prelude::*, sprite::Anchor};
+
+use crate::{themes::Theme, transition_events::*, ui::*, ScreenState};
 
 #[derive(Component)]
 #[allow(dead_code)]
@@ -77,7 +78,7 @@ pub fn main_menu_buttons(props: &Props, spawner: &mut ChildSpawnerCommands) {
                     font_medium,
                     font_size(25.),
                     text_anchor(Anchor::CENTER_RIGHT),
-                    text_color(COLOR_BOARD_LINE_MEDIUM),
+                    theme_text_color(Theme::board_line_medium),
                 ),
             ),
         ),

@@ -1,5 +1,5 @@
-use crate::{constants::*, game::*, ui::*};
-use crate::{Fonts, Game, ScreenState, Settings, Transition};
+use crate::{game::*, ui::*};
+use crate::{Fonts, Game, ScreenState, Settings, Theme, Transition};
 use bevy::prelude::*;
 
 const INITIAL_NUMBER_INSTRUCTION: &str =
@@ -41,7 +41,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                     justify(Justify::Center),
                     font_bold,
                     font_size(66.7),
-                    text_color(COLOR_MAIN_DARKER),
+                    theme_text_color(Theme::text),
                 ),
             ),
         ),
@@ -54,7 +54,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                     justify(Justify::Center),
                     font_medium,
                     font_size(41.7),
-                    text_color(COLOR_MAIN_DARKER),
+                    theme_text_color(Theme::text),
                 ),
             ),
         ),
@@ -67,7 +67,7 @@ pub fn welcome_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                     justify(Justify::Center),
                     font_medium,
                     font_size(33.3),
-                    text_color(COLOR_MAIN_DARKER),
+                    theme_text_color(Theme::text),
                 ),
             ),
         ),
@@ -94,7 +94,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) 
                     justify(Justify::Center),
                     font_bold,
                     font_size(66.7),
-                    text_color(COLOR_MAIN_DARKER)
+                    theme_text_color(Theme::text)
                 ),
             ),
         ),
@@ -109,7 +109,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) 
                     justify(Justify::Center),
                     font_medium,
                     font_size(33.3),
-                    text_color(COLOR_MAIN_DARKER)
+                    theme_text_color(Theme::text)
                 ),
             ),
         ),
@@ -126,7 +126,7 @@ pub fn learn_numbers_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) 
                     justify(Justify::Center),
                     font_medium,
                     font_size(30.),
-                    text_color(COLOR_MAIN_DARKER)
+                    theme_text_color(Theme::text)
                 )
             )
         ),
@@ -155,7 +155,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                         justify(Justify::Center),
                         font_bold,
                         font_size(66.7),
-                        text_color(COLOR_MAIN_DARKER)
+                        theme_text_color(Theme::text)
                     ),
                 )
             ),
@@ -170,7 +170,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                         justify(Justify::Center),
                         font_medium,
                         font_size(33.3),
-                        text_color(COLOR_MAIN_DARKER)
+                        theme_text_color(Theme::text)
                     ),
                 ),
             ),
@@ -187,7 +187,7 @@ pub fn learn_notes_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
                         justify(Justify::Center),
                         font_medium,
                         font_size(30.),
-                        text_color(COLOR_MAIN_DARKER)
+                        theme_text_color(Theme::text)
                     ),
                 )
             ),
@@ -243,6 +243,7 @@ pub fn how_to_play_numbers_interaction(
     selection: Res<Selection>,
     settings: Res<Settings>,
     fonts: Res<Fonts>,
+    theme: Res<Theme>,
 ) {
     if *screen.get() != ScreenState::LearnNumbers {
         return;
@@ -252,7 +253,7 @@ pub fn how_to_play_numbers_interaction(
         for (mut instruction_text, mut text_color, mut text_font) in &mut number_instruction_query {
             instruction_text.0 = INITIAL_NUMBER_INSTRUCTION.to_owned();
             text_font.font = fonts.medium.clone();
-            text_color.0 = COLOR_MAIN_DARKER;
+            text_color.0 = theme.text;
         }
         for mut hint_visibility in &mut number_hint_query {
             *hint_visibility = Visibility::Hidden;
@@ -261,7 +262,7 @@ pub fn how_to_play_numbers_interaction(
         for (mut instruction_text, mut text_color, mut text_font) in &mut number_instruction_query {
             instruction_text.0 = PROCEED_NUMBER_INSTRUCTION.to_owned();
             text_font.font = fonts.bold.clone();
-            text_color.0 = COLOR_POP_FOCUS;
+            text_color.0 = theme.text_highlight;
         }
         if settings.enable_wheel_aid {
             for mut hint_visibility in &mut number_hint_query {
@@ -286,6 +287,7 @@ pub fn how_to_play_notes_interaction(
     screen: Res<State<ScreenState>>,
     fonts: Res<Fonts>,
     game: Res<Game>,
+    theme: Res<Theme>,
 ) {
     if *screen.get() != ScreenState::LearnNotes {
         return;
@@ -295,7 +297,7 @@ pub fn how_to_play_notes_interaction(
         for (mut instruction_text, mut text_color, mut text_font) in &mut notes_instruction_query {
             instruction_text.0 = INITIAL_NOTES_INSTRUCTION.to_owned();
             text_font.font = fonts.medium.clone();
-            text_color.0 = COLOR_MAIN_DARKER;
+            text_color.0 = theme.text;
         }
         for mut hint_visibility in &mut notes_hint_query {
             *hint_visibility = Visibility::Hidden;
@@ -304,7 +306,7 @@ pub fn how_to_play_notes_interaction(
         for (mut instruction_text, mut text_color, mut text_font) in &mut notes_instruction_query {
             instruction_text.0 = PROCEED_NOTES_INSTRUCTION.to_owned();
             text_font.font = fonts.bold.clone();
-            text_color.0 = COLOR_POP_FOCUS;
+            text_color.0 = theme.text_highlight;
         }
         for mut hint_visibility in &mut notes_hint_query {
             *hint_visibility = Visibility::Visible;

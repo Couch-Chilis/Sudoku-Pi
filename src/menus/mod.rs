@@ -76,7 +76,7 @@ fn button_section(
     initial_rotation: f32,
     z_index: f32,
     children: impl FnOnce(&Props, &mut ChildSpawnerCommands) + 'static,
-) -> (impl Bundle, impl FnOnce(&Props, &mut ChildSpawnerCommands)) {
+) -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
     column_t(
         ButtonSection {
             initial_rotation,
