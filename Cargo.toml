@@ -23,9 +23,8 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
-bevy = { version = "0.17", default-features = false, features = [
+bevy = { version = "0.18.1", default-features = false, features = [
     "android_shared_stdcxx",
-    "animation",
     "bevy_asset",
     "bevy_gilrs",
     "bevy_scene",
@@ -37,13 +36,14 @@ bevy = { version = "0.17", default-features = false, features = [
     "bevy_sprite",
     "bevy_state",
     "bevy_text",
+    "gltf_animation",
     "jpeg",
     "png",
     "wayland",
     "x11",
 ] }
 #bevy-steamworks = { optional = true, version = "0.8" }
-bevy_tweening = { version = "0.14", default-features = false, features = [
+bevy_tweening = { version = "0.15", default-features = false, features = [
     "bevy_sprite",
     "bevy_text",
 ] }

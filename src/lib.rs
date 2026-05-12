@@ -187,7 +187,7 @@ impl Plugin for AssetConfiguratorPlugin {
             .get_resource_or_insert_with::<AssetSourceBuilders>(Default::default);
         sources.insert(
             AssetSourceId::Default,
-            AssetSourceBuilder::default().with_reader(|| Box::<MemoryAssetReader>::default()),
+            AssetSourceBuilder::new(|| Box::<MemoryAssetReader>::default()),
         );
     }
 }
