@@ -196,6 +196,8 @@ impl Plugin for AssetConfiguratorPlugin {
 
 fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
     let settings = Settings::load();
+    let theme = settings.theme.into_theme();
+
     let game = if settings.onboarding_finished {
         Game::load()
     } else {
@@ -211,14 +213,15 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
     app.init_resource::<Fonts>()
         .init_resource::<Images>()
         .init_resource::<ActiveSliceHandles>()
+        .insert_resource(ClearColor(theme.background))
         .insert_resource(game)
         .insert_resource(timer)
         .insert_resource(settings)
         .insert_resource(Highscores::load())
         .insert_resource(SettingsToggleTimer::default())
         .insert_resource(screen_sizing)
+        .insert_resource(theme)
         .insert_resource(zoom_factor)
-        .insert_resource(ClearColor(Color::WHITE))
         .add_message::<Transition>()
         .add_message::<WindowDestroyed>()
         .add_systems(Startup, setup)
@@ -308,6 +311,7 @@ fn setup(
     game: Res<Game>,
     highscores: Res<Highscores>,
     screen_sizing: Res<ScreenSizing>,
+    theme: Res<Theme>,
 ) {
     commands.spawn((
         Camera2d,
@@ -320,7 +324,6 @@ fn setup(
     let fonts = Fonts::load(fonts);
     let fortune = Fortune::load();
     let images = Images::load(images);
-    let theme = settings.theme.into_theme();
 
     let props = Props {
         game: &game,
@@ -356,7 +359,6 @@ fn setup(
     commands.insert_resource(fonts);
     commands.insert_resource(fortune);
     commands.insert_resource(images);
-    commands.insert_resource(theme);
 }
 
 // Synchronize the timer to the game state right before the game exits.
@@ -473,14 +475,16 @@ where
     B: Bundle,
 {
     let is_tablet = bag.screen_sizing.is_tablet();
+    let screen_sizing = bag.screen_sizing;
+    let (tile_x, tile_y) = screen.tile_offsets();
 
-    let mut bundle = FlexContainerBundle::default();
-    bundle.style.gap = if screen == ScreenState::Game {
+    let gap = if screen == ScreenState::Game {
         Val::Auto
     } else {
         Val::None
     };
-    bundle.style.padding = Sides {
+
+    let padding = Sides {
         top: if screen == ScreenState::MainMenu {
             Val::None
         } else if is_tablet && screen == ScreenState::Game {
@@ -497,15 +501,21 @@ where
         left: Val::None,
     };
 
-    let screen_sizing = bag.screen_sizing;
-    let (tile_x, tile_y) = screen.tile_offsets();
-    bundle.transform = Transform {
-        scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
-        translation: Vec3::new(
-            screen_sizing.width * tile_x as f32,
-            screen_sizing.height * tile_y as f32,
-            1.,
-        ),
+    let bundle = FlexContainerBundle {
+        style: FlexContainerStyle {
+            gap,
+            padding,
+            ..default()
+        },
+        transform: Transform {
+            scale: Vec3::new(screen_sizing.width, screen_sizing.height, 1.),
+            translation: Vec3::new(
+                screen_sizing.width * tile_x as f32,
+                screen_sizing.height * tile_y as f32,
+                1.,
+            ),
+            ..default()
+        },
         ..default()
     };
 

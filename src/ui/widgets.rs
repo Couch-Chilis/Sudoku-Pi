@@ -305,6 +305,7 @@ where
 
 pub fn leaf(styles: impl FlexItemStyleEnhancer) -> FlexLeafBundle {
     let mut bundle = FlexLeafBundle::default();
+    bundle.sprite = Sprite::from_color(Color::NONE, Vec2::new(1., 1.));
     styles.enhance(&mut bundle.flex.style);
     bundle
 }

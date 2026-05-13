@@ -15,10 +15,9 @@ use crate::{ui::*, ScreenInteraction, ScreenState};
 use difficulty_menu::*;
 use main_menu::*;
 use settings_menu::*;
-use settings_toggle::*;
 
 pub use settings_menu::settings_screen;
-pub use settings_toggle::SettingsToggleTimer;
+pub use settings_toggle::*;
 
 #[derive(Component, Default)]
 struct ButtonSection {

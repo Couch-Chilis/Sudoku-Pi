@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-#[derive(Clone, Copy, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeSetting {
     #[default]

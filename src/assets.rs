@@ -12,7 +12,9 @@ const BOARD_LINE_THIN_CIRCLE: &[u8] = include_bytes!("../assets/board_line_thin_
 const COG: &[u8] = include_bytes!("../assets/cog.png");
 const COG_PRESSED: &[u8] = include_bytes!("../assets/cog_pressed.png");
 const LAUNCH_SCREEN: &[u8] = include_bytes!("../assets/launch_screen.png");
+const LAUNCH_SCREEN_DARK: &[u8] = include_bytes!("../assets/launch_screen_dark.png");
 const LAUNCH_SCREEN_IPAD: &[u8] = include_bytes!("../assets/launch_screen_ipad.png");
+const LAUNCH_SCREEN_IPAD_DARK: &[u8] = include_bytes!("../assets/launch_screen_ipad_dark.png");
 const MODE_SLIDER: &[u8] = include_bytes!("../assets/mode_slider.png");
 const POP_DARK_CIRCLE: &[u8] = include_bytes!("../assets/pop_dark_circle.png");
 const SLICE_1: &[u8] = include_bytes!("../assets/slice_1.png");
@@ -126,7 +128,9 @@ pub struct Images {
     pub cog: ImageWithDimensions,
     pub cog_pressed: ImageWithDimensions,
     pub launch_screen: ImageWithDimensions,
+    pub launch_screen_dark: ImageWithDimensions,
     pub launch_screen_ipad: ImageWithDimensions,
+    pub launch_screen_ipad_dark: ImageWithDimensions,
     pub mode_slider: ImageWithDimensions,
     pub pop_dark_circle: ImageWithDimensions,
     pub slice_active_1: ImageWithDimensions,
@@ -172,7 +176,12 @@ impl Images {
             cog: ImageWithDimensions::load(&mut images, COG),
             cog_pressed: ImageWithDimensions::load(&mut images, COG_PRESSED),
             launch_screen: ImageWithDimensions::load(&mut images, LAUNCH_SCREEN),
+            launch_screen_dark: ImageWithDimensions::load(&mut images, LAUNCH_SCREEN_DARK),
             launch_screen_ipad: ImageWithDimensions::load(&mut images, LAUNCH_SCREEN_IPAD),
+            launch_screen_ipad_dark: ImageWithDimensions::load(
+                &mut images,
+                LAUNCH_SCREEN_IPAD_DARK,
+            ),
             mode_slider: ImageWithDimensions::load(&mut images, MODE_SLIDER),
             pop_dark_circle: ImageWithDimensions::load(&mut images, POP_DARK_CIRCLE),
             slice_active_1: ImageWithDimensions::load(&mut images, SLICE_1),

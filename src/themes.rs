@@ -90,6 +90,91 @@ impl Theme {
         self.board_line_thin
     }
 
+    pub fn is_dark_mode(&self) -> bool {
+        self.background == COLOR_DEEP_BROWN
+    }
+
+    pub fn mix(&self, other: &Self, factor: f32) -> Self {
+        Self {
+            background: self.background.mix(&other.background, factor),
+            text: self.text.mix(&other.text, factor),
+            text_highlight: self.text_highlight.mix(&other.text_highlight, factor),
+            button_text: self.button_text.mix(&other.button_text, factor),
+            button_text_press: self.button_text_press.mix(&other.button_text_press, factor),
+            button_background: self.button_background.mix(&other.button_background, factor),
+            button_background_selected: self
+                .button_background_selected
+                .mix(&other.button_background_selected, factor),
+            button_background_press: self
+                .button_background_press
+                .mix(&other.button_background_press, factor),
+            secondary_button_text: self
+                .secondary_button_text
+                .mix(&other.secondary_button_text, factor),
+            secondary_button_text_selected: self
+                .secondary_button_text_selected
+                .mix(&other.secondary_button_text_selected, factor),
+            secondary_button_text_press: self
+                .secondary_button_text_press
+                .mix(&other.secondary_button_text_press, factor),
+            secondary_button_background: self
+                .secondary_button_background
+                .mix(&other.secondary_button_background, factor),
+            secondary_button_background_press: self
+                .secondary_button_background_press
+                .mix(&other.secondary_button_background_press, factor),
+            secondary_button_border: self
+                .secondary_button_border
+                .mix(&other.secondary_button_border, factor),
+            secondary_button_border_selected: self
+                .secondary_button_border_selected
+                .mix(&other.secondary_button_border_selected, factor),
+            secondary_button_border_press: self
+                .secondary_button_border_press
+                .mix(&other.secondary_button_border_press, factor),
+            ternary_button_text: self
+                .ternary_button_text
+                .mix(&other.ternary_button_text, factor),
+            ternary_button_text_selected: self
+                .ternary_button_text_selected
+                .mix(&other.ternary_button_text_selected, factor),
+            ternary_button_text_press: self
+                .ternary_button_text_press
+                .mix(&other.ternary_button_text_press, factor),
+            ternary_button_background: self
+                .ternary_button_background
+                .mix(&other.ternary_button_background, factor),
+            ternary_button_background_press: self
+                .ternary_button_background_press
+                .mix(&other.ternary_button_background_press, factor),
+            ternary_button_border: self
+                .ternary_button_border
+                .mix(&other.ternary_button_border, factor),
+            ternary_button_border_selected: self
+                .ternary_button_border_selected
+                .mix(&other.ternary_button_border_selected, factor),
+            ternary_button_border_press: self
+                .ternary_button_border_press
+                .mix(&other.ternary_button_border_press, factor),
+            timer_border: self.timer_border.mix(&other.timer_border, factor),
+            timer_text: self.timer_text.mix(&other.timer_text, factor),
+            score_text: self.score_text.mix(&other.score_text, factor),
+            wheel_top_text: self.wheel_top_text.mix(&other.wheel_top_text, factor),
+            hint: self.hint.mix(&other.hint, factor),
+            mistake: self.mistake.mix(&other.mistake, factor),
+            board_number: self.board_number.mix(&other.board_number, factor),
+            board_prefill_number: self
+                .board_prefill_number
+                .mix(&other.board_prefill_number, factor),
+            board_line_thick: self.board_line_thick.mix(&other.board_line_thick, factor),
+            board_line_medium: self.board_line_medium.mix(&other.board_line_medium, factor),
+            board_line_thin: self.board_line_thin.mix(&other.board_line_thin, factor),
+            cell_selection: self.cell_selection.mix(&other.cell_selection, factor),
+            cell_same_number: self.cell_same_number.mix(&other.cell_same_number, factor),
+            cell_highlight: self.cell_highlight.mix(&other.cell_highlight, factor),
+        }
+    }
+
     pub fn score_text(&self) -> Color {
         self.score_text
     }

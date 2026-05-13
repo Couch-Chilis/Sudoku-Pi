@@ -7,11 +7,14 @@ mod layout;
 mod props;
 mod style_enhancers;
 mod styles;
+mod theme_adapter;
 mod widgets;
 
 use bevy::{prelude::*, transform::TransformSystems};
-
 use bevy_tweening::TweenAnim;
+
+use theme_adapter::ThemeAdapterPlugin;
+
 pub use buttons::*;
 pub use child_spawner_commands_ext::*;
 pub use flex::*;
@@ -34,6 +37,7 @@ impl Plugin for UiPlugin {
             PostUpdate,
             LayoutSystem::ApplyLayout.before(TransformSystems::Propagate),
         )
+        .add_plugins(ThemeAdapterPlugin)
         .add_systems(
             PostUpdate,
             (

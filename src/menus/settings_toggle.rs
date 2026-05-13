@@ -1,10 +1,11 @@
 use bevy::{prelude::*, sprite::Anchor};
 
-use crate::{ui::*, utils::*, Images, Settings};
+use crate::{settings::ThemeSetting, ui::*, utils::*, Images, Settings};
 
 #[derive(Clone, Component, Copy)]
 pub enum SettingsToggle {
     AutofillCorrectNotes,
+    DarkMode,
     EnableWheelAid,
     SelectedCellHighlight,
     ShowMistakes,
@@ -25,6 +26,7 @@ impl SettingsToggle {
     pub fn is_enabled(&self, settings: &Settings) -> bool {
         match self {
             SettingsToggle::AutofillCorrectNotes => settings.autofill_correct_notes,
+            SettingsToggle::DarkMode => settings.theme == ThemeSetting::Dark,
             SettingsToggle::EnableWheelAid => settings.enable_wheel_aid,
             SettingsToggle::SelectedCellHighlight => settings.selected_cell_highlight,
             SettingsToggle::ShowMistakes => settings.show_mistakes,

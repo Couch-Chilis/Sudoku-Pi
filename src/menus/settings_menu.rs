@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{ui::*, ScreenState, Settings};
+use crate::{settings::ThemeSetting, ui::*, ScreenState, Settings};
 
 use super::settings_toggle::*;
 
@@ -18,11 +18,12 @@ pub fn settings_screen() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
         column(
             available_size,
             padding(Sides::vertical(Val::Auto)),
-            fragment4(
+            fragment5(
                 settings_toggle("Wheel swipe aid", EnableWheelAid),
                 settings_toggle("Selected cell highlight", SelectedCellHighlight),
                 settings_toggle("Reveal mistakes", ShowMistakes),
                 settings_toggle("Auto-fill correct notes", AutofillCorrectNotes),
+                settings_toggle("Dark mode", DarkMode),
             ),
         ),
         column(
@@ -55,6 +56,12 @@ pub fn settings_toggle_actions(
             match toggle {
                 SettingsToggle::AutofillCorrectNotes => {
                     settings.autofill_correct_notes = !settings.autofill_correct_notes;
+                }
+                SettingsToggle::DarkMode => {
+                    settings.theme = match settings.theme {
+                        ThemeSetting::Light => ThemeSetting::Dark,
+                        ThemeSetting::Dark => ThemeSetting::Light,
+                    }
                 }
                 SettingsToggle::EnableWheelAid => {
                     settings.enable_wheel_aid = !settings.enable_wheel_aid;

@@ -40,7 +40,6 @@ impl PointerQueryExt for PointerQuery<'_, '_, '_> {
         let (buttons, touches, _, windows) = self;
 
         if touches.is_changed() {
-            println!("Touches changed! {touches:#?}");
             get_touch_input_with_position(self)
         } else if buttons.is_changed() || windows.single().is_ok_and(|window| window.is_changed()) {
             get_button_input_with_position(self)
