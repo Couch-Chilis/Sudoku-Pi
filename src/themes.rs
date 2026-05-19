@@ -4,6 +4,7 @@ use bevy::prelude::*;
 const COLOR_BAMBOO_SHOOT: Color = Color::srgb(204. / 255., 188. / 255., 42. / 255.);
 const COLOR_CREAM: Color = Color::srgb(1., 254. / 255., 248. / 255.);
 const COLOR_DEEP_BROWN: Color = Color::srgb(36. / 255., 21. / 255., 0.);
+const COLOR_LIGHTER_BROWN: Color = Color::srgb(54. / 255., 31. / 255., 0.);
 const COLOR_EGGSHELL: Color = Color::srgb(251. / 255., 249. / 255., 230. / 255.);
 const COLOR_MAIN: Color = Color::srgb(169. / 255., 154. / 255., 55. / 255.);
 const COLOR_MAIN_DARKER: Color = Color::srgb(139. / 255., 126. / 255., 45. / 255.);
@@ -258,25 +259,25 @@ pub const DARK_THEME: Theme = Theme {
     button_text_press: COLOR_POP_DARK,
     button_background: COLOR_MAIN,
     button_background_selected: COLOR_ORANGE,
-    button_background_press: Color::WHITE,
+    button_background_press: COLOR_POP_DARK,
 
     secondary_button_text: COLOR_MAIN,
-    secondary_button_text_selected: COLOR_POP_DARK,
-    secondary_button_text_press: COLOR_CREAM,
-    secondary_button_background: COLOR_DEEP_BROWN,
+    secondary_button_text_selected: COLOR_ORANGE,
+    secondary_button_text_press: COLOR_POP_DARK,
+    secondary_button_background: COLOR_LIGHTER_BROWN,
     secondary_button_background_press: COLOR_ORANGE,
     secondary_button_border: COLOR_MAIN,
-    secondary_button_border_selected: COLOR_POP_DARK,
-    secondary_button_border_press: COLOR_CREAM,
+    secondary_button_border_selected: COLOR_ORANGE,
+    secondary_button_border_press: COLOR_POP_DARK,
 
     ternary_button_text: COLOR_MAIN,
-    ternary_button_text_selected: COLOR_POP_DARK,
-    ternary_button_text_press: Color::WHITE,
+    ternary_button_text_selected: COLOR_ORANGE,
+    ternary_button_text_press: COLOR_POP_DARK,
     ternary_button_background: COLOR_DEEP_BROWN,
     ternary_button_background_press: COLOR_ORANGE,
     ternary_button_border: COLOR_MAIN,
-    ternary_button_border_selected: COLOR_POP_DARK,
-    ternary_button_border_press: Color::WHITE,
+    ternary_button_border_selected: COLOR_ORANGE,
+    ternary_button_border_press: COLOR_POP_DARK,
 
     timer_border: COLOR_MAIN_DARKEST,
     timer_text: COLOR_MAIN,
@@ -289,13 +290,13 @@ pub const DARK_THEME: Theme = Theme {
 
     mistake: COLOR_POP_FOCUS,
 
-    board_number: Color::WHITE,
+    board_number: COLOR_EGGSHELL,
     board_prefill_number: Color::linear_rgb(0., 0., 1.),
     board_line_thick: COLOR_MAIN_DARKEST,
     board_line_medium: Color::srgb(185. / 255., 178. / 255., 129. / 255.),
-    board_line_thin: Color::srgb(238. / 255., 235. / 255., 215. / 255.),
+    board_line_thin: COLOR_MAIN_DARKEST,
 
     cell_selection: COLOR_BAMBOO_SHOOT,
-    cell_same_number: COLOR_MUSTARD,
-    cell_highlight: COLOR_EGGSHELL,
+    cell_same_number: COLOR_MAIN_DARKEST,
+    cell_highlight: COLOR_LIGHTER_BROWN,
 };

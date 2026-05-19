@@ -153,7 +153,7 @@ pub(super) fn render_numbers(
     settings: Res<Settings>,
     theme: Res<Theme>,
 ) {
-    if !game.is_changed() && !settings.is_changed() {
+    if !game.is_changed() && !settings.is_changed() && !theme.is_changed() {
         return;
     }
 
@@ -334,7 +334,7 @@ pub(super) fn render_cell_highlights(
     highlights: Res<Highlights>,
     theme: Res<Theme>,
 ) {
-    if !highlights.is_changed() {
+    if !highlights.is_changed() && !theme.is_changed() {
         return;
     }
 

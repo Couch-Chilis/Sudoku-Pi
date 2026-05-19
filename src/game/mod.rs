@@ -10,6 +10,7 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
+use crate::game::board::render_board_lines;
 use crate::{pointer_query::*, sudoku::*, ui::*};
 use crate::{GameTimer, ScreenState, Settings};
 
@@ -56,13 +57,14 @@ impl Plugin for GamePlugin {
                     button_actions.run_if(in_state(ScreenState::Game)),
                     highscore_button_actions.run_if(in_state(ScreenState::Highscores)),
                     slider_interaction.run_if(in_state(ScreenState::Game)),
-                    render_numbers,
-                    render_notes,
                     render_wheel,
+                    render_board_lines,
                     render_disabled_wheel_slices,
                     render_slider_knobs,
                     settings_icon_interaction.run_if(in_state(ScreenState::Game)),
                     calculate_highlights,
+                    render_numbers.after(calculate_highlights),
+                    render_notes.after(calculate_highlights),
                     render_cell_highlights.after(calculate_highlights),
                     render_note_highlights.after(calculate_highlights),
                 ),

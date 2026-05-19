@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{constants::*, ui::*, ScreenState};
+use crate::{constants::*, themes::Theme, ui::*, ScreenState};
 
 use super::{board_numbers, wheel::wheel};
 
@@ -31,46 +31,45 @@ enum Orientation {
     Vertical,
 }
 
-enum Thickness {
+#[derive(Component)]
+pub enum LineThickness {
     Thin,
     Medium,
     Thick,
 }
 
-fn board_lines(props: &Props, spawner: &mut ChildSpawnerCommands) {
+fn board_lines(_props: &Props, spawner: &mut ChildSpawnerCommands) {
+    use LineThickness::*;
     use Orientation::*;
-    use Thickness::*;
 
-    spawner.spawn(line(props, 0, Horizontal, Thick));
-    spawner.spawn(line(props, 1, Horizontal, Thin));
-    spawner.spawn(line(props, 2, Horizontal, Thin));
-    spawner.spawn(line(props, 3, Horizontal, Medium));
-    spawner.spawn(line(props, 4, Horizontal, Thin));
-    spawner.spawn(line(props, 5, Horizontal, Thin));
-    spawner.spawn(line(props, 6, Horizontal, Medium));
-    spawner.spawn(line(props, 7, Horizontal, Thin));
-    spawner.spawn(line(props, 8, Horizontal, Thin));
-    spawner.spawn(line(props, 9, Horizontal, Thick));
-    spawner.spawn(line(props, 0, Vertical, Thick));
-    spawner.spawn(line(props, 1, Vertical, Thin));
-    spawner.spawn(line(props, 2, Vertical, Thin));
-    spawner.spawn(line(props, 3, Vertical, Medium));
-    spawner.spawn(line(props, 4, Vertical, Thin));
-    spawner.spawn(line(props, 5, Vertical, Thin));
-    spawner.spawn(line(props, 6, Vertical, Medium));
-    spawner.spawn(line(props, 7, Vertical, Thin));
-    spawner.spawn(line(props, 8, Vertical, Thin));
-    spawner.spawn(line(props, 9, Vertical, Thick));
+    spawner.spawn(line(0, Horizontal, Thick));
+    spawner.spawn(line(1, Horizontal, Thin));
+    spawner.spawn(line(2, Horizontal, Thin));
+    spawner.spawn(line(3, Horizontal, Medium));
+    spawner.spawn(line(4, Horizontal, Thin));
+    spawner.spawn(line(5, Horizontal, Thin));
+    spawner.spawn(line(6, Horizontal, Medium));
+    spawner.spawn(line(7, Horizontal, Thin));
+    spawner.spawn(line(8, Horizontal, Thin));
+    spawner.spawn(line(9, Horizontal, Thick));
+    spawner.spawn(line(0, Vertical, Thick));
+    spawner.spawn(line(1, Vertical, Thin));
+    spawner.spawn(line(2, Vertical, Thin));
+    spawner.spawn(line(3, Vertical, Medium));
+    spawner.spawn(line(4, Vertical, Thin));
+    spawner.spawn(line(5, Vertical, Thin));
+    spawner.spawn(line(6, Vertical, Medium));
+    spawner.spawn(line(7, Vertical, Thin));
+    spawner.spawn(line(8, Vertical, Thin));
+    spawner.spawn(line(9, Vertical, Thick));
 }
 
-fn line(props: &Props, n: u8, orientation: Orientation, thickness: Thickness) -> impl Bundle {
-    let theme = props.resources.theme;
-
-    use Thickness::*;
-    let (thickness, color, z) = match thickness {
-        Thin => (0.03 * CELL_SIZE, theme.board_line_thin, 5.),
-        Medium => (0.03 * CELL_SIZE, theme.board_line_medium, 6.),
-        Thick => (0.06 * CELL_SIZE, theme.board_line_thick, 7.),
+fn line(n: u8, orientation: Orientation, thickness: LineThickness) -> impl Bundle {
+    use LineThickness::*;
+    let (width, z) = match thickness {
+        Thin => (0.03 * CELL_SIZE, 5.),
+        Medium => (0.03 * CELL_SIZE, 6.),
+        Thick => (0.06 * CELL_SIZE, 7.),
     };
 
     use Orientation::*;
@@ -80,18 +79,39 @@ fn line(props: &Props, n: u8, orientation: Orientation, thickness: Thickness) ->
     };
 
     let scale = match orientation {
-        Horizontal => Vec3::new(9.03 * CELL_SIZE, thickness, 1.),
-        Vertical => Vec3::new(thickness, 9.03 * CELL_SIZE, 1.),
+        Horizontal => Vec3::new(9.03 * CELL_SIZE, width, 1.),
+        Vertical => Vec3::new(width, 9.03 * CELL_SIZE, 1.),
     };
 
     (
-        Sprite::from_color(color, Vec2::new(1., 1.)),
+        thickness,
+        Sprite::default(),
         Transform {
             translation,
             scale,
             ..default()
         },
     )
+}
+
+pub fn render_board_lines(
+    mut lines_query: Query<(&mut Sprite, &LineThickness)>,
+    theme: Res<Theme>,
+) {
+    if !theme.is_changed() {
+        return;
+    }
+
+    for (mut sprite, thickness) in &mut lines_query {
+        use LineThickness::*;
+        let color = match thickness {
+            Thin => theme.board_line_thin,
+            Medium => theme.board_line_medium,
+            Thick => theme.board_line_thick,
+        };
+
+        *sprite = Sprite::from_color(color, Vec2::new(1., 1.));
+    }
 }
 
 fn mistake_borders() -> impl FnOnce(&Props, &mut ChildSpawnerCommands) {
