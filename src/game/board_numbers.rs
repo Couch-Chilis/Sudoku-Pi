@@ -162,9 +162,9 @@ pub(super) fn render_numbers(
         let new_color = if let Some(n) = game.current.get(*x, *y) {
             text.0 = n.to_string();
             text_font.font = if game.is_completed(n) {
-                fonts.light.clone()
+                fonts.light.clone().into()
             } else {
-                fonts.bold.clone()
+                fonts.bold.clone().into()
             };
             get_number_color(&theme, &game, &settings, *x, *y)
         } else {

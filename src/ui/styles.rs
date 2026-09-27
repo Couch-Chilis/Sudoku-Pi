@@ -86,7 +86,7 @@ pub fn button_text_color(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
 }
 
 pub fn button_text_font(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
-    bundle.font.font = bag.fonts.medium.clone();
+    bundle.font.font = bag.fonts.medium.clone().into();
 }
 
 pub fn button_text_size(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
@@ -94,7 +94,8 @@ pub fn button_text_size(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
         55.
     } else {
         36.7
-    };
+    }
+    .into();
 }
 
 pub fn cog_size(style: &mut FlexItemStyle) {
@@ -116,11 +117,11 @@ pub fn fixed_aspect_ratio(style: &mut FlexItemStyle) {
 }
 
 pub fn font_bold(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
-    bundle.font.font = bag.fonts.bold.clone();
+    bundle.font.font = bag.fonts.bold.clone().into();
 }
 
 pub fn font_medium(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
-    bundle.font.font = bag.fonts.medium.clone();
+    bundle.font.font = bag.fonts.medium.clone().into();
 }
 
 pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
@@ -131,7 +132,7 @@ pub fn fixed_size(width: Val, height: Val) -> impl FnOnce(&mut FlexItemStyle) {
 
 pub fn font_size(font_size: f32) -> impl FnOnce(&mut FlexTextBundle, &ResourceBag) {
     move |bundle: &mut FlexTextBundle, _bag: &ResourceBag| {
-        bundle.font.font_size = font_size;
+        bundle.font.font_size = font_size.into();
     }
 }
 
@@ -140,7 +141,8 @@ pub fn game_screen_score_font_size(bundle: &mut FlexTextBundle, bag: &ResourceBa
         71.7
     } else {
         48.3
-    };
+    }
+    .into();
 }
 
 pub fn game_screen_score_size(style: &mut FlexItemStyle) {
@@ -161,7 +163,8 @@ pub fn game_screen_timer_font_size(bundle: &mut FlexTextBundle, bag: &ResourceBa
         87.5
     } else {
         58.3
-    };
+    }
+    .into();
 }
 
 pub fn game_screen_timer_inner_size(style: &mut FlexItemStyle) {
@@ -273,16 +276,16 @@ pub fn highscore_scroll_padding(bundle: &mut FlexContainerBundle, _bag: &Resourc
 pub fn highscore_scroll_quote(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
     bundle.anchor = Anchor::CENTER;
     bundle.color = Color::BLACK.into();
-    bundle.font.font = bag.fonts.scroll.clone();
+    bundle.font.font = bag.fonts.scroll.clone().into();
 
     if bag.screen_sizing.is_tablet() {
-        bundle.font.font_size = 50.;
+        bundle.font.font_size = FontSize::from(50.);
         bundle.bounds = TextBounds {
             width: Some(1200.),
             height: None,
         };
     } else {
-        bundle.font.font_size = 30.;
+        bundle.font.font_size = FontSize::from(30.);
         bundle.bounds = TextBounds {
             width: Some(580.),
             height: None,
@@ -293,12 +296,13 @@ pub fn highscore_scroll_quote(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
 pub fn highscore_scroll_author(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
     bundle.anchor = Anchor::BOTTOM_RIGHT;
     bundle.color = Color::BLACK.into();
-    bundle.font.font = bag.fonts.scroll.clone();
+    bundle.font.font = bag.fonts.scroll.clone().into();
     bundle.font.font_size = if bag.screen_sizing.is_tablet() {
         41.7
     } else {
         25.
-    };
+    }
+    .into();
     bundle.layout.justify = Justify::Right;
 }
 
@@ -370,12 +374,13 @@ pub fn score_board_padding(bundle: &mut FlexContainerBundle, _bag: &ResourceBag)
 
 pub fn settings_label_text(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
     bundle.color = bag.theme.secondary_button_text.into();
-    bundle.font.font = bag.fonts.medium.clone();
+    bundle.font.font = bag.fonts.medium.clone().into();
     bundle.font.font_size = if bag.screen_sizing.is_tablet() {
         60.
     } else {
         41.7
-    };
+    }
+    .into();
 }
 
 pub fn text_anchor(anchor: Anchor) -> impl FnOnce(&mut FlexTextBundle, &ResourceBag) {

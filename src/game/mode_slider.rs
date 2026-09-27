@@ -157,12 +157,13 @@ fn build_label(
         let mut bundle = FlexTextBundle::from_text(text);
         bundle.anchor = anchor;
         bundle.color = resources.theme.text.into();
-        bundle.font.font = resources.fonts.medium.clone();
+        bundle.font.font = resources.fonts.medium.clone().into();
         bundle.font.font_size = if resources.screen_sizing.is_tablet() {
             53.3
         } else {
             40.
-        };
+        }
+        .into();
 
         label_container.spawn(bundle);
     });

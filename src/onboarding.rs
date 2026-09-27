@@ -252,7 +252,7 @@ pub fn how_to_play_numbers_interaction(
     if screen.is_changed() {
         for (mut instruction_text, mut text_color, mut text_font) in &mut number_instruction_query {
             instruction_text.0 = INITIAL_NUMBER_INSTRUCTION.to_owned();
-            text_font.font = fonts.medium.clone();
+            text_font.font = fonts.medium.clone().into();
             text_color.0 = theme.text;
         }
         for mut hint_visibility in &mut number_hint_query {
@@ -261,7 +261,7 @@ pub fn how_to_play_numbers_interaction(
     } else if selection.is_changed() && selection.hint.is_none() {
         for (mut instruction_text, mut text_color, mut text_font) in &mut number_instruction_query {
             instruction_text.0 = PROCEED_NUMBER_INSTRUCTION.to_owned();
-            text_font.font = fonts.bold.clone();
+            text_font.font = fonts.bold.clone().into();
             text_color.0 = theme.text_highlight;
         }
         if settings.enable_wheel_aid {
@@ -296,7 +296,7 @@ pub fn how_to_play_notes_interaction(
     if screen.is_changed() {
         for (mut instruction_text, mut text_color, mut text_font) in &mut notes_instruction_query {
             instruction_text.0 = INITIAL_NOTES_INSTRUCTION.to_owned();
-            text_font.font = fonts.medium.clone();
+            text_font.font = fonts.medium.clone().into();
             text_color.0 = theme.text;
         }
         for mut hint_visibility in &mut notes_hint_query {
@@ -305,7 +305,7 @@ pub fn how_to_play_notes_interaction(
     } else if game.is_changed() && game.has_notes() {
         for (mut instruction_text, mut text_color, mut text_font) in &mut notes_instruction_query {
             instruction_text.0 = PROCEED_NOTES_INSTRUCTION.to_owned();
-            text_font.font = fonts.bold.clone();
+            text_font.font = fonts.bold.clone().into();
             text_color.0 = theme.text_highlight;
         }
         for mut hint_visibility in &mut notes_hint_query {

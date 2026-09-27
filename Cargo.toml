@@ -23,8 +23,8 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1"
-bevy = { version = "0.18.1", default-features = false, features = [
-    "android_shared_stdcxx",
+bevy = { version = "0.19", default-features = false, features = [
+    "android-game-activity",
     "bevy_asset",
     "bevy_gilrs",
     "bevy_scene",
@@ -43,7 +43,7 @@ bevy = { version = "0.18.1", default-features = false, features = [
     "x11",
 ] }
 #bevy-steamworks = { optional = true, version = "0.8" }
-bevy_tweening = { version = "0.15", default-features = false, features = [
+bevy_tweening = { version = "0.16", default-features = false, features = [
     "bevy_sprite",
     "bevy_text",
 ] }

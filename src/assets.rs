@@ -66,10 +66,10 @@ pub struct Fonts {
 impl Fonts {
     pub fn load(mut fonts: ResMut<Assets<Font>>) -> Self {
         Self {
-            bold: fonts.add(Font::try_from_bytes(Vec::from(BOLD_FONT)).unwrap()),
-            medium: fonts.add(Font::try_from_bytes(Vec::from(MEDIUM_FONT)).unwrap()),
-            light: fonts.add(Font::try_from_bytes(Vec::from(LIGHT_FONT)).unwrap()),
-            scroll: fonts.add(Font::try_from_bytes(Vec::from(XIAOWEI_REGULAR_FONT)).unwrap()),
+            bold: fonts.add(Font::from_bytes(Vec::from(BOLD_FONT))),
+            medium: fonts.add(Font::from_bytes(Vec::from(MEDIUM_FONT))),
+            light: fonts.add(Font::from_bytes(Vec::from(LIGHT_FONT))),
+            scroll: fonts.add(Font::from_bytes(Vec::from(XIAOWEI_REGULAR_FONT))),
         }
     }
 }
