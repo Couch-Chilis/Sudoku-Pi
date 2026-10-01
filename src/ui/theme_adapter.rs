@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     menus::SettingsToggle,
-    settings::{Settings, ThemeSetting},
-    themes::{Theme, DARK_THEME, LIGHT_THEME},
+    settings::Settings,
+    themes::{HostTheme, Theme, DARK_THEME, LIGHT_THEME},
     Interaction,
 };
 
@@ -22,39 +22,43 @@ impl Plugin for ThemeAdapterPlugin {
 #[derive(Default, Resource)]
 struct ThemeTransitionState {
     frames_passed: u8,
-    theme_setting: ThemeSetting,
+    /// Whether the currently targeted theme is dark, or `None` before the first
+    /// evaluation.
+    target_dark: Option<bool>,
 }
 
-fn init_theme_setting(mut state: ResMut<ThemeTransitionState>, settings: Res<Settings>) {
+fn init_theme_setting(
+    mut state: ResMut<ThemeTransitionState>,
+    settings: Res<Settings>,
+    host_theme: Res<HostTheme>,
+) {
     let state = state.bypass_change_detection();
     state.frames_passed = NUM_TRANSITION_FRAMES; // Prevent initial transition.
-    state.theme_setting = settings.theme;
+    state.target_dark = Some(settings.theme.is_dark(host_theme.0));
 }
 
 fn on_settings_change(
     mut theme: ResMut<Theme>,
     mut state: ResMut<ThemeTransitionState>,
     settings: Res<Settings>,
+    host_theme: Res<HostTheme>,
 ) {
-    if settings.theme != state.theme_setting {
-        state.theme_setting = settings.theme;
+    // Re-evaluated every frame so a change in either the setting or the host
+    // theme triggers a transition.
+    let target_dark = settings.theme.is_dark(host_theme.0);
+    if state.target_dark != Some(target_dark) {
+        state.target_dark = Some(target_dark);
         state.frames_passed = 0;
     }
 
     if state.frames_passed < NUM_TRANSITION_FRAMES {
-        let target_theme = match state.theme_setting {
-            ThemeSetting::Light => LIGHT_THEME,
-            ThemeSetting::Dark => DARK_THEME,
-        };
+        let target_theme = if target_dark { DARK_THEME } else { LIGHT_THEME };
 
         state.frames_passed += 1;
         *theme = if state.frames_passed == NUM_TRANSITION_FRAMES {
             target_theme
         } else {
-            let from_theme = match state.theme_setting {
-                ThemeSetting::Light => DARK_THEME,
-                ThemeSetting::Dark => LIGHT_THEME,
-            };
+            let from_theme = if target_dark { LIGHT_THEME } else { DARK_THEME };
             let factor = state.frames_passed as f32 / NUM_TRANSITION_FRAMES as f32;
 
             from_theme.mix(&target_theme, factor)

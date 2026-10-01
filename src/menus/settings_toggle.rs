@@ -1,6 +1,7 @@
+use bevy::window::WindowTheme;
 use bevy::{prelude::*, sprite::Anchor};
 
-use crate::{settings::ThemeSetting, ui::*, utils::*, Images, Settings};
+use crate::{ui::*, utils::*, Images, Settings};
 
 #[derive(Clone, Component, Copy)]
 pub enum SettingsToggle {
@@ -23,10 +24,10 @@ pub struct Toggle;
 pub struct ToggleEnabled;
 
 impl SettingsToggle {
-    pub fn is_enabled(&self, settings: &Settings) -> bool {
+    pub fn is_enabled(&self, settings: &Settings, system_theme: Option<WindowTheme>) -> bool {
         match self {
             SettingsToggle::AutofillCorrectNotes => settings.autofill_correct_notes,
-            SettingsToggle::DarkMode => settings.theme == ThemeSetting::Dark,
+            SettingsToggle::DarkMode => settings.theme.is_dark(system_theme),
             SettingsToggle::EnableWheelAid => settings.enable_wheel_aid,
             SettingsToggle::SelectedCellHighlight => settings.selected_cell_highlight,
             SettingsToggle::ShowMistakes => settings.show_mistakes,
@@ -73,7 +74,7 @@ pub fn settings_toggle(
             ),
         );
 
-        let is_enabled = toggle.is_enabled(settings);
+        let is_enabled = toggle.is_enabled(settings, None);
         let toggle_bundle = (
             Toggle,
             toggle,

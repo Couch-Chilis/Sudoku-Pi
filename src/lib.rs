@@ -24,7 +24,10 @@ use bevy::app::AppExit;
 use bevy::asset::io::memory::MemoryAssetReader;
 use bevy::asset::io::{AssetSourceBuilder, AssetSourceBuilders, AssetSourceId};
 use bevy::prelude::*;
-use bevy::window::{WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized};
+use bevy::window::{
+    PrimaryWindow, WindowCloseRequested, WindowDestroyed, WindowMode, WindowResized,
+    WindowThemeChanged,
+};
 use bevy_tweening::{lens::TransformPositionLens, Tween, TweenAnim, TweeningPlugin};
 use smallvec::SmallVec;
 
@@ -36,7 +39,7 @@ use onboarding::*;
 use resource_bag::ResourceBag;
 use settings::Settings;
 use sudoku::Game;
-use themes::Theme;
+use themes::{HostTheme, Theme};
 use transition_events::{on_transition, Transition};
 use ui::*;
 
@@ -196,7 +199,9 @@ impl Plugin for AssetConfiguratorPlugin {
 
 fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
     let settings = Settings::load();
-    let theme = settings.theme.into_theme();
+    // Provisional theme; refined in `resolve_system_theme` once the window (and
+    // therefore the host theme) is available.
+    let theme = settings.theme.resolve(None);
 
     let game = if settings.onboarding_finished {
         Game::load()
@@ -213,6 +218,7 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
     app.init_resource::<Fonts>()
         .init_resource::<Images>()
         .init_resource::<ActiveSliceHandles>()
+        .init_resource::<HostTheme>()
         .insert_resource(ClearColor(theme.background))
         .insert_resource(game)
         .insert_resource(timer)
@@ -224,10 +230,12 @@ fn run(screen_sizing: ScreenSizing, zoom_factor: ZoomFactor) {
         .insert_resource(zoom_factor)
         .add_message::<Transition>()
         .add_message::<WindowDestroyed>()
-        .add_systems(Startup, setup)
+        .add_systems(PreStartup, init_host_theme)
+        .add_systems(Startup, (resolve_system_theme, setup).chain())
         .add_systems(
             Update,
             (
+                track_host_theme,
                 on_escape,
                 on_resize,
                 #[cfg(debug_assertions)]
@@ -300,6 +308,41 @@ fn on_keyboard_input(
             _ => {}
         }
     }
+}
+
+/// Reads the host (operating system) theme from the primary window once it has
+/// been created. Runs before the theme is resolved so the correct theme is
+/// picked up on startup.
+fn init_host_theme(
+    mut host_theme: ResMut<HostTheme>,
+    windows: Query<&Window, With<PrimaryWindow>>,
+) {
+    host_theme.0 = windows.single().ok().and_then(|window| window.window_theme);
+}
+
+/// Keeps [`HostTheme`] in sync with later host theme changes.
+fn track_host_theme(
+    mut host_theme: ResMut<HostTheme>,
+    mut theme_changes: MessageReader<WindowThemeChanged>,
+) {
+    for change in theme_changes.read() {
+        host_theme.0 = Some(change.theme);
+    }
+}
+
+/// Resolves the concrete theme from the settings, following the host theme
+/// when the setting is `ThemeSetting::System`. Runs at startup once the primary
+/// window (and therefore the reported host theme) exists, and before the UI is
+/// spawned so the initial colors are correct.
+fn resolve_system_theme(
+    mut theme: ResMut<Theme>,
+    mut clear_color: ResMut<ClearColor>,
+    settings: Res<Settings>,
+    host_theme: Res<HostTheme>,
+) {
+    let resolved = settings.theme.resolve(host_theme.0);
+    clear_color.0 = resolved.background;
+    *theme = resolved;
 }
 
 fn setup(

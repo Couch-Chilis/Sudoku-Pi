@@ -4,22 +4,37 @@ use crate::{
 };
 use anyhow::Context;
 use bevy::prelude::*;
+use bevy::window::WindowTheme;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
 #[derive(Clone, Copy, Default, Deserialize, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeSetting {
+    /// Follow the theme reported by the host system.
     #[default]
+    System,
     Light,
     Dark,
 }
 
 impl ThemeSetting {
-    pub fn into_theme(self) -> Theme {
+    /// Resolves to a concrete [`Theme`], following the host theme when set to
+    /// [`ThemeSetting::System`].
+    pub fn resolve(self, system_theme: Option<WindowTheme>) -> Theme {
+        if self.is_dark(system_theme) {
+            DARK_THEME
+        } else {
+            LIGHT_THEME
+        }
+    }
+
+    /// Whether this setting selects the dark theme for the given host theme.
+    pub fn is_dark(self, system_theme: Option<WindowTheme>) -> bool {
         match self {
-            ThemeSetting::Light => LIGHT_THEME,
-            ThemeSetting::Dark => DARK_THEME,
+            ThemeSetting::System => system_theme == Some(WindowTheme::Dark),
+            ThemeSetting::Light => false,
+            ThemeSetting::Dark => true,
         }
     }
 }

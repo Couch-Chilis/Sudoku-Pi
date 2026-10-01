@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{settings::ThemeSetting, ui::*, ScreenState, Settings};
+use crate::{settings::ThemeSetting, themes::HostTheme, ui::*, ScreenState, Settings};
 
 use super::settings_toggle::*;
 
@@ -50,6 +50,7 @@ pub fn settings_screen_button_actions(
 pub fn settings_toggle_actions(
     query: Query<(&Interaction, &SettingsToggle), Changed<Interaction>>,
     mut settings: ResMut<Settings>,
+    host_theme: Res<HostTheme>,
 ) {
     for (interaction, toggle) in &query {
         if *interaction == Interaction::Pressed {
@@ -58,10 +59,11 @@ pub fn settings_toggle_actions(
                     settings.autofill_correct_notes = !settings.autofill_correct_notes;
                 }
                 SettingsToggle::DarkMode => {
-                    settings.theme = match settings.theme {
-                        ThemeSetting::Light => ThemeSetting::Dark,
-                        ThemeSetting::Dark => ThemeSetting::Light,
-                    }
+                    settings.theme = if settings.theme.is_dark(host_theme.0) {
+                        ThemeSetting::Light
+                    } else {
+                        ThemeSetting::Dark
+                    };
                 }
                 SettingsToggle::EnableWheelAid => {
                     settings.enable_wheel_aid = !settings.enable_wheel_aid;
@@ -84,10 +86,11 @@ pub fn on_setting_change(
     mut commands: Commands,
     query: Query<(Entity, &SettingsToggle, Option<&ToggleEnabled>)>,
     settings: Res<Settings>,
+    host_theme: Res<HostTheme>,
 ) {
     if settings.is_changed() {
         for (entity, settings_toggle, toggle_enabled) in &query {
-            let is_enabled = settings_toggle.is_enabled(&settings);
+            let is_enabled = settings_toggle.is_enabled(&settings, host_theme.0);
             if is_enabled {
                 if toggle_enabled.is_none() {
                     commands.entity(entity).insert(ToggleEnabled);

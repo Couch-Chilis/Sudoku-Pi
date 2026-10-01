@@ -1,19 +1,24 @@
 use bevy::prelude::*;
+use bevy::window::WindowTheme;
 
 // Base colors.
 const COLOR_BAMBOO_SHOOT: Color = Color::srgb(204. / 255., 188. / 255., 42. / 255.);
 const COLOR_CREAM: Color = Color::srgb(1., 254. / 255., 248. / 255.);
-const COLOR_DEEP_BROWN: Color = Color::srgb(36. / 255., 21. / 255., 0.);
-const COLOR_LIGHTER_BROWN: Color = Color::srgb(54. / 255., 31. / 255., 0.);
+const COLOR_DEEP_BROWN: Color = Color::srgb(38. / 255., 30. / 255., 27. / 255.);
+const COLOR_LIGHTER_BROWN: Color = Color::srgb(60. / 255., 49. / 255., 44. / 255.);
 const COLOR_EGGSHELL: Color = Color::srgb(251. / 255., 249. / 255., 230. / 255.);
 const COLOR_MAIN: Color = Color::srgb(169. / 255., 154. / 255., 55. / 255.);
 const COLOR_MAIN_DARKER: Color = Color::srgb(139. / 255., 126. / 255., 45. / 255.);
 const COLOR_MAIN_DARKEST: Color = Color::srgb(92. / 255., 84. / 255., 30. / 255.);
 //const COLOR_MAIN_LIGHT: Color = Color::srgb(185. / 255., 168. / 255., 60. / 255.);
 const COLOR_MUSTARD: Color = Color::srgb(229. / 255., 216. / 255., 97. / 255.);
-const COLOR_ORANGE: Color = Color::srgb(236. / 255., 117. / 255., 5. / 255.);
 const COLOR_POP_DARK: Color = Color::srgb(213. / 255., 11. / 255., 72. / 255.);
 const COLOR_POP_FOCUS: Color = Color::srgb(245. / 255., 55. / 255., 112. / 255.);
+
+/// Tracks the host (operating system) theme so the app can follow it while the
+/// theme setting is [`crate::settings::ThemeSetting::System`].
+#[derive(Default, Resource)]
+pub struct HostTheme(pub Option<WindowTheme>);
 
 #[derive(Clone, Resource)]
 pub struct Theme {
@@ -23,6 +28,9 @@ pub struct Theme {
     // Regular text.
     pub text: Color,
     pub text_highlight: Color,
+
+    // Scroll text (highscores quote and author).
+    pub scroll_text: Color,
 
     // Button colors.
     pub button_text: Color,
@@ -100,6 +108,7 @@ impl Theme {
             background: self.background.mix(&other.background, factor),
             text: self.text.mix(&other.text, factor),
             text_highlight: self.text_highlight.mix(&other.text_highlight, factor),
+            scroll_text: self.scroll_text.mix(&other.scroll_text, factor),
             button_text: self.button_text.mix(&other.button_text, factor),
             button_text_press: self.button_text_press.mix(&other.button_text_press, factor),
             button_background: self.button_background.mix(&other.button_background, factor),
@@ -202,6 +211,7 @@ pub const LIGHT_THEME: Theme = Theme {
 
     text: COLOR_MAIN_DARKER,
     text_highlight: COLOR_POP_FOCUS,
+    scroll_text: Color::BLACK,
 
     button_text: Color::WHITE,
     button_text_press: COLOR_POP_DARK,
@@ -252,37 +262,38 @@ pub const LIGHT_THEME: Theme = Theme {
 pub const DARK_THEME: Theme = Theme {
     background: COLOR_DEEP_BROWN,
 
-    text: COLOR_MAIN_DARKER,
-    text_highlight: COLOR_ORANGE,
+    text: COLOR_MAIN,
+    text_highlight: COLOR_POP_FOCUS,
+    scroll_text: COLOR_EGGSHELL,
 
     button_text: Color::WHITE,
-    button_text_press: COLOR_POP_DARK,
+    button_text_press: Color::WHITE,
     button_background: COLOR_MAIN,
-    button_background_selected: COLOR_ORANGE,
+    button_background_selected: COLOR_POP_FOCUS,
     button_background_press: COLOR_POP_DARK,
 
     secondary_button_text: COLOR_MAIN,
-    secondary_button_text_selected: COLOR_ORANGE,
-    secondary_button_text_press: COLOR_POP_DARK,
+    secondary_button_text_selected: COLOR_POP_FOCUS,
+    secondary_button_text_press: Color::WHITE,
     secondary_button_background: COLOR_LIGHTER_BROWN,
-    secondary_button_background_press: COLOR_ORANGE,
+    secondary_button_background_press: COLOR_POP_DARK,
     secondary_button_border: COLOR_MAIN,
-    secondary_button_border_selected: COLOR_ORANGE,
+    secondary_button_border_selected: COLOR_POP_FOCUS,
     secondary_button_border_press: COLOR_POP_DARK,
 
     ternary_button_text: COLOR_MAIN,
-    ternary_button_text_selected: COLOR_ORANGE,
-    ternary_button_text_press: COLOR_POP_DARK,
+    ternary_button_text_selected: COLOR_POP_FOCUS,
+    ternary_button_text_press: Color::WHITE,
     ternary_button_background: COLOR_DEEP_BROWN,
-    ternary_button_background_press: COLOR_ORANGE,
+    ternary_button_background_press: COLOR_POP_DARK,
     ternary_button_border: COLOR_MAIN,
-    ternary_button_border_selected: COLOR_ORANGE,
+    ternary_button_border_selected: COLOR_POP_FOCUS,
     ternary_button_border_press: COLOR_POP_DARK,
 
     timer_border: COLOR_MAIN_DARKEST,
     timer_text: COLOR_MAIN,
 
-    score_text: COLOR_POP_DARK,
+    score_text: COLOR_POP_FOCUS,
 
     wheel_top_text: Color::WHITE,
 
@@ -292,8 +303,8 @@ pub const DARK_THEME: Theme = Theme {
 
     board_number: COLOR_EGGSHELL,
     board_prefill_number: Color::linear_rgb(0., 0., 1.),
-    board_line_thick: COLOR_MAIN_DARKEST,
-    board_line_medium: Color::srgb(185. / 255., 178. / 255., 129. / 255.),
+    board_line_thick: COLOR_MAIN,
+    board_line_medium: COLOR_MAIN_DARKER,
     board_line_thin: COLOR_MAIN_DARKEST,
 
     cell_selection: COLOR_BAMBOO_SHOOT,

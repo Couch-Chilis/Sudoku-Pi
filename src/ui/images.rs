@@ -18,10 +18,11 @@ pub fn launch_screen(mut sprite: Mut<Sprite>, bag: &ResourceBag) -> (f32, f32) {
 }
 
 pub fn wall_image(mut sprite: Mut<Sprite>, bag: &ResourceBag) -> (f32, f32) {
-    let image = if bag.screen_sizing.is_tablet() {
-        &bag.images.wall_ipad
-    } else {
-        &bag.images.wall
+    let image = match (bag.screen_sizing.is_tablet(), bag.theme.is_dark_mode()) {
+        (false, false) => &bag.images.wall,
+        (false, true) => &bag.images.wall_dark,
+        (true, false) => &bag.images.wall_ipad,
+        (true, true) => &bag.images.wall_ipad_dark,
     };
 
     if sprite.image != image.handle {

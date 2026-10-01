@@ -49,7 +49,9 @@ const TOGGLE_DESELECT_5: &[u8] = include_bytes!("../assets/toggle_deselect_5.png
 const TOGGLE_DESELECTED: &[u8] = include_bytes!("../assets/toggle_deselected.png");
 const TOP_LABEL: &[u8] = include_bytes!("../assets/top_label.png");
 const WALL: &[u8] = include_bytes!("../assets/wall.png");
+const WALL_DARK: &[u8] = include_bytes!("../assets/wall_dark.png");
 const WALL_IPAD: &[u8] = include_bytes!("../assets/wall_ipad.png");
+const WALL_IPAD_DARK: &[u8] = include_bytes!("../assets/wall_ipad_dark.png");
 const WHEEL: &[u8] = include_bytes!("../assets/wheel.png");
 
 const FORTUNE: &[u8] = include_bytes!("../assets/fortune.txt");
@@ -165,7 +167,9 @@ pub struct Images {
     pub toggle_deselected: ImageWithDimensions,
     pub top_label: ImageWithDimensions,
     pub wall: ImageWithDimensions,
+    pub wall_dark: ImageWithDimensions,
     pub wall_ipad: ImageWithDimensions,
+    pub wall_ipad_dark: ImageWithDimensions,
     pub wheel: ImageWithDimensions,
 }
 
@@ -216,7 +220,9 @@ impl Images {
             toggle_deselected: ImageWithDimensions::load(&mut images, TOGGLE_DESELECTED),
             top_label: ImageWithDimensions::load(&mut images, TOP_LABEL),
             wall: ImageWithDimensions::load(&mut images, WALL),
+            wall_dark: ImageWithDimensions::load(&mut images, WALL_DARK),
             wall_ipad: ImageWithDimensions::load(&mut images, WALL_IPAD),
+            wall_ipad_dark: ImageWithDimensions::load(&mut images, WALL_IPAD_DARK),
             wheel: ImageWithDimensions::load(&mut images, WHEEL),
         }
     }

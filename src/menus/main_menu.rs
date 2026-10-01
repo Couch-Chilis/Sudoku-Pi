@@ -73,7 +73,7 @@ pub fn main_menu_buttons(props: &Props, spawner: &mut ChildSpawnerCommands) {
             ),
             (),
             text(
-                "© 2025 Couch Chilis",
+                "© 2026 Couch Chilis",
                 (
                     font_medium,
                     font_size(25.),

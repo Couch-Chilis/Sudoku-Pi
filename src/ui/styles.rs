@@ -275,7 +275,7 @@ pub fn highscore_scroll_padding(bundle: &mut FlexContainerBundle, _bag: &Resourc
 
 pub fn highscore_scroll_quote(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
     bundle.anchor = Anchor::CENTER;
-    bundle.color = Color::BLACK.into();
+    bundle.color = bag.theme.scroll_text.into();
     bundle.font.font = bag.fonts.scroll.clone().into();
 
     if bag.screen_sizing.is_tablet() {
@@ -295,7 +295,7 @@ pub fn highscore_scroll_quote(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
 
 pub fn highscore_scroll_author(bundle: &mut FlexTextBundle, bag: &ResourceBag) {
     bundle.anchor = Anchor::BOTTOM_RIGHT;
-    bundle.color = Color::BLACK.into();
+    bundle.color = bag.theme.scroll_text.into();
     bundle.font.font = bag.fonts.scroll.clone().into();
     bundle.font.font_size = if bag.screen_sizing.is_tablet() {
         41.7
