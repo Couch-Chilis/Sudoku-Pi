@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'nl.couch_chilis.sudoku_pi'
-    compileSdk 34
+    namespace = 'nl.couch_chilis.sudoku_pi'
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "nl.couch_chilis.sudoku_pi"
-        minSdk 31
-        targetSdk 33
-        versionCode 1
-        versionName "1.0"
+        applicationId = "nl.couch_chilis.sudoku_pi"
+        minSdk = 31
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.1.0"
         // need this otherwise it won't insert libc++_shared.so
         externalNativeBuild {
             cmake {
@@ -22,41 +22,55 @@ android {
         ndk {
             abiFilters 'arm64-v8a'
         }
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     externalNativeBuild {
         cmake {
-            path "CMakeLists.txt"
-        }
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            path = "CMakeLists.txt"
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     buildFeatures {
-        prefab true
+        prefab = true
     }
-    // The final part to insert libc++_shared.so only
     packagingOptions {
         exclude 'lib/*/libdummy.so'
     }
     sourceSets {
         main {
-            assets.srcDirs += files('../assets')
+            assets.srcDirs += ['../assets']
+            res.srcDirs += ['../assets/android-res']
+        }
+    }
 
-            res.srcDirs += files('../assets/android-res')
+    signingConfigs {
+        release {
+            def keystorePath = System.getenv("KEYSTORE_PATH") ?: "/home/arendjr/android-keystore.jks"
+            def keystoreFile = file(keystorePath)
+            if (keystoreFile.exists() && System.getenv("KEYSTORE_PASSWORD") != null) {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (signingConfigs.release.storeFile != null && signingConfigs.release.storePassword != null) {
+                signingConfig = signingConfigs.release
+            }
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 dependencies {
-
     implementation libs.appcompat
     implementation libs.material
     implementation "androidx.games:games-activity:4.0.0"
