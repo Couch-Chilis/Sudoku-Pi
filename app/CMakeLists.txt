@@ -2,4 +2,5 @@
 cmake_minimum_required(VERSION 3.4.1)
 project(cppshared_dummy)
 set (SRC_DIR ./src/main/cpp)
+set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,max-page-size=16384")
 add_library (dummy SHARED ${SRC_DIR}/dummy.cpp)
