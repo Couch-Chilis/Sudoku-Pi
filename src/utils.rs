@@ -1,4 +1,7 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 use bevy::prelude::*;
 
@@ -27,14 +30,18 @@ impl TransformExt for Transform {
 }
 
 pub fn ensure_sudoku_dir() -> PathBuf {
-    #[allow(deprecated)]
-    let parent_dir = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
-
-    let sudoku_dir = parent_dir.join(if cfg!(target_os = "ios") {
-        "Library/Application support"
+    let sudoku_dir = if cfg!(target_os = "android") {
+        bevy::android::ANDROID_APP
+            .get()
+            .and_then(|app| app.internal_data_path())
+            .unwrap_or_else(|| PathBuf::from("/data/local/tmp"))
+    } else if cfg!(target_os = "ios") {
+        let home = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
+        home.join("Library/Application support")
     } else {
-        ".sudoku"
-    });
+        let home = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
+        home.join(".sudoku")
+    };
     if sudoku_dir.exists() {
         return sudoku_dir;
     }
@@ -42,6 +49,10 @@ pub fn ensure_sudoku_dir() -> PathBuf {
     match fs::create_dir_all(&sudoku_dir) {
         Ok(()) => sudoku_dir,
         Err(err) => {
+            let parent_dir = sudoku_dir
+                .parent()
+                .map(Path::to_path_buf)
+                .unwrap_or(sudoku_dir);
             warn!("Falling back to parent dir ({parent_dir:?}): {err:?}");
             parent_dir
         }

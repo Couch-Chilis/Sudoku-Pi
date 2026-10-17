@@ -26,8 +26,8 @@ If you want to support us, please buy the game in the
 
 Please feel free to follow us or reach out to us!
 
-* Mastodon: https://mastodon.gamedev.place/@couchchilis
-* Discord: https://discord.gg/X3ZJvrNZw5
+- Mastodon: https://mastodon.gamedev.place/@couchchilis
+- Discord: https://discord.gg/X3ZJvrNZw5
 
 # Contributing
 
@@ -51,7 +51,7 @@ We offer [paid bounties](https://github.com/Couch-Chilis/Sudoku-Pi/issues?q=is%3
 ## Android
 
 0. Make sure you have the Android SDK and NDK installed, as well as `cargo-ndk`.
-1. Use the `build_android_arm.sh` script to build the library.
+1. Use the `build_android.sh` script to build the library.
 2. Open this folder as a project in Android Studio. If the script above
    completed, it should compile, link, and run successfully.
 

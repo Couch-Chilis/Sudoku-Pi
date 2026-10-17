@@ -4,4 +4,4 @@
 
 ./build_android.sh
 
-KEYSTORE_PATH="$HOME/Nextcloud/android-keystore.jks" KEY_ALIAS=release-key KEY_PASSWORD="$KEYSTORE_PASSWORD" ./gradlew :app:bundleRelease
+KEYSTORE_PATH="$HOME/Nextcloud/android-keystore.jks" KEY_ALIAS=release-key KEY_PASSWORD="$KEYSTORE_PASSWORD" KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD" ./gradlew :app:bundleRelease
