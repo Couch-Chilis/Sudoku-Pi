@@ -1,31 +1,39 @@
 [target.aarch64-linux-android]
-linker = "/home/arendjr/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+linker = "/home/arendjr/Android/Sdk/ndk/30.0.16248370/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
 rustflags = [
     "-Clink-arg=-landroid",
     "-Clink-arg=-llog",
     "-Clink-arg=-lOpenSLES",
+    "-Clink-arg=-Wl,-z,max-page-size=16384",
+    "-Clink-arg=-Wl,-z,common-page-size=16384",
 ]
 
 [target.armv7-linux-androideabi]
-linker = "/home/arendjr/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang"
+linker = "/home/arendjr/Android/Sdk/ndk/30.0.16248370/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi24-clang"
 rustflags = [
     "-Clink-arg=-landroid",
     "-Clink-arg=-llog",
     "-Clink-arg=-lOpenSLES",
+    "-Clink-arg=-Wl,-z,max-page-size=16384",
+    "-Clink-arg=-Wl,-z,common-page-size=16384",
 ]
 
 [target.i686-linux-android]
-linker = "/home/arendjr/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android24-clang"
+linker = "/home/arendjr/Android/Sdk/ndk/30.0.16248370/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android24-clang"
 rustflags = [
     "-Clink-arg=-landroid",
     "-Clink-arg=-llog",
     "-Clink-arg=-lOpenSLES",
+    "-Clink-arg=-Wl,-z,max-page-size=16384",
+    "-Clink-arg=-Wl,-z,common-page-size=16384",
 ]
 
 [target.x86_64-linux-android]
-linker = "/home/arendjr/Android/Sdk/ndk/27.1.12297006/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang"
+linker = "/home/arendjr/Android/Sdk/ndk/30.0.16248370/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android24-clang"
 rustflags = [
     "-Clink-arg=-landroid",
     "-Clink-arg=-llog",
     "-Clink-arg=-lOpenSLES",
+    "-Clink-arg=-Wl,-z,max-page-size=16384",
+    "-Clink-arg=-Wl,-z,common-page-size=16384",
 ]

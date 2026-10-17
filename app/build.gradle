@@ -5,12 +5,13 @@ plugins {
 android {
     namespace = 'nl.couch_chilis.sudoku_pi'
     compileSdk = 36
+    ndkVersion = "30.0.16248370"
 
     defaultConfig {
         applicationId = "nl.couch_chilis.sudoku_pi"
         minSdk = 31
         targetSdk = 36
-        versionCode = 3
+        versionCode = 5
         versionName = "1.1.1"
         // need this otherwise it won't insert libc++_shared.so
         externalNativeBuild {
