@@ -182,6 +182,12 @@ pub fn main() {
     run(ScreenSizing::default(), ZoomFactor::default())
 }
 
+#[cfg(target_os = "ios")]
+#[no_mangle]
+pub extern "C" fn sudoku_pi_start() {
+    main();
+}
+
 /// Plugin that disables all the asset loaders, since we load all assets manually.
 struct AssetConfiguratorPlugin {}
 

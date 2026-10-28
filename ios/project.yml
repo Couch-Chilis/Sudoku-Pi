@@ -1,0 +1,80 @@
+# XcodeGen specification for the iOS version.
+#
+# Run `xcodegen generate` from this directory to create `Sudoku Pi.xcodeproj`.
+# The generated project is committed, because Xcode Cloud reads the schemes from
+# the repository.
+#
+# The application itself is the Rust `sudoku-pi` static library; the targets
+# here only provide the platform entry point (`main.m`), the bundle metadata,
+# the icon and the frameworks that the Rust code needs to link against. The library
+# is built by `scripts/build-rust.sh`, which runs as a pre-build script phase.
+
+name: Sudoku Pi
+
+options:
+  bundleIdPrefix: nl.couch-chilis
+  deploymentTarget:
+    iOS: "15.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # The build script runs `cargo`, which writes outside the derived data
+    # directory, so Xcode's user script sandbox has to be disabled.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    # Signing is managed automatically; the team comes from the Apple ID or from
+    # Xcode Cloud. Set it here if you want local builds to sign without picking
+    # the team in Xcode after every regeneration:
+    DEVELOPMENT_TEAM: 24ZH6FMFEQ
+    CODE_SIGN_STYLE: Automatic
+
+# Shared schemes. Xcode Cloud builds these, and XcodeGen only writes them out
+# when they are declared here.
+schemes:
+  FlowWriter-iOS:
+    build:
+      targets:
+        FlowWriter-iOS: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+
+targets:
+  FlowWriter-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: iOS
+        excludes:
+          - Info.plist
+    settings:
+      base:
+        PRODUCT_NAME: Sudoku Pi
+        PRODUCT_BUNDLE_IDENTIFIER: nl.couch-chilis.Sudoku-Pi
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # `cargo` copies the library here before the target is linked.
+        LIBRARY_SEARCH_PATHS:
+          - $(SRCROOT)/build
+        OTHER_LDFLAGS:
+          - -lsudoku_pi
+          - -lz
+    preBuildScripts:
+      - name: Build the Rust library
+        script: '"$SRCROOT/../build-ios.sh"'
+        basedOnDependencyAnalysis: false
+    dependencies:
+      - sdk: UIKit.framework
+      - sdk: Foundation.framework
+      - sdk: CoreFoundation.framework
+      - sdk: CoreGraphics.framework
+      - sdk: CoreText.framework
+      - sdk: CoreVideo.framework
+      - sdk: QuartzCore.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: IOSurface.framework
+      - sdk: Security.framework

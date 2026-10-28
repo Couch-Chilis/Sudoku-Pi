@@ -58,12 +58,17 @@ We offer [paid bounties](https://github.com/Couch-Chilis/Sudoku-Pi/issues?q=is%3
 ## iOS
 
 0. Make sure you have Xcode and a recent Rust toolchain installed.
-   - You'll also need the iOS toolchain: `rustup target install aarch64-apple-ios`
-1. Use either the `build_ios.sh` script or the `build_ios_sim.sh` script,
-   depending on whether you want to create a build for the Simulator or a
-   regular device.
-2. Open this folder as a project in Xcode. If the script above completed, it
-   should compile, link, and run successfully.
+1. Open `ios/Sudoku Pi.xcodeproj` in Xcode. It should compile, link, and run
+   successfully.
+
+The Xcode project is generated from `apple/project.yml` with
+[XcodeGen](https://github.com/yonaskolb/XcodeGen):
+
+```sh
+brew install xcodegen
+cd apple
+xcodegen generate
+```
 
 # License
 

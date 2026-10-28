@@ -8,3 +8,4 @@ target
 **/*.a
 **/.cxx
 **/jniLibs
+**/xcuserdata/
