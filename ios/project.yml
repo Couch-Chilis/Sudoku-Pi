@@ -45,10 +45,9 @@ targets:
     type: application
     platform: iOS
     sources:
-      - path: .
-        excludes:
-          - Info.plist
-          - project.yml
+      - path: main.m
+      - path: "Launch Screen.storyboard"
+      - path: Resources.xcassets
     settings:
       base:
         PRODUCT_NAME: Sudoku Pi
