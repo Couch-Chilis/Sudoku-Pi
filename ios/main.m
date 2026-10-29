@@ -1,14 +1,25 @@
-#import <UIKit/UIKit.h>
+@import UIKit;
 
-// Entry point implemented in Rust and exported from libsudoku_pi.a (src/lib.rs).
-// This must NOT call UIApplicationMain itself: winit's iOS event loop calls
-// UIApplicationMain when the Rust side runs, and it asserts that UIApplication
-// has not already been created.
-extern void sudoku_pi_start(void);
+void run_with_fixed_sizes(double, double, double, double, SInt32);
 
 int main(int argc, char *argv[]) {
     @autoreleasepool {
-        sudoku_pi_start();
+        //CGSize statusBarSize = [[UIApplication sharedApplication] statusBarFrame].size;
+        SInt32 topPadding = 44;
+
+        UIScreen *screen = [UIScreen mainScreen];
+        CGFloat width = screen.bounds.size.width;
+        CGFloat height = screen.bounds.size.height;
+        CGFloat scale = screen.scale;
+        CGFloat nativeScale = screen.nativeScale;
+
+        run_with_fixed_sizes(
+            width,
+            height,
+            scale,
+            nativeScale,
+            topPadding
+        );
     }
     return 0;
 }

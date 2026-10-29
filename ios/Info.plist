@@ -25,12 +25,18 @@
 	<false />
 	<key>LSRequiresIPhoneOS</key>
 	<true />
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.puzzle-games</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true />
-	<key>UILaunchScreen</key>
-	<dict />
+	<key>UILaunchStoryboardName</key>
+	<string>Launch Screen.storyboard</string>
 	<key>UIRequiresFullScreen</key>
 	<true />
+	<key>UIStatusBarHidden</key>
+	<false />
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleDefault</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>arm64</string>
