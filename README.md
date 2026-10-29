@@ -3,6 +3,7 @@
 > Your new way to play Sudoku
 
 <a href="https://apps.apple.com/us/app/sudoku-pi/id6467504425?itsct=apps_box_badge&amp;itscg=30200" style="display: inline-block; overflow: hidden; border-radius: 13px; width: 250px; height: 83px;"><img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&amp;releaseDate=1696377600" alt="Download on the App Store" style="border-radius: 13px; width: 250px; height: 83px;"></a>
+<a href="https://play.google.com/store/apps/details?id=nl.couch_chilis.sudoku_pi" style="display: inline-block; overflow: hidden; width: 240px; height: 71px;"><img alt="Get it on Google Play" src="https://appure.io/badges/playstore/png/en.png" height="60" /></a>
 
 Sudoku Pi is a finger-friendly Sudoku game that takes a refreshing new approach
 to how the game is played. Our aim is to minimize finger movements and to
@@ -20,7 +21,8 @@ that grants you the right to make copies and make modifications, so long as your
 copies are made available under the same terms.
 
 If you want to support us, please buy the game in the
-[App Store](https://apps.apple.com/us/app/sudoku-pi/id6467504425).
+[App Store](https://apps.apple.com/us/app/sudoku-pi/id6467504425) or on
+[Google Play](https://play.google.com/store/apps/details?id=nl.couch_chilis.sudoku_pi).
 
 # Community
 
