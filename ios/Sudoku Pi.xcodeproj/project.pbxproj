@@ -7,20 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0940BAE32E67DC8C0932D462 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = "TEMP_92825680-7DCA-4E0B-96B8-5B25DA05E097" /* main.m */; };
 		3A0654AAB8C094A76117B921 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10032694047F9BD7666BB01 /* CoreGraphics.framework */; };
 		486483EFCAB586F4FB8B89FA /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 058AB2451D5ACC7CBEE0DAA7 /* CoreText.framework */; };
-		4B598D69DFA5E02D74EE6F16 /* Sudoku Pi.xcodeproj in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */; };
 		54A25BEFDE811F6008F283A0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D428B6C850DD0C4F95850186 /* UIKit.framework */; };
-		58F5E2D7E54A3A43E56CA048 /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_48223F41-FB96-46DB-A15F-7FEBA663BA50" /* Resources.xcassets */; };
 		5A1BF46F8BA1476CCF224734 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE537E2D48BCA458765092C2 /* CoreFoundation.framework */; };
 		5B01A0D178C0544C2A8F80A1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99297A8DFFBCF1B0ADE1CCD8 /* MetalKit.framework */; };
 		751BCE6AA426CD016DFB6AA8 /* ci_post_clone.sh in Resources */ = {isa = PBXBuildFile; fileRef = 2E3B6B7C37BAB97007AC849B /* ci_post_clone.sh */; };
 		77FAFC2D0A710984B6E15062 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5BFE08C8F78810212F06F20 /* CoreVideo.framework */; };
+		790477CE7AA6023620971851 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_1D297B51-7D97-4034-B5A4-6F7D2148C867" /* Launch Screen.storyboard */; };
+		7BC63F6B367942854DC44DB0 /* libsudoku_pi.a in Resources */ = {isa = PBXBuildFile; fileRef = C00AF9308387C4FF71110653 /* libsudoku_pi.a */; };
 		7F20392291C9A2A4FF922BCE /* build-rust.sh in Resources */ = {isa = PBXBuildFile; fileRef = D97B9811072015ED4D48AD8A /* build-rust.sh */; };
-		81A5E86183E047F8E5804496 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_6423442A-A36A-4521-B1CF-92D68473520B" /* Launch Screen.storyboard */; };
 		88EC5EA3C58AB08617822D1C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3D71190D15D16C4AE834628 /* QuartzCore.framework */; };
+		91E41F2D87016D7617BCA53F /* Sudoku Pi.xcodeproj in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_A0E5E929-4478-42D0-8AB6-3DA755F418D3" /* Sudoku Pi.xcodeproj */; };
 		92C052E64E73364CD1AB3769 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6631B96DDFF3C3E4985AA3F9 /* Foundation.framework */; };
-		ABD978123E2E826CBC7BE1DA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = "TEMP_35C27A14-1AD3-4B01-9461-7D895F6D9018" /* main.m */; };
+		AE58301DA4AF9D90713E9ADA /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_535A249A-0296-4922-A32A-1C20704E6781" /* Resources.xcassets */; };
 		BEE59A40E6F15821F6C5F8FF /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE74AF0050337EACABC4BEA5 /* Security.framework */; };
 		CE7D377802976F38081F1E16 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF727853AE45F27F7ECBB13 /* Metal.framework */; };
 		DCD6CEB6D3F50D66EB3BD483 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A87C32075C6551D0E627D5B2 /* IOSurface.framework */; };
@@ -35,16 +36,17 @@
 		99297A8DFFBCF1B0ADE1CCD8 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		A87C32075C6551D0E627D5B2 /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
 		B10032694047F9BD7666BB01 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		C00AF9308387C4FF71110653 /* libsudoku_pi.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libsudoku_pi.a; sourceTree = "<group>"; };
 		C3D71190D15D16C4AE834628 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		CE537E2D48BCA458765092C2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		D428B6C850DD0C4F95850186 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		D5BFE08C8F78810212F06F20 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		D97B9811072015ED4D48AD8A /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
 		DE74AF0050337EACABC4BEA5 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		"TEMP_35C27A14-1AD3-4B01-9461-7D895F6D9018" /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		"TEMP_48223F41-FB96-46DB-A15F-7FEBA663BA50" /* Resources.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources.xcassets; sourceTree = "<group>"; };
-		"TEMP_6423442A-A36A-4521-B1CF-92D68473520B" /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
-		"TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Sudoku Pi.xcodeproj"; sourceTree = "<group>"; };
+		"TEMP_1D297B51-7D97-4034-B5A4-6F7D2148C867" /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
+		"TEMP_535A249A-0296-4922-A32A-1C20704E6781" /* Resources.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources.xcassets; sourceTree = "<group>"; };
+		"TEMP_92825680-7DCA-4E0B-96B8-5B25DA05E097" /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		"TEMP_A0E5E929-4478-42D0-8AB6-3DA755F418D3" /* Sudoku Pi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Sudoku Pi.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,30 +87,39 @@
 			path = scripts;
 			sourceTree = "<group>";
 		};
-		95E4258430933F1000CF2323 /* Recovered References */ = {
+		95B7688130937327007AD7FB /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				"TEMP_35C27A14-1AD3-4B01-9461-7D895F6D9018" /* main.m */,
-				"TEMP_6423442A-A36A-4521-B1CF-92D68473520B" /* Launch Screen.storyboard */,
-				"TEMP_48223F41-FB96-46DB-A15F-7FEBA663BA50" /* Resources.xcassets */,
-				"TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */,
+				"TEMP_92825680-7DCA-4E0B-96B8-5B25DA05E097" /* main.m */,
+				"TEMP_1D297B51-7D97-4034-B5A4-6F7D2148C867" /* Launch Screen.storyboard */,
+				"TEMP_535A249A-0296-4922-A32A-1C20704E6781" /* Resources.xcassets */,
+				"TEMP_A0E5E929-4478-42D0-8AB6-3DA755F418D3" /* Sudoku Pi.xcodeproj */,
 			);
 			name = "Recovered References";
 			sourceTree = "<group>";
 		};
-		95E4258530933F1000CF2323 /* Products */ = {
+		95B7688230937328007AD7FB /* Products */ = {
 			isa = PBXGroup;
 			name = Products;
+			sourceTree = "<group>";
+		};
+		A8D419CF08F3300BFDB30368 /* build */ = {
+			isa = PBXGroup;
+			children = (
+				C00AF9308387C4FF71110653 /* libsudoku_pi.a */,
+			);
+			path = build;
 			sourceTree = "<group>";
 		};
 		D537B7BD981AB57451627006 = {
 			isa = PBXGroup;
 			children = (
+				A8D419CF08F3300BFDB30368 /* build */,
 				EC9DACE393D31371A0480DFC /* ci_scripts */,
 				8F549F93BB1C12197744A325 /* scripts */,
 				F10745262E5266A424512884 /* Frameworks */,
 				326BF9273C5E4070FD5B341E /* Products */,
-				95E4258430933F1000CF2323 /* Recovered References */,
+				95B7688130937327007AD7FB /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -190,8 +201,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 95E4258530933F1000CF2323 /* Products */;
-					ProjectRef = "TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */;
+					ProductGroup = 95B7688230937328007AD7FB /* Products */;
+					ProjectRef = "TEMP_A0E5E929-4478-42D0-8AB6-3DA755F418D3" /* Sudoku Pi.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -206,11 +217,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				81A5E86183E047F8E5804496 /* Launch Screen.storyboard in Resources */,
-				58F5E2D7E54A3A43E56CA048 /* Resources.xcassets in Resources */,
-				4B598D69DFA5E02D74EE6F16 /* Sudoku Pi.xcodeproj in Resources */,
+				790477CE7AA6023620971851 /* Launch Screen.storyboard in Resources */,
+				AE58301DA4AF9D90713E9ADA /* Resources.xcassets in Resources */,
+				91E41F2D87016D7617BCA53F /* Sudoku Pi.xcodeproj in Resources */,
 				7F20392291C9A2A4FF922BCE /* build-rust.sh in Resources */,
 				751BCE6AA426CD016DFB6AA8 /* ci_post_clone.sh in Resources */,
+				7BC63F6B367942854DC44DB0 /* libsudoku_pi.a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,7 +255,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				ABD978123E2E826CBC7BE1DA /* main.m in Sources */,
+				0940BAE32E67DC8C0932D462 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
