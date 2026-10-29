@@ -30,22 +30,7 @@ impl TransformExt for Transform {
 }
 
 pub fn ensure_sudoku_dir() -> PathBuf {
-    let sudoku_dir = if cfg!(target_os = "android") {
-        bevy::android::ANDROID_APP
-            .get()
-            .and_then(|app| app.internal_data_path())
-            .unwrap_or_else(|| PathBuf::from("/data/local/tmp"))
-    } else if cfg!(target_os = "ios") {
-        let home = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
-        home.join("Library/Application support")
-    } else {
-        let home = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
-        home.join(".sudoku")
-    };
-    if sudoku_dir.exists() {
-        return sudoku_dir;
-    }
-
+    let sudoku_dir = sudoku_dir();
     match fs::create_dir_all(&sudoku_dir) {
         Ok(()) => sudoku_dir,
         Err(err) => {
@@ -57,6 +42,24 @@ pub fn ensure_sudoku_dir() -> PathBuf {
             parent_dir
         }
     }
+}
+
+#[cfg(not(target_os = "android"))]
+fn sudoku_dir() -> PathBuf {
+    let home = std::env::home_dir().unwrap_or(PathBuf::from("/tmp"));
+    if cfg!(target_os = "ios") {
+        home.join("Library/Application support")
+    } else {
+        home.join(".sudoku")
+    }
+}
+
+#[cfg(target_os = "android")]
+fn sudoku_dir() -> PathBuf {
+    bevy::android::ANDROID_APP
+        .get()
+        .and_then(|app| app.internal_data_path())
+        .unwrap_or_else(|| PathBuf::from("/data/local/tmp"));
 }
 
 pub fn format_time(time_secs: f32) -> String {

@@ -3,70 +3,137 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		953030F12AA907F30022579D /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 953030F02AA907F30022579D /* Launch Screen.storyboard */; };
-		95317E5A2A4CD0F800F6DEB0 /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 95317E592A4CD0F800F6DEB0 /* Resources.xcassets */; };
+		3A0654AAB8C094A76117B921 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B10032694047F9BD7666BB01 /* CoreGraphics.framework */; };
+		486483EFCAB586F4FB8B89FA /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 058AB2451D5ACC7CBEE0DAA7 /* CoreText.framework */; };
+		4B598D69DFA5E02D74EE6F16 /* Sudoku Pi.xcodeproj in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */; };
+		54A25BEFDE811F6008F283A0 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D428B6C850DD0C4F95850186 /* UIKit.framework */; };
+		58F5E2D7E54A3A43E56CA048 /* Resources.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_48223F41-FB96-46DB-A15F-7FEBA663BA50" /* Resources.xcassets */; };
+		5A1BF46F8BA1476CCF224734 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CE537E2D48BCA458765092C2 /* CoreFoundation.framework */; };
+		5B01A0D178C0544C2A8F80A1 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 99297A8DFFBCF1B0ADE1CCD8 /* MetalKit.framework */; };
+		751BCE6AA426CD016DFB6AA8 /* ci_post_clone.sh in Resources */ = {isa = PBXBuildFile; fileRef = 2E3B6B7C37BAB97007AC849B /* ci_post_clone.sh */; };
+		77FAFC2D0A710984B6E15062 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D5BFE08C8F78810212F06F20 /* CoreVideo.framework */; };
+		7F20392291C9A2A4FF922BCE /* build-rust.sh in Resources */ = {isa = PBXBuildFile; fileRef = D97B9811072015ED4D48AD8A /* build-rust.sh */; };
+		81A5E86183E047F8E5804496 /* Launch Screen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = "TEMP_6423442A-A36A-4521-B1CF-92D68473520B" /* Launch Screen.storyboard */; };
+		88EC5EA3C58AB08617822D1C /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3D71190D15D16C4AE834628 /* QuartzCore.framework */; };
+		92C052E64E73364CD1AB3769 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6631B96DDFF3C3E4985AA3F9 /* Foundation.framework */; };
+		ABD978123E2E826CBC7BE1DA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = "TEMP_35C27A14-1AD3-4B01-9461-7D895F6D9018" /* main.m */; };
+		BEE59A40E6F15821F6C5F8FF /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE74AF0050337EACABC4BEA5 /* Security.framework */; };
+		CE7D377802976F38081F1E16 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FF727853AE45F27F7ECBB13 /* Metal.framework */; };
+		DCD6CEB6D3F50D66EB3BD483 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A87C32075C6551D0E627D5B2 /* IOSurface.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		953030F02AA907F30022579D /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
-		95317E592A4CD0F800F6DEB0 /* Resources.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources.xcassets; sourceTree = "<group>"; };
-		95F989502A421E850028C43B /* Sudoku Pi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Sudoku Pi.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		95F989762A4225710028C43B /* Sudoku Pi */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Sudoku Pi"; sourceTree = "<group>"; };
-		95F989812A422B710028C43B /* Frameworks */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Frameworks; path = "Sudoku Pi/Frameworks"; sourceTree = "<group>"; };
-		D23A6C112F1692AB005E2D7B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		D23A6C132F1692D9005E2D7B /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		D23A6C152F169313005E2D7B /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		058AB2451D5ACC7CBEE0DAA7 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
+		1FF727853AE45F27F7ECBB13 /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		2E3B6B7C37BAB97007AC849B /* ci_post_clone.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_post_clone.sh; sourceTree = "<group>"; };
+		6631B96DDFF3C3E4985AA3F9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		6AD5964B72CEC04DC7C7D801 /* SudokuPi-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; name = "SudokuPi-iOS.app"; path = "Sudoku Pi.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		99297A8DFFBCF1B0ADE1CCD8 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		A87C32075C6551D0E627D5B2 /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		B10032694047F9BD7666BB01 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		C3D71190D15D16C4AE834628 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		CE537E2D48BCA458765092C2 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		D428B6C850DD0C4F95850186 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		D5BFE08C8F78810212F06F20 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
+		D97B9811072015ED4D48AD8A /* build-rust.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "build-rust.sh"; sourceTree = "<group>"; };
+		DE74AF0050337EACABC4BEA5 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		"TEMP_35C27A14-1AD3-4B01-9461-7D895F6D9018" /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		"TEMP_48223F41-FB96-46DB-A15F-7FEBA663BA50" /* Resources.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Resources.xcassets; sourceTree = "<group>"; };
+		"TEMP_6423442A-A36A-4521-B1CF-92D68473520B" /* Launch Screen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = "Launch Screen.storyboard"; sourceTree = "<group>"; };
+		"TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = "Sudoku Pi.xcodeproj"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		95F9894D2A421E850028C43B /* Frameworks */ = {
+		4F4C0C4997165D2CBD5C26D7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				54A25BEFDE811F6008F283A0 /* UIKit.framework in Frameworks */,
+				92C052E64E73364CD1AB3769 /* Foundation.framework in Frameworks */,
+				5A1BF46F8BA1476CCF224734 /* CoreFoundation.framework in Frameworks */,
+				3A0654AAB8C094A76117B921 /* CoreGraphics.framework in Frameworks */,
+				486483EFCAB586F4FB8B89FA /* CoreText.framework in Frameworks */,
+				77FAFC2D0A710984B6E15062 /* CoreVideo.framework in Frameworks */,
+				88EC5EA3C58AB08617822D1C /* QuartzCore.framework in Frameworks */,
+				CE7D377802976F38081F1E16 /* Metal.framework in Frameworks */,
+				5B01A0D178C0544C2A8F80A1 /* MetalKit.framework in Frameworks */,
+				DCD6CEB6D3F50D66EB3BD483 /* IOSurface.framework in Frameworks */,
+				BEE59A40E6F15821F6C5F8FF /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		95F989472A421E850028C43B = {
+		326BF9273C5E4070FD5B341E /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				953030F02AA907F30022579D /* Launch Screen.storyboard */,
-				95317E592A4CD0F800F6DEB0 /* Resources.xcassets */,
-				95F989522A421E850028C43B /* Sudoku Pi */,
-				95F989512A421E850028C43B /* Products */,
-				95F989722A42247B0028C43B /* Frameworks */,
-			);
-			sourceTree = "<group>";
-		};
-		95F989512A421E850028C43B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				95F989502A421E850028C43B /* Sudoku Pi.app */,
+				6AD5964B72CEC04DC7C7D801 /* SudokuPi-iOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		95F989522A421E850028C43B /* Sudoku Pi */ = {
+		8F549F93BB1C12197744A325 /* scripts */ = {
 			isa = PBXGroup;
 			children = (
+				D97B9811072015ED4D48AD8A /* build-rust.sh */,
 			);
-			path = "Sudoku Pi";
+			path = scripts;
 			sourceTree = "<group>";
 		};
-		95F989722A42247B0028C43B /* Frameworks */ = {
+		95E4258430933F1000CF2323 /* Recovered References */ = {
 			isa = PBXGroup;
 			children = (
-				D23A6C152F169313005E2D7B /* AudioToolbox.framework */,
-				D23A6C132F1692D9005E2D7B /* CoreAudio.framework */,
-				D23A6C112F1692AB005E2D7B /* AVFoundation.framework */,
-				95F989812A422B710028C43B /* Frameworks */,
-				95F989762A4225710028C43B /* Sudoku Pi */,
+				"TEMP_35C27A14-1AD3-4B01-9461-7D895F6D9018" /* main.m */,
+				"TEMP_6423442A-A36A-4521-B1CF-92D68473520B" /* Launch Screen.storyboard */,
+				"TEMP_48223F41-FB96-46DB-A15F-7FEBA663BA50" /* Resources.xcassets */,
+				"TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		95E4258530933F1000CF2323 /* Products */ = {
+			isa = PBXGroup;
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D537B7BD981AB57451627006 = {
+			isa = PBXGroup;
+			children = (
+				EC9DACE393D31371A0480DFC /* ci_scripts */,
+				8F549F93BB1C12197744A325 /* scripts */,
+				F10745262E5266A424512884 /* Frameworks */,
+				326BF9273C5E4070FD5B341E /* Products */,
+				95E4258430933F1000CF2323 /* Recovered References */,
+			);
+			sourceTree = "<group>";
+		};
+		EC9DACE393D31371A0480DFC /* ci_scripts */ = {
+			isa = PBXGroup;
+			children = (
+				2E3B6B7C37BAB97007AC849B /* ci_post_clone.sh */,
+			);
+			path = ci_scripts;
+			sourceTree = "<group>";
+		};
+		F10745262E5266A424512884 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				CE537E2D48BCA458765092C2 /* CoreFoundation.framework */,
+				B10032694047F9BD7666BB01 /* CoreGraphics.framework */,
+				058AB2451D5ACC7CBEE0DAA7 /* CoreText.framework */,
+				D5BFE08C8F78810212F06F20 /* CoreVideo.framework */,
+				6631B96DDFF3C3E4985AA3F9 /* Foundation.framework */,
+				A87C32075C6551D0E627D5B2 /* IOSurface.framework */,
+				1FF727853AE45F27F7ECBB13 /* Metal.framework */,
+				99297A8DFFBCF1B0ADE1CCD8 /* MetalKit.framework */,
+				C3D71190D15D16C4AE834628 /* QuartzCore.framework */,
+				DE74AF0050337EACABC4BEA5 /* Security.framework */,
+				D428B6C850DD0C4F95850186 /* UIKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -74,85 +141,146 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		95F9894F2A421E850028C43B /* Sudoku Pi */ = {
+		CDDD8418182A2216FA711FCA /* SudokuPi-iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 95F9896C2A421E860028C43B /* Build configuration list for PBXNativeTarget "Sudoku Pi" */;
+			buildConfigurationList = E89E464F25E3B49B1B21DD4C /* Build configuration list for PBXNativeTarget "SudokuPi-iOS" */;
 			buildPhases = (
-				95F9894C2A421E850028C43B /* Sources */,
-				95F9894D2A421E850028C43B /* Frameworks */,
-				95F9894E2A421E850028C43B /* Resources */,
+				166190751D17D6C1EB1FA906 /* Build the Rust library */,
+				3BC622F045E5A07244628749 /* Sources */,
+				158C5FD7E9003997C353113B /* Resources */,
+				4F4C0C4997165D2CBD5C26D7 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = "Sudoku Pi";
-			productName = "Sudoku Pi";
-			productReference = 95F989502A421E850028C43B /* Sudoku Pi.app */;
+			name = "SudokuPi-iOS";
+			packageProductDependencies = (
+			);
+			productName = "SudokuPi-iOS";
+			productReference = 6AD5964B72CEC04DC7C7D801 /* SudokuPi-iOS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		95F989482A421E850028C43B /* Project object */ = {
+		5582D0BFBD0CBA8B92FC8338 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = 1;
+				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
-					95F9894F2A421E850028C43B = {
-						CreatedOnToolsVersion = 14.3.1;
+					CDDD8418182A2216FA711FCA = {
+						DevelopmentTeam = 24ZH6FMFEQ;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
-			buildConfigurationList = 95F9894B2A421E850028C43B /* Build configuration list for PBXProject "Sudoku Pi" */;
-			compatibilityVersion = "Xcode 14.0";
+			buildConfigurationList = 4C7C65DA0A241075FB8D38B3 /* Build configuration list for PBXProject "Sudoku Pi" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
-				en,
 				Base,
+				en,
 			);
-			mainGroup = 95F989472A421E850028C43B;
-			productRefGroup = 95F989512A421E850028C43B /* Products */;
+			mainGroup = D537B7BD981AB57451627006;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 326BF9273C5E4070FD5B341E /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 95E4258530933F1000CF2323 /* Products */;
+					ProjectRef = "TEMP_F3EA1A9A-9E48-4A8E-B4C8-E097FEEE5A73" /* Sudoku Pi.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
-				95F9894F2A421E850028C43B /* Sudoku Pi */,
+				CDDD8418182A2216FA711FCA /* SudokuPi-iOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		95F9894E2A421E850028C43B /* Resources */ = {
+		158C5FD7E9003997C353113B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				953030F12AA907F30022579D /* Launch Screen.storyboard in Resources */,
-				95317E5A2A4CD0F800F6DEB0 /* Resources.xcassets in Resources */,
+				81A5E86183E047F8E5804496 /* Launch Screen.storyboard in Resources */,
+				58F5E2D7E54A3A43E56CA048 /* Resources.xcassets in Resources */,
+				4B598D69DFA5E02D74EE6F16 /* Sudoku Pi.xcodeproj in Resources */,
+				7F20392291C9A2A4FF922BCE /* build-rust.sh in Resources */,
+				751BCE6AA426CD016DFB6AA8 /* ci_post_clone.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		166190751D17D6C1EB1FA906 /* Build the Rust library */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build the Rust library";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/scripts/build-rust.sh\"";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
-		95F9894C2A421E850028C43B /* Sources */ = {
+		3BC622F045E5A07244628749 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				ABD978123E2E826CBC7BE1DA /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		95F9896A2A421E860028C43B /* Debug */ = {
+		33AF35BE47AB876E08C6212A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/build";
+				OTHER_LDFLAGS = (
+					"-lsudoku_pi",
+					"-lz",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "nl.couch-chilis.Sudoku-Pi";
+				PRODUCT_NAME = "Sudoku Pi";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4B7F2C5742A9DF6C5E532F31 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -178,17 +306,20 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 24ZH6FMFEQ;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
 					"$(inherited)",
+					"DEBUG=1",
 				);
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
@@ -196,25 +327,26 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "2026 Couch Chilis";
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
-		95F9896B2A421E860028C43B /* Release */ = {
+		6BCC27F2DA0DD80C881EDEDA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
@@ -240,10 +372,13 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 24ZH6FMFEQ;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -252,90 +387,36 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "2026 Couch Chilis";
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				VALIDATE_PRODUCT = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
-		95F9896D2A421E860028C43B /* Debug */ = {
+		8302139A99CEF78E7917736A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 24ZH6FMFEQ;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Sudoku Pi";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UIStatusBarHidden = NO;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/build";
+				OTHER_LDFLAGS = (
+					"-lsudoku_pi",
+					"-lz",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "nl.couch-chilis.Sudoku-Pi";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		95F9896E2A421E860028C43B /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 24ZH6FMFEQ;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Sudoku Pi";
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.puzzle-games";
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = "Launch Screen.storyboard";
-				INFOPLIST_KEY_UIRequiresFullScreen = YES;
-				INFOPLIST_KEY_UIStatusBarHidden = NO;
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDefault;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-					"$(PROJECT_DIR)/Sudoku\\ Pi/Frameworks",
-				);
-				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "nl.couch-chilis.Sudoku-Pi";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
+				PRODUCT_NAME = "Sudoku Pi";
+				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -343,25 +424,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		95F9894B2A421E850028C43B /* Build configuration list for PBXProject "Sudoku Pi" */ = {
+		4C7C65DA0A241075FB8D38B3 /* Build configuration list for PBXProject "Sudoku Pi" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				95F9896A2A421E860028C43B /* Debug */,
-				95F9896B2A421E860028C43B /* Release */,
+				4B7F2C5742A9DF6C5E532F31 /* Debug */,
+				6BCC27F2DA0DD80C881EDEDA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		95F9896C2A421E860028C43B /* Build configuration list for PBXNativeTarget "Sudoku Pi" */ = {
+		E89E464F25E3B49B1B21DD4C /* Build configuration list for PBXNativeTarget "SudokuPi-iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				95F9896D2A421E860028C43B /* Debug */,
-				95F9896E2A421E860028C43B /* Release */,
+				33AF35BE47AB876E08C6212A /* Debug */,
+				8302139A99CEF78E7917736A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 95F989482A421E850028C43B /* Project object */;
+	rootObject = 5582D0BFBD0CBA8B92FC8338 /* Project object */;
 }

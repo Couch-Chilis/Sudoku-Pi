@@ -31,23 +31,24 @@ settings:
 # Shared schemes. Xcode Cloud builds these, and XcodeGen only writes them out
 # when they are declared here.
 schemes:
-  FlowWriter-iOS:
+  SudokuPi-iOS:
     build:
       targets:
-        FlowWriter-iOS: all
+        SudokuPi-iOS: all
     run:
       config: Debug
     archive:
       config: Release
 
 targets:
-  FlowWriter-iOS:
+  SudokuPi-iOS:
     type: application
     platform: iOS
     sources:
-      - path: iOS
+      - path: .
         excludes:
           - Info.plist
+          - project.yml
     settings:
       base:
         PRODUCT_NAME: Sudoku Pi
@@ -64,7 +65,7 @@ targets:
           - -lz
     preBuildScripts:
       - name: Build the Rust library
-        script: '"$SRCROOT/../build-ios.sh"'
+        script: '"$SRCROOT/scripts/build-rust.sh"'
         basedOnDependencyAnalysis: false
     dependencies:
       - sdk: UIKit.framework
